@@ -25,7 +25,7 @@ class ChatViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows chats to be viewed or edited.
+    API endpoint that allows messages to be viewed or edited.
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
