@@ -27,6 +27,6 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows messages to be viewed or edited.
     """
-    queryset = Message.objects.all()
+    queryset = Message.objects.all().order_by('created_at')
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]

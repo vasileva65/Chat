@@ -1,18 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-'''
-class User(models.Model):
-    user_id = models.PositiveIntegerField(primary_key=True)
-    login = models.CharField(max_length=20, unique=True)
-    name = models.CharField(max_length=20)
-    lastname = models.CharField(max_length=50)
-    surname = models.CharField(max_length=50)
-    job_title = models.CharField(max_length=255)
-
-    def __str__(self):
-        return "%s %s" % (self.name, self.lastname)
-'''
 
 class Chat(models.Model):
     chat_id = models.PositiveIntegerField(primary_key=True)
@@ -20,7 +8,7 @@ class Chat(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    #last_read
+    # TODO: add last read concept
 
     def __str__(self):
         return self.chat_name
@@ -33,7 +21,7 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_read = models.BooleanField(default=False)
-    #position
+    # TODO: add position concept
 
     def __str__(self):
         return self.body
