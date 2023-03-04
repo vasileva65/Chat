@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from models import Chat, Message
+from chat.models import Chat, Message
 from rest_framework import viewsets
 from rest_framework import permissions
 from chat.serializers import UserSerializer, ChatSerializer, MessageSerializer
@@ -11,7 +11,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
 
 
 class ChatViewSet(viewsets.ModelViewSet):
@@ -20,7 +20,7 @@ class ChatViewSet(viewsets.ModelViewSet):
     """
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
 
 
 class MessageViewSet(viewsets.ModelViewSet):
@@ -29,4 +29,4 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all().order_by('created_at')
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
