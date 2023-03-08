@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 class Chat(models.Model):
-    chat_id = models.PositiveIntegerField(primary_key=True)
+    chat_id = models.AutoField(primary_key=True)
     chat_name = models.CharField(max_length=20, unique=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -14,7 +14,7 @@ class Chat(models.Model):
         return self.chat_name
 
 class Message(models.Model):
-    message_id = models.PositiveIntegerField(primary_key=True)
+    message_id = models.AutoField(primary_key=True)
     sender_id = models.ForeignKey('auth.User', related_name='message', on_delete=models.CASCADE)
     chat_id = models.ForeignKey(Chat, on_delete=models.CASCADE)
     body = models.TextField()

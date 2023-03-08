@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,15 +9,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-  Future<http.Response> buttonPressed() async {
-    http.Response returnedResult = await http.get(
-        Uri.parse('http://localhost:8000/messages'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset-UTF-8'
-        });
-    print(returnedResult.body);
-    return returnedResult;
-  }
 
   // This widget is the root of your application.
   @override
@@ -25,107 +18,138 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: const Text('New page'),
-            ),
-            body: Center(
-              child: Column(children: [
-                Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: const Text('Welcome to the new page!')),
-                Padding(
-                  padding: const EdgeInsets.all(0.0),
-                  child: ElevatedButton(
-                      onPressed: buttonPressed, child: Text('Click!')),
-                )
-              ]),
-            )));
+        home: MyHomePage());
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final myController = TextEditingController();
+  final dio = Dio();
+  List<String> items = [];
+  ScrollController scrollController = ScrollController();
 
-  void _incrementCounter() {
+  @override
+  void dispose() {
+    myController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    fetchMessages();
+  }
+
+  void _printLatestValue() {
+    print('Second text field: ${myController.text}');
+  }
+
+  fetchMessages() async {
+    Response returnedResult = await dio.get('http://localhost:8000/messages');
+    print(returnedResult.data);
+
+    List<String> result = [];
+
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      result.add(returnedResult.data[i]['body']);
+    }
+
+    print(result);
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      items = result;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('New page'),
+          actions: [
+            TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(16.0),
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Chats'),
+                        ),
+                        body: const Center(
+                          child: Text(
+                            'The list of chats',
+                            style: TextStyle(fontSize: 24),
+                          ),
+                        ));
+                  }));
+                },
+                child: Text('Chats')),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: Center(
+          child: Column(children: [
+            Container(
+              height: MediaQuery.of(context).size.height - 130,
+              child: Flexible(
+                child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(items[index]),
+                    );
+                  },
+                  controller: scrollController,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                onEditingComplete: () async {
+                  print(myController.text);
+                  try {
+                    Response response = await dio
+                        .post('http://localhost:8000/messages/', data: {
+                      'sender_id': 1,
+                      'chat_id': 1,
+                      'body': myController.text,
+                    });
+                    print(response);
+                    print(response.data);
+                  } on DioError catch (e) {
+                    if (e.response != null) {
+                      print(e.response!.data);
+                    }
+                    return;
+                  }
+
+                  myController.text = '';
+
+                  fetchMessages();
+
+                  scrollController.animateTo(
+                      scrollController.position.maxScrollExtent,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeOut);
+                },
+                controller: myController,
+              ),
+            )
+          ]),
+        ));
   }
 }
