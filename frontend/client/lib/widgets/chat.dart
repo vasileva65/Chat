@@ -1,3 +1,4 @@
+import 'package:client/models/message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -14,7 +15,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final myController = TextEditingController();
   final dio = Dio();
-  List<String> items = [];
+  List<Message> items = [];
   ScrollController scrollController = ScrollController();
 
   @override
@@ -41,13 +42,13 @@ class _ChatPageState extends State<ChatPage> {
     print("I fetched");
     print(returnedResult.data);
 
-    List<String> result = [];
+    List<Message> result = [];
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
-      result.add(returnedResult.data[i]['body']);
+      Message message = Message(returnedResult.data[i]['sender_id'],
+          DateTime.now(), returnedResult.data[i]['body']);
+      result.add(message);
     }
-
-    print(result);
 
     setState(() {
       items = result;
@@ -59,21 +60,8 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('New page'),
-        actions: [
-          TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(16.0),
-                textStyle: const TextStyle(fontSize: 20),
-              ),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return ChatList();
-                }));
-              },
-              child: Text('Chats')),
-        ],
+        title: const Text('Chat'),
+        backgroundColor: Color.fromARGB(255, 0, 102, 204),
       ),
       body: Center(
         child: Column(children: [
@@ -84,9 +72,19 @@ class _ChatPageState extends State<ChatPage> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(items[index]),
-                    subtitle: Text('2022.01.01'),
+                    title: const Text(
+                      'Name',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      items[index].body,
+                      style: const TextStyle(
+                          fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
+                    ),
                     leading: CircleAvatar(),
+                    trailing: Text('2020-10-10'),
+                    minVerticalPadding: 10.0,
                   );
                 },
                 controller: scrollController,
@@ -95,7 +93,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           Padding(
             padding: const EdgeInsets.all(10),
-            child: TextField(
+            child: TextFormField(
               onEditingComplete: () async {
                 print(myController.text);
                 try {
@@ -104,6 +102,7 @@ class _ChatPageState extends State<ChatPage> {
                     'sender_id': 1,
                     'chat_id': 1,
                     'body': myController.text,
+                    //'created_at':
                   });
                   print(response);
                   print(response.data);
@@ -124,12 +123,21 @@ class _ChatPageState extends State<ChatPage> {
                 print("I am animating");
 
                 scrollController.animateTo(
-                    scrollController.position.maxScrollExtent + 48,
+                    scrollController.position.maxScrollExtent + 1000,
                     duration: Duration(milliseconds: 300),
                     curve: Curves.easeOut);
                 print("I called animated to");
               },
               controller: myController,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                filled: true,
+                //borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                //borderSide: BorderSide()),
+                hintText: 'Введите сообщение...',
+              ),
+              //maxLines: 5,
+              //minLines: 1,
             ),
           )
         ]),

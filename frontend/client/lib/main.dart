@@ -17,9 +17,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: ' Chat',
+        title: 'Chat',
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 74, 172)),
         ),
         home: MainScreen());
   }

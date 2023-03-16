@@ -18,7 +18,12 @@ class _MainScreenState extends State<MainScreen> {
       body: Container(
           child: Row(
         children: [
-          SafeArea(child: Container(width: 400, child: ChatList())),
+          SafeArea(child: Container(width: 300, child: ChatList())),
+          const VerticalDivider(
+            color: Color.fromARGB(255, 194, 194, 194),
+            thickness: 1,
+            width: 0.5,
+          ),
           Expanded(
               child: Container(
                   width: MediaQuery.of(context).size.width - 400,
