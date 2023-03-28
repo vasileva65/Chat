@@ -13,6 +13,7 @@ class Chat(models.Model):
     def __str__(self):
         return self.chat_name
 
+
 class Message(models.Model):
     message_id = models.AutoField(primary_key=True)
     sender_id = models.ForeignKey('auth.User', related_name='message', on_delete=models.CASCADE)
@@ -26,6 +27,14 @@ class Message(models.Model):
     def __str__(self):
         return self.body
 
+class UserProfile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to ='uploads/', height_field=None, width_field=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return str(self.user)
+    
 
 

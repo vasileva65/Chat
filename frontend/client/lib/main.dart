@@ -1,8 +1,9 @@
+import 'package:client/widgets/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
-
+import 'dart:io';
 import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/main_screen.dart';
 
@@ -23,6 +24,6 @@ class MyApp extends StatelessWidget {
           colorScheme:
               ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 74, 172)),
         ),
-        home: MainScreen());
+        home: LoginPage());
   }
 }

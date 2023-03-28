@@ -1,12 +1,16 @@
 import 'package:client/models/message.dart';
+import 'package:client/models/userProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:client/widgets/chat_list.dart';
+import 'package:intl/intl.dart';
+import 'package:client/models/auth.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+  Auth auth;
+  ChatPage(this.auth, {super.key});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -17,6 +21,41 @@ class _ChatPageState extends State<ChatPage> {
   final dio = Dio();
   List<Message> items = [];
   ScrollController scrollController = ScrollController();
+
+  Future sendMessages() async {
+    print(myController.text);
+    try {
+      Response response = await dio.post('http://localhost:8000/messages/',
+          data: {
+            'sender_id': widget.auth.userId,
+            'chat_id': 1,
+            'body': myController.text,
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+        print(e.response!.data);
+      }
+      return;
+    }
+
+    myController.text = '';
+
+    print('max scroll extent: ${items.length}');
+    await fetchMessages();
+
+    print('max scroll extent: ${items.length}');
+
+    scrollController.animateTo(scrollController.position.maxScrollExtent + 1000,
+        duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+  }
 
   @override
   void dispose() {
@@ -37,16 +76,21 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future fetchMessages() async {
-    print("I am fetching");
-    Response returnedResult = await dio.get('http://localhost:8000/messages');
-    print("I fetched");
+    Response returnedResult = await dio.get('http://localhost:8000/messages',
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+        }));
+
     print(returnedResult.data);
 
     List<Message> result = [];
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
-      Message message = Message(returnedResult.data[i]['sender_id'],
-          DateTime.now(), returnedResult.data[i]['body']);
+      Message message = Message(
+          returnedResult.data[i]['sender_first_name'],
+          returnedResult.data[i]['sender_last_name'],
+          DateTime.parse(returnedResult.data[i]['created_at']),
+          returnedResult.data[i]['body']);
       result.add(message);
     }
 
@@ -72,8 +116,8 @@ class _ChatPageState extends State<ChatPage> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: const Text(
-                      'Name',
+                    title: Text(
+                      items[index].name + " " + items[index].lastname,
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -83,7 +127,9 @@ class _ChatPageState extends State<ChatPage> {
                           fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
                     ),
                     leading: CircleAvatar(),
-                    trailing: Text('2020-10-10'),
+                    trailing: Text(DateFormat('dd.MM.yyyy kk:mm')
+                        .format(items[index].dateTime)
+                        .toString()),
                     minVerticalPadding: 10.0,
                   );
                 },
@@ -94,42 +140,14 @@ class _ChatPageState extends State<ChatPage> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: TextFormField(
-              onEditingComplete: () async {
-                print(myController.text);
-                try {
-                  Response response =
-                      await dio.post('http://localhost:8000/messages/', data: {
-                    'sender_id': 1,
-                    'chat_id': 1,
-                    'body': myController.text,
-                    //'created_at':
-                  });
-                  print(response);
-                  print(response.data);
-                } on DioError catch (e) {
-                  if (e.response != null) {
-                    print(e.response!.data);
-                  }
-                  return;
-                }
-
-                myController.text = '';
-
-                print('max scroll extent: ${items.length}');
-                await fetchMessages();
-
-                print('max scroll extent: ${items.length}');
-
-                print("I am animating");
-
-                scrollController.animateTo(
-                    scrollController.position.maxScrollExtent + 1000,
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut);
-                print("I called animated to");
-              },
+              onEditingComplete: sendMessages,
               controller: myController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  splashRadius: 20,
+                  onPressed: sendMessages,
+                ),
                 border: InputBorder.none,
                 filled: true,
                 //borderRadius: BorderRadius.all(Radius.circular(25.0)),

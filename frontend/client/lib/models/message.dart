@@ -1,7 +1,8 @@
 class Message {
-  late int name;
+  late String name;
+  late String lastname;
   late DateTime dateTime;
   late String body;
 
-  Message(this.name, this.dateTime, this.body);
+  Message(this.name, this.lastname, this.dateTime, this.body);
 }

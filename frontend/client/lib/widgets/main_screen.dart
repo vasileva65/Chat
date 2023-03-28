@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/chat_list.dart';
+import 'package:client/models/auth.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({
-    super.key,
-  });
+  Auth auth;
+
+  MainScreen(this.auth);
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -24,10 +25,7 @@ class _MainScreenState extends State<MainScreen> {
             thickness: 1,
             width: 0.5,
           ),
-          Expanded(
-              child: Container(
-                  width: MediaQuery.of(context).size.width - 400,
-                  child: ChatPage())),
+          Expanded(child: Container(width: 600, child: ChatPage(widget.auth))),
         ],
       )),
     );
