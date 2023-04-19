@@ -1,5 +1,5 @@
 class UserProfile {
   String userId;
-
-  UserProfile(this.userId);
+  String avatar;
+  UserProfile(this.userId, this.avatar);
 }

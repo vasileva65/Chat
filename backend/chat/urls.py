@@ -14,6 +14,7 @@ from rest_framework_simplejwt.views import (
 from django.contrib import admin
 from rest_framework_simplejwt.views import TokenRefreshView
 
+
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
 router.register(r'users', UserViewSet,basename="user")

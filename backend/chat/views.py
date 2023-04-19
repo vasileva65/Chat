@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 import logging
+
+import requests
 from chat.models import (
     Chat, 
     Message,
@@ -66,6 +68,16 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all().order_by('created_at')
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def create(self, request):
+        print(request.data['sender_id'])
+        print(request.data['chat_id'])
+        resp = requests.get('http://localhost:8080/', params={
+            'sender_id' : request.data['sender_id'], 
+            'chat_id' : request.data['chat_id']
+            })
+        print(resp)
+        return super().create(request)
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):

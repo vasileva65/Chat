@@ -1,5 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
+from profanity.validators import validate_is_profane
+
+class UserProfile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(null=True, blank=True, upload_to ='user_photos/', height_field=None, width_field=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.user)
 
 
 class Chat(models.Model):
@@ -18,7 +28,7 @@ class Message(models.Model):
     message_id = models.AutoField(primary_key=True)
     sender_id = models.ForeignKey('auth.User', related_name='message', on_delete=models.CASCADE)
     chat_id = models.ForeignKey(Chat, on_delete=models.CASCADE)
-    body = models.TextField()
+    body = models.TextField(validators=[validate_is_profane])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_read = models.BooleanField(default=False)
@@ -27,14 +37,7 @@ class Message(models.Model):
     def __str__(self):
         return self.body
 
-class UserProfile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to ='uploads/', height_field=None, width_field=None)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return str(self.user)
     
 
 

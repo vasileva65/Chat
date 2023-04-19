@@ -6,8 +6,16 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/main_screen.dart';
+import 'package:window_size/window_size.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    setWindowTitle('Chat');
+    setWindowMinSize(const Size(450, 400));
+  }
+
   runApp(const MyApp());
 }
 
@@ -20,9 +28,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Chat',
         theme: ThemeData(
+          fontFamily: 'Rubik',
           primarySwatch: Colors.blue,
           colorScheme:
-              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 0, 74, 172)),
+              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 37, 87, 153)),
         ),
         home: LoginPage());
   }
