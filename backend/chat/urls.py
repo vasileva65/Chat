@@ -6,6 +6,7 @@ from chat.views import (
     MessageViewSet,
     UserProfileViewSet,
     ChatViewSet,
+    ChatMembersViewSet
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -20,6 +21,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet,basename="user")
 router.register(r'messages', MessageViewSet,basename="message")
 router.register(r'chats', ChatViewSet,basename="chat")
+router.register(r'chatmembers', ChatMembersViewSet,basename="chatmembers")
 router.register(r'user/profile', UserProfileViewSet,basename="userprofile")
 
 

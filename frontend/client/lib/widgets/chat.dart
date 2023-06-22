@@ -1,3 +1,4 @@
+import 'package:client/models/chats.dart';
 import 'package:client/models/message.dart';
 import 'package:client/models/userProfile.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,8 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 class ChatPage extends StatefulWidget {
   Auth auth;
   UserProfile userData;
-  ChatPage(this.auth, this.userData, {super.key});
+  Chats chat;
+  ChatPage(this.auth, this.userData, this.chat, {super.key});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -24,18 +26,19 @@ class _ChatPageState extends State<ChatPage> {
   final myController = TextEditingController();
   final dio = Dio();
   List<Message> items = [];
+  List<UserProfile> profiles = [];
   ScrollController scrollController = ScrollController();
 
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
 
   Future sendMessages() async {
-    print(myController.text);
+    print('sendMessages' + myController.text);
     try {
       Response response = await dio.post('http://localhost:8000/messages/',
           data: {
             'sender_id': widget.auth.userId,
-            'chat_id': 1,
+            'chat_id': widget.chat.chatId,
             'body': myController.text,
           },
           options: Options(headers: {
@@ -84,8 +87,31 @@ class _ChatPageState extends State<ChatPage> {
 
     //print('max scroll extent: ${items.length}');
 
-    scrollController.animateTo(scrollController.position.maxScrollExtent + 1000,
+    scrollController.animateTo(0.0,
         duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+  }
+
+  Future getPhotos() async {
+    Response returnedResult =
+        await dio.get('http://localhost:8000/user/profile',
+            options: Options(headers: {
+              'Authorization': "Bearer ${widget.auth.token}",
+            }));
+    print("PHOTOS");
+    print(returnedResult.data);
+
+    List<UserProfile> result = [];
+
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      UserProfile profile = UserProfile(
+          returnedResult.data[i]['user_id'].toString(),
+          returnedResult.data[i]['avatar']);
+      result.add(profile);
+    }
+
+    setState(() {
+      profiles = result;
+    });
   }
 
   @override
@@ -97,6 +123,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     // TODO: implement initState
+    print('doing init');
     super.initState();
 
     _channel.stream.listen((data) {
@@ -110,6 +137,7 @@ class _ChatPageState extends State<ChatPage> {
     });
 
     fetchMessages();
+    getPhotos();
   }
 
   void _printLatestValue() {
@@ -127,20 +155,24 @@ class _ChatPageState extends State<ChatPage> {
     List<Message> result = [];
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
-      Message message = Message(
-          returnedResult.data[i]['sender_first_name'],
-          returnedResult.data[i]['sender_last_name'],
-          DateTime.parse(returnedResult.data[i]['created_at']),
-          returnedResult.data[i]['body']);
-      result.add(message);
+      if (widget.chat.chatId == returnedResult.data[i]['chat_id']) {
+        Message message = Message(
+            returnedResult.data[i]['sender_first_name'],
+            returnedResult.data[i]['sender_last_name'],
+            DateTime.parse(returnedResult.data[i]['created_at']),
+            returnedResult.data[i]['body']);
+        result.insert(0, message);
+      }
     }
 
-    setState(() {
-      items = result;
-    });
+    if (mounted) {
+      setState(() {
+        items = result;
+      });
 
-    scrollController.animateTo(scrollController.position.maxScrollExtent + 1000,
-        duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+      scrollController.animateTo(0.0,
+          duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+    }
 
     print('AVATAR');
     print(widget.userData.avatar);
@@ -148,6 +180,8 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('doing rebuild');
+    print(widget.chat.name);
     return Scaffold(
       appBar: AppBar(
         //centerTitle: true,
@@ -156,52 +190,50 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Center(
         child: Column(children: [
-          Container(
+          SizedBox(
             height: MediaQuery.of(context).size.height - 130,
-            child: Flexible(
-              child: ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 3),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Container(
-                      padding: EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        "${items[index].name} ${items[index].lastname}",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Color.fromARGB(255, 39, 77, 126),
-                        ),
+            child: ListView.builder(
+              reverse: true,
+              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 3),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Container(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      "${items[index].name} ${items[index].lastname}",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color.fromARGB(255, 39, 77, 126),
                       ),
                     ),
-                    subtitle: Text(
-                      items[index].body,
-                      style: const TextStyle(
-                          fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
+                  ),
+                  subtitle: Text(
+                    items[index].body,
+                    style: const TextStyle(
+                        fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
+                  ),
+                  leading: const CircleAvatar(
+                    //backgroundColor: Colors.grey,
+                    backgroundImage: NetworkImage(''),
+                  ),
+                  trailing: Text(
+                    DateFormat('dd.MM.yyyy kk:mm')
+                        .format(items[index].dateTime)
+                        .toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w100,
+                      fontSize: 13,
                     ),
-                    leading: const CircleAvatar(
-                      //backgroundColor: Colors.grey,
-                      backgroundImage: NetworkImage(
-                          'http://localhost:8000/media/user_photos/User-Profile-PNG-Image_rywALHe.png'),
-                    ),
-                    trailing: Text(
-                      DateFormat('dd.MM.yyyy kk:mm')
-                          .format(items[index].dateTime)
-                          .toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w100,
-                        fontSize: 13,
-                      ),
-                    ),
-                    minVerticalPadding: 15.0,
-                  );
-                },
-                controller: scrollController,
-              ),
+                  ),
+                  minVerticalPadding: 15.0,
+                );
+              },
+              controller: scrollController,
             ),
           ),
+          //поле отправки сообщений
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
             child: TextFormField(
@@ -221,7 +253,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 filled: true,
-                hintText: 'Введите сообщение...',
+                hintText: 'Введите сообщение... Для чата ${widget.chat.chatId}',
               ),
               //maxLines: 5,
               //minLines: 1,

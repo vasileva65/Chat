@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:client/models/userProfile.dart';
 import 'package:client/widgets/main_screen.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,8 @@ import 'package:client/widgets/main_screen.dart';
 import 'package:client/models/auth.dart';
 import 'package:client/models/userProfile.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
+
+import '../models/chats.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -21,8 +24,30 @@ class _LoginPage extends State<LoginPage> {
   String errorText = '';
 
   late UserProfile userData;
+  Chats chat = Chats(0, '', '');
 
-  Future<Auth> login(String email, String password) async {
+  Future signIn() async {
+    Auth auth = await login();
+    setState(() {});
+    if (auth.authenticated) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MainScreen(
+                  auth,
+                  userData,
+                  chat: chat,
+                )),
+        (Route<dynamic> route) => true,
+      );
+    } else {
+      setState(() {
+        errorText = auth.authError;
+      });
+    }
+  }
+
+  Future login() async {
     // Returns true if auth succeeded.
     try {
       Response response = await dio.post(
@@ -44,7 +69,9 @@ class _LoginPage extends State<LoginPage> {
       print(response.data['access']);
       return Auth(userData.userId, response.data['access'], true);
     } on DioError catch (e) {
-      if (e.response != null) {
+      if (e.response!.data['detail'] == null) {
+        return Auth('', '', false, authError: 'Поле не может быть пустым');
+      } else if (e.response != null) {
         return Auth('', '', false, authError: e.response!.data['detail']);
       }
       return Auth('', '', false, authError: 'Ошибка сети..');
@@ -90,14 +117,14 @@ class _LoginPage extends State<LoginPage> {
         title: const Text(''),
         backgroundColor: Color.fromARGB(255, 37, 87, 153),
       ),
-      body: Container(
+      body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         //padding: EdgeInsets.symmetric(horizontal: 250),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               width: 400,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -118,8 +145,9 @@ class _LoginPage extends State<LoginPage> {
 
                   //
                   Container(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextFormField(
+                      onEditingComplete: signIn,
                       controller: usernameController,
                       decoration: const InputDecoration(
                           border: OutlineInputBorder(),
@@ -129,12 +157,13 @@ class _LoginPage extends State<LoginPage> {
                   ),
 
                   Container(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextFormField(
+                      onEditingComplete: signIn,
                       controller: passController,
                       obscureText: passwordVisible,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         labelText: 'Пароль',
                         hintText: 'Введите пароль',
                         errorText: errorText.isEmpty ? null : errorText,
@@ -165,27 +194,10 @@ class _LoginPage extends State<LoginPage> {
                     ),
                   ),*/
                   Container(
-                    padding: EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     height: 65,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        Auth auth = await login(
-                            usernameController.text, passController.text);
-                        setState(() {});
-                        if (auth.authenticated) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    MainScreen(auth, userData)),
-                            (Route<dynamic> route) => false,
-                          );
-                        } else {
-                          setState(() {
-                            errorText = auth.authError;
-                          });
-                        }
-                      },
+                      onPressed: signIn,
                       style: ButtonStyle(
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(

@@ -1,10 +1,11 @@
-from django.contrib.auth.models import User, Group
-from chat.models import Message, UserProfile
+from django.contrib.auth.models import Group
+from chat.models import Chat, ChatMembers, Message, UserProfile
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
-
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,17 +13,24 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['url', 'id', 'username', 'first_name', 'last_name']
 
 
+class ChatMembersSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(source='chat_id.avatar', read_only=True)
+    chat_name = serializers.CharField(source='chat_id.chat_name', read_only=True)
+    class Meta:
+        model = ChatMembers
+        fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at']
+
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = ['url', 'id', 'name', 'user_id']
+        model = Chat
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at']
 
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender_id.username', read_only=True)
     sender_first_name = serializers.CharField(source='sender_id.first_name', read_only=True)
     sender_last_name = serializers.CharField(source='sender_id.last_name', read_only=True)
-    
+
     class Meta:
         model = Message
         fields = ['url', 'message_id', 'sender_id', 'sender_username', 'sender_first_name', 'sender_last_name', 'chat_id', 'body', 'created_at']

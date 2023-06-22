@@ -1,11 +1,11 @@
-from django.contrib.auth.models import User
 import logging
 
 import requests
 from chat.models import (
     Chat, 
     Message,
-    UserProfile
+    UserProfile, 
+    ChatMembers
 )
 from rest_framework import (
     viewsets,
@@ -17,7 +17,8 @@ from chat.serializers import (
     MessageSerializer,
     UserProfileSerializer,
     MyTokenObtainPairSerializer,
-    RegisterSerializer
+    RegisterSerializer, 
+    ChatMembersSerializer
 )
 from rest_framework import permissions
 from rest_framework.permissions import (
@@ -25,6 +26,8 @@ from rest_framework.permissions import (
     AllowAny
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -44,7 +47,6 @@ class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
 
-
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Object-level permission to only allow owners of an object to edit it.
@@ -59,6 +61,14 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Instance must have an attribute named `owner`.
         return int(request.data['sender_id']) == request.user.pk
+
+class ChatMembersViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows chats to be viewed or edited.
+    """
+    queryset = ChatMembers.objects.all()
+    serializer_class = ChatMembersSerializer
+    permission_classes = [IsAuthenticated]
     
 
 class MessageViewSet(viewsets.ModelViewSet):
