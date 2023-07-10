@@ -27,6 +27,7 @@ from rest_framework.permissions import (
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
+#from .models import User
 User = get_user_model()
 
 

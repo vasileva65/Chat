@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'package:client/models/userProfile.dart';
 import 'package:client/widgets/main_screen.dart';
+import 'package:client/widgets/registration.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -115,7 +116,8 @@ class _LoginPage extends State<LoginPage> {
       //backgroundColor: Color.fromARGB(255, 114, 154, 207),
       appBar: AppBar(
         title: const Text(''),
-        backgroundColor: Color.fromARGB(255, 37, 87, 153),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
       ),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
@@ -150,6 +152,10 @@ class _LoginPage extends State<LoginPage> {
                       onEditingComplete: signIn,
                       controller: usernameController,
                       decoration: const InputDecoration(
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  width: 1,
+                                  color: Color.fromARGB(255, 37, 87, 153))),
                           border: OutlineInputBorder(),
                           labelText: 'Имя пользователя',
                           hintText: 'Введите имя пользователя'),
@@ -163,6 +169,10 @@ class _LoginPage extends State<LoginPage> {
                       controller: passController,
                       obscureText: passwordVisible,
                       decoration: InputDecoration(
+                        focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                width: 1,
+                                color: Color.fromARGB(255, 37, 87, 153))),
                         border: const OutlineInputBorder(),
                         labelText: 'Пароль',
                         hintText: 'Введите пароль',
@@ -208,11 +218,45 @@ class _LoginPage extends State<LoginPage> {
                         'Войти',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        height: 40,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RegistrationPage()),
+                              (Route<dynamic> route) => true,
+                            );
+                          },
+                          child: const Text('Регистрация'),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        height: 40,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          onPressed: () {},
+                          child: const Text('Забыли пароль?'),
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),

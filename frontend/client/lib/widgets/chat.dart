@@ -171,7 +171,7 @@ class _ChatPageState extends State<ChatPage> {
       });
 
       scrollController.animateTo(0.0,
-          duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     }
 
     print('AVATAR');
@@ -181,12 +181,23 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     print('doing rebuild');
+    print(widget.chat.chatId);
     print(widget.chat.name);
     return Scaffold(
       appBar: AppBar(
+        shape: const Border(
+            bottom:
+                BorderSide(width: 0.2, color: Color.fromARGB(255, 0, 0, 0))),
         //centerTitle: true,
-        title: const Text('Корпоративный чат'),
-        backgroundColor: Color.fromARGB(255, 37, 87, 153),
+        title: Text(
+          widget.chat.name,
+          style: const TextStyle(
+              fontSize: 15,
+              color: Color.fromARGB(255, 0, 0,
+                  0)), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
+        ),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        shadowColor: const Color.fromARGB(1, 255, 255, 255),
       ),
       body: Center(
         child: Column(children: [
@@ -236,27 +247,36 @@ class _ChatPageState extends State<ChatPage> {
           //поле отправки сообщений
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            child: TextFormField(
-              onEditingComplete: sendMessages,
-              controller: myController,
-              decoration: InputDecoration(
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.send),
-                  splashRadius: 20,
-                  onPressed: sendMessages,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(5.0),
-                  borderSide: const BorderSide(
-                    width: 0,
-                    style: BorderStyle.none,
+            child: Expanded(
+              child: TextField(
+                onEditingComplete: sendMessages,
+                controller: myController,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.only(
+                      right: 10, top: 10, bottom: 10, left: 15),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    splashRadius: 20,
+                    onPressed: sendMessages,
                   ),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                      borderSide: const BorderSide(
+                          width: 1, color: Color.fromARGB(255, 37, 87, 153))),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                    borderSide: const BorderSide(
+                      width: 0.2,
+                      style: BorderStyle.none,
+                    ),
+                  ),
+                  //filled: true,
+                  hintText:
+                      'Введите сообщение... Для чата ${widget.chat.chatId}',
                 ),
-                filled: true,
-                hintText: 'Введите сообщение... Для чата ${widget.chat.chatId}',
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
               ),
-              //maxLines: 5,
-              //minLines: 1,
             ),
           )
         ]),

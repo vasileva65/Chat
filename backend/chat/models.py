@@ -3,19 +3,23 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from profanity.validators import validate_is_profane
 from django.conf import settings
-from chat.manager import CustomUserManager
+from .manager import CustomUserManager
 
 class User(AbstractUser):
+    
     middle_name = models.CharField(max_length=150, blank=True)
 
     objects = CustomUserManager()
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.username
 
 class UserProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(null=True, blank=True, upload_to ='user_photos/', height_field=None, width_field=None)
+    avatar = models.ImageField(upload_to ='user_photos/', default='default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
 
@@ -27,7 +31,7 @@ class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True)
     chat_name = models.CharField(max_length=20, unique=True)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(null=True, blank=True, upload_to ='chat_photos/', height_field=None, width_field=None)
+    avatar = models.ImageField(upload_to ='chat_photos/', default='default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
     # TODO: add last read concept

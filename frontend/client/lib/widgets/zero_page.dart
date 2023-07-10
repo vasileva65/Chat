@@ -19,10 +19,7 @@ class _ZeroPageState extends State<ZeroPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         //backgroundColor: Color.fromARGB(255, 114, 154, 207),
-        appBar: AppBar(
-          title: const Text(''),
-          backgroundColor: Color.fromARGB(255, 37, 87, 153),
-        ),
+
         body: SizedBox(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
