@@ -8,19 +8,16 @@ import 'package:flutter/material.dart';
 
 import 'main_screen.dart';
 
-class RegistrationPage extends StatefulWidget {
+class ChangePassPage extends StatefulWidget {
   @override
-  _RegistrationPage createState() => _RegistrationPage();
+  _ChangePassPage createState() => _ChangePassPage();
 }
 
-class _RegistrationPage extends State<RegistrationPage> {
+class _ChangePassPage extends State<ChangePassPage> {
   final dio = Dio();
   final usernameController = TextEditingController();
   final passController = TextEditingController();
   final passController2 = TextEditingController();
-  final nameController = TextEditingController();
-  final lastnameController = TextEditingController();
-  final middlenameController = TextEditingController();
   String errorText = '';
 
   late UserProfile userData;
@@ -49,11 +46,9 @@ class _RegistrationPage extends State<RegistrationPage> {
     // Returns true if auth succeeded.
     try {
       Response response = await dio.post(
-        'http://localhost:8000/register/',
+        'http://localhost:8000/changepassword/',
         data: {
-          'name': nameController.text,
-          'lastname': nameController.text,
-          'middlename': nameController.text,
+          'username': usernameController.text,
           'password': passController.text,
           'password2': passController2.text,
         },
@@ -68,24 +63,25 @@ class _RegistrationPage extends State<RegistrationPage> {
       // GET /user/profile/<id>
       // PATCH /user/profile/<id>
       print(response.data['access']);
-
       return Auth(userData.userId, response.data['access'], true);
     } on DioError catch (e) {
-      print(e.response);
-      print(e.response!.data['password'][0]);
-      if (e.response != null) {
-        return Auth('', '', false, authError: e.response!.data['password'][0]);
+      if (e.response!.data['detail'] == null) {
+        return Auth('', '', false,
+            authError: 'Пароль должен содержать минимум 8 символов');
+      } else if (e.response != null) {
+        return Auth('', '', false, authError: e.response!.data['detail']);
       }
       return Auth('', '', false, authError: 'Ошибка сети..');
     }
   }
 
   Future getUserProfileData(Response res) async {
-    Response returnedResult = await dio.get('http://localhost:8000/register'
-        //options: Options(headers: {
-        //       'Authorization': "Bearer ${res.data['access']}",
-        //     })
-        );
+    Response returnedResult =
+        await dio.get('http://localhost:8000/changepassword'
+            //options: Options(headers: {
+            //       'Authorization': "Bearer ${res.data['access']}",
+            //     })
+            );
 
     print(returnedResult.data);
     UserProfile user = UserProfile('', '');
@@ -117,7 +113,10 @@ class _RegistrationPage extends State<RegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       //backgroundColor: Color.fromARGB(255, 114, 154, 207),
-
+      appBar: AppBar(
+        title: const Text(''),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      ),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -134,7 +133,7 @@ class _RegistrationPage extends State<RegistrationPage> {
                   Container(
                     padding: const EdgeInsets.only(bottom: 25),
                     child: const Text(
-                      'Создайте аккаунт',
+                      'Изменить пароль',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 33,
@@ -156,38 +155,8 @@ class _RegistrationPage extends State<RegistrationPage> {
                                   width: 1,
                                   color: Color.fromARGB(255, 37, 87, 153))),
                           border: OutlineInputBorder(),
-                          labelText: 'Имя',
-                          hintText: 'Введите имя'),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      onEditingComplete: signIn,
-                      controller: lastnameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Фамилия',
-                          hintText: 'Введите фамилию'),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      onEditingComplete: signIn,
-                      controller: middlenameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Отчество',
-                          hintText: 'Введите отчество'),
+                          labelText: 'Имя пользователя',
+                          hintText: 'Введите имя пользователя'),
                     ),
                   ),
                   Container(
@@ -205,7 +174,6 @@ class _RegistrationPage extends State<RegistrationPage> {
                         labelText: 'Пароль',
                         hintText: 'Придумайте пароль',
                         errorText: errorText.isEmpty ? null : errorText,
-                        errorMaxLines: 2,
                         suffixIcon: IconButton(
                           splashRadius: 20,
                           icon: Icon(passwordVisible
@@ -237,7 +205,6 @@ class _RegistrationPage extends State<RegistrationPage> {
                         labelText: 'Повтор пароля',
                         hintText: 'Повторите пароль',
                         errorText: errorText.isEmpty ? null : errorText,
-                        errorMaxLines: 2,
                         suffixIcon: IconButton(
                           splashRadius: 20,
                           icon: Icon(passwordVisible2
@@ -276,7 +243,7 @@ class _RegistrationPage extends State<RegistrationPage> {
                         borderRadius: BorderRadius.circular(5.0),
                       ))),
                       child: const Text(
-                        'Регистрация',
+                        'Сменить пароль',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,

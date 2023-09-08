@@ -1,10 +1,14 @@
 from django.contrib.auth.models import Group
+from backend.generator import generate_username
 from chat.models import Chat, ChatMembers, Message, UserProfile
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
+import re
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 #from .models import User
 User = get_user_model()
 
@@ -57,37 +61,39 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-            required=True,
-            validators=[UniqueValidator(queryset=User.objects.all())]
-            )
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        fields = ('first_name', 'last_name', 'middle_name', 'password', 'password2')
         extra_kwargs = {
             'first_name': {'required': True},
-            'last_name': {'required': True}
+            'last_name': {'required': True},
+            'middle_name': {'required': True}
         }
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-
+            raise serializers.ValidationError({"password": "Пароли не совпадают."})
         return attrs
 
     def create(self, validated_data):
+        username = generate_username(validated_data['first_name'],validated_data['middle_name'])
+
+        while(User.objects.filter(username=username).exists()):
+            username = generate_username(validated_data['first_name'], validated_data['middle_name'])
+        
         user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
+            username=username,
             first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            last_name=validated_data['last_name'],
+            middle_name=validated_data['middle_name']
         )
         
         user.set_password(validated_data['password'])
+
         user.save()
 
         return user

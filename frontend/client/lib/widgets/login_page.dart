@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'package:client/models/userProfile.dart';
+import 'package:client/widgets/forgot_password_page.dart';
 import 'package:client/widgets/main_screen.dart';
 import 'package:client/widgets/registration.dart';
 import 'package:http/http.dart' as http;
@@ -204,7 +205,7 @@ class _LoginPage extends State<LoginPage> {
                     ),
                   ),*/
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     height: 65,
                     child: ElevatedButton(
                       onPressed: signIn,
@@ -252,7 +253,14 @@ class _LoginPage extends State<LoginPage> {
                           style: TextButton.styleFrom(
                             textStyle: const TextStyle(fontSize: 16),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ChangePassPage()),
+                              (Route<dynamic> route) => true,
+                            );
+                          },
                           child: const Text('Забыли пароль?'),
                         ),
                       )

@@ -110,8 +110,7 @@ class _ChatListState extends State<ChatList> {
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 child: TextField(
                   //cursorColor: Color.fromARGB(255, 255, 255, 255),
-                  style: const TextStyle(
-                      color: Color.fromARGB(255, 255, 255, 255)),
+                  style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
                   onChanged: (value) {
                     filterSearchResults(value);
                   },
