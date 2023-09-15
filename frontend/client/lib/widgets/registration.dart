@@ -1,6 +1,7 @@
 import 'package:client/models/auth.dart';
 import 'package:client/models/chats.dart';
 import 'package:client/models/userProfile.dart';
+import 'package:client/widgets/login_page.dart';
 import 'package:client/widgets/zero_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -32,10 +33,7 @@ class _RegistrationPage extends State<RegistrationPage> {
     if (auth.authenticated) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-            builder: (context) => ZeroPage(
-                  auth,
-                )),
+        MaterialPageRoute(builder: (context) => ZeroPage(auth, userData)),
         (Route<dynamic> route) => true,
       );
     } else {
@@ -72,8 +70,8 @@ class _RegistrationPage extends State<RegistrationPage> {
       return Auth(userData.userId, response.data['access'], true);
     } on DioError catch (e) {
       print(e.response);
-      print(e.response!.data['password'][0]);
-      if (e.response != null) {
+      //print(e.response!.data['password'][0]);
+      if (e.response!.data['password'] != null) {
         return Auth('', '', false, authError: e.response!.data['password'][0]);
       }
       return Auth('', '', false, authError: 'Ошибка сети..');
@@ -81,17 +79,19 @@ class _RegistrationPage extends State<RegistrationPage> {
   }
 
   Future getUserProfileData(Response res) async {
-    Response returnedResult = await dio.get('http://localhost:8000/register'
-        //options: Options(headers: {
-        //       'Authorization': "Bearer ${res.data['access']}",
-        //     })
-        );
+    Response returnedResult = await dio.get('http://localhost:8000/register',
+        options: Options(headers: {
+          'Authorization': "Bearer ${res.data['access']}",
+        }));
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '');
+    UserProfile user = UserProfile('', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
         returnedResult.data[0]['user_id'].toString(),
+        returnedResult.data[0]['first_name'].toString(),
+        returnedResult.data[0]['last_name'].toString(),
+        returnedResult.data[0]['middle_name'].toString(),
         returnedResult.data[0]['avatar'].toString(),
       );
     }
@@ -254,6 +254,7 @@ class _RegistrationPage extends State<RegistrationPage> {
                       ),
                     ),
                   ),
+
                   /*TextButton(
                     onPressed: () {
                       //TODO FORGOT PASSWORD SCREEN
@@ -284,6 +285,36 @@ class _RegistrationPage extends State<RegistrationPage> {
                         ),
                       ),
                     ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        height: 40,
+                        child: const Text('Уже есть аккаунт?',
+                            style: TextStyle(fontSize: 16)),
+                      ),
+                      //const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        height: 38,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginPage()),
+                              (Route<dynamic> route) => false,
+                            );
+                          },
+                          child: const Text('Войти'),
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),

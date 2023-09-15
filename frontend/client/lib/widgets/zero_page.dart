@@ -8,7 +8,8 @@ import '../models/chats.dart';
 
 class ZeroPage extends StatefulWidget {
   Auth auth;
-  ZeroPage(this.auth, {super.key});
+  UserProfile userProfile;
+  ZeroPage(this.auth, this.userProfile, {super.key});
 
   @override
   State<ZeroPage> createState() => _ZeroPageState();

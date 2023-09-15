@@ -39,6 +39,10 @@ class _ChatListState extends State<ChatList> {
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       print(widget.auth.userId);
+      print('user name:');
+      print(widget.userData.userId);
+      print(widget.userData.name);
+
       if (returnedResult.data[i]['user_id'].toString() == widget.auth.userId) {
         Chats chat = Chats(
             returnedResult.data[i]['chat_id'],
@@ -80,7 +84,23 @@ class _ChatListState extends State<ChatList> {
     return Scaffold(
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         appBar: AppBar(
-          title: const Text(''),
+          title: ListTile(
+            title: Text(
+              '${widget.userData.lastname} ${widget.userData.name}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Color.fromARGB(255, 39, 77, 126),
+              ),
+            ),
+            leading: CircleAvatar(
+              backgroundColor: Color.fromARGB(1, 255, 255, 255),
+              backgroundImage: NetworkImage(widget.userData.avatar),
+            ),
+            selectedTileColor: Color.fromARGB(17, 255, 255, 255),
+            selected: isSelected,
+            onTap: () {},
+          ),
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           elevation: 0,
           shape: const Border(

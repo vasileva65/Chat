@@ -40,7 +40,7 @@ class _LoginPage extends State<LoginPage> {
                   userData,
                   chat: chat,
                 )),
-        (Route<dynamic> route) => true,
+        (Route<dynamic> route) => false,
       );
     } else {
       setState(() {
@@ -63,7 +63,10 @@ class _LoginPage extends State<LoginPage> {
       await getUserProfileData(response);
 
       print("user data userId");
-      print(userData.userId);
+      print(userData.userId +
+          userData.lastname +
+          userData.middlename +
+          userData.name);
 
       // GET /user/profile -> {user_id: username: email: first_name: last_name: avatat:}
       // GET /user/profile/<id>
@@ -88,11 +91,14 @@ class _LoginPage extends State<LoginPage> {
             }));
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '');
+    UserProfile user = UserProfile('', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
         returnedResult.data[0]['user_id'].toString(),
-        returnedResult.data[0]['avatar'].toString(),
+        returnedResult.data[0]['user']['first_name'],
+        returnedResult.data[0]['user']['last_name'],
+        returnedResult.data[0]['user']['middle_name'],
+        returnedResult.data[0]['avatar'],
       );
     }
     print("here is the result");
@@ -100,6 +106,8 @@ class _LoginPage extends State<LoginPage> {
 
     setState(() {
       userData = user;
+      print('userdata changed');
+      print(userData.lastname.toString() + userData.name + userData.middlename);
     });
   }
 

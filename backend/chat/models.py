@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from profanity.validators import validate_is_profane
 from django.conf import settings
 from .manager import CustomUserManager
+from django.db.models.signals import post_save
 
 class User(AbstractUser):
     
@@ -17,6 +18,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+
 class UserProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to ='user_photos/', default='default.jpg', height_field=None, width_field=None)
@@ -26,6 +28,13 @@ class UserProfile(models.Model):
     def __str__(self):
         return str(self.user)
 
+#create profile when user signs up
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        user_profile = UserProfile(user=instance)
+        user_profile.save()
+
+post_save.connect(create_profile, sender=User)
 
 class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True)

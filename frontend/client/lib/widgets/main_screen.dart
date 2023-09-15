@@ -20,6 +20,9 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     print('build called');
+    print(widget.userData);
+    print(widget.userData.name);
+    print(widget.userData.lastname);
     print(widget.chat.chatId);
     return Scaffold(
       body: Container(
@@ -52,7 +55,7 @@ class _MainScreenState extends State<MainScreen> {
                           widget.auth,
                           widget.userData,
                           widget.chat)
-                      : ZeroPage(widget.auth))),
+                      : ZeroPage(widget.auth, widget.userData))),
         ],
       )),
     );

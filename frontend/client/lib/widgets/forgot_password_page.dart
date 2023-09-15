@@ -29,10 +29,7 @@ class _ChangePassPage extends State<ChangePassPage> {
     if (auth.authenticated) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-            builder: (context) => ZeroPage(
-                  auth,
-                )),
+        MaterialPageRoute(builder: (context) => ZeroPage(auth, userData)),
         (Route<dynamic> route) => true,
       );
     } else {
@@ -84,10 +81,13 @@ class _ChangePassPage extends State<ChangePassPage> {
             );
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '');
+    UserProfile user = UserProfile('', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
         returnedResult.data[0]['user_id'].toString(),
+        returnedResult.data[0]['first_name'].toString(),
+        returnedResult.data[0]['last_name'].toString(),
+        returnedResult.data[0]['middle_name'].toString(),
         returnedResult.data[0]['avatar'].toString(),
       );
     }

@@ -6,8 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
-import re
-from django.core.exceptions import ValidationError
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext as _
 #from .models import User
 User = get_user_model()
@@ -15,7 +14,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'id', 'username', 'first_name', 'last_name']
+        fields = ['url', 'id', 'username', 'first_name', 'last_name', 'middle_name']
 
 
 class ChatMembersSerializer(serializers.ModelSerializer):
@@ -71,15 +70,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True},
-            'middle_name': {'required': True}
+            'middle_name': {'required': True},
         }
 
+    
+    
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Пароли не совпадают."})
         return attrs
 
+    
+
     def create(self, validated_data):
+
+        
+    
         username = generate_username(validated_data['first_name'],validated_data['middle_name'])
 
         while(User.objects.filter(username=username).exists()):
@@ -95,5 +101,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
 
         user.save()
-
+        
         return user
+    
+    
+  
+    
+    
+    
