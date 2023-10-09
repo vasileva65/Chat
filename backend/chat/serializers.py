@@ -20,9 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
 class ChatMembersSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(source='chat_id.avatar', read_only=True)
     chat_name = serializers.CharField(source='chat_id.chat_name', read_only=True)
+    people_count = serializers.SerializerMethodField(read_only=True)
+
+    def get_people_count(self, obj):
+        return obj.chat_id.chatmembers_set.count()
+    
     class Meta:
         model = ChatMembers
-        fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at']
+        fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at', 'people_count']
+
 
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,10 +40,11 @@ class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender_id.username', read_only=True)
     sender_first_name = serializers.CharField(source='sender_id.first_name', read_only=True)
     sender_last_name = serializers.CharField(source='sender_id.last_name', read_only=True)
+    avatar = serializers.CharField(source='sender_id.avatar', read_only=True)
 
     class Meta:
         model = Message
-        fields = ['url', 'message_id', 'sender_id', 'sender_username', 'sender_first_name', 'sender_last_name', 'chat_id', 'body', 'created_at']
+        fields = ['url', 'message_id', 'sender_id', 'sender_username', 'sender_first_name', 'sender_last_name', 'avatar', 'chat_id', 'body', 'created_at']
 
 
 
@@ -84,8 +91,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        
-    
         username = generate_username(validated_data['first_name'],validated_data['middle_name'])
 
         while(User.objects.filter(username=username).exists()):
@@ -101,8 +106,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
 
         user.save()
-        
-        return user
+
+        refresh = RefreshToken.for_user(user)
+        user_serializer = UserSerializer(user, context=self.context)  
+        return {
+            'user': user_serializer.data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+    
+
     
     
   

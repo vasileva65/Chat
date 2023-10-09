@@ -52,10 +52,16 @@ class ChatMembers(models.Model):
     chat_id = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     joined_at = models.DateTimeField(auto_now_add=True)
-    left_at = models.DateTimeField(auto_now=True, null=True)
+    left_at = models.DateTimeField(null=True, blank=True)
+
 
     def __str__(self):
         return self.chat_id.chat_name + ' ' + self.user_id.username
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.left_at = None
+        super().save(*args, **kwargs)
     
 
 class Message(models.Model):

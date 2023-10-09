@@ -28,6 +28,8 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> items = [];
   List<UserProfile> profiles = [];
   ScrollController scrollController = ScrollController();
+  bool _isExpanded = false;
+  final nameController = TextEditingController();
 
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
@@ -105,11 +107,13 @@ class _ChatPageState extends State<ChatPage> {
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       UserProfile profile = UserProfile(
           returnedResult.data[i]['user_id'].toString(),
-          returnedResult.data[i]['first_name'],
-          returnedResult.data[i]['last_name'],
-          returnedResult.data[i]['middle_name'],
+          returnedResult.data[i]['user']['first_name'],
+          returnedResult.data[i]['user']['last_name'],
+          returnedResult.data[i]['user']['middle_name'],
           returnedResult.data[i]['avatar']);
       result.add(profile);
+      print("PROFILE");
+      print(profile);
     }
 
     setState(() {
@@ -181,31 +185,161 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.userData.avatar);
   }
 
+  _getCloseButton(context) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: IconButton(
+        splashRadius: 1,
+        icon: const Icon(
+          Icons.clear,
+          color: Colors.black,
+        ),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  void chatSettings() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        titlePadding: const EdgeInsets.all(0.0),
+        title: Container(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
+            child: Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _getCloseButton(context),
+                const Text("Настройки чата"),
+              ],
+            ))),
+        content: Padding(
+          padding: const EdgeInsets.fromLTRB(40, 0, 40, 0),
+          child: SizedBox(
+            width: 250,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                  child: Material(
+                    elevation: 8,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    child: InkWell(
+                      splashColor: Colors.black26,
+                      onTap: () {},
+                      child: Ink.image(
+                        image: NetworkImage(widget.userData.avatar),
+                        height: 120,
+                        width: 120,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: TextFormField(
+                    //onEditingComplete: signIn,
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                width: 1,
+                                color: Color.fromARGB(255, 37, 87, 153))),
+                        border: OutlineInputBorder(),
+                        labelText: 'Название чата',
+                        hintText: 'Введите название'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              style: ButtonStyle(
+                  backgroundColor: const MaterialStatePropertyAll<Color>(
+                      Color.fromARGB(255, 37, 87, 153)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ))),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                child: const Text(
+                  "Сохранить",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w300),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     print('doing rebuild');
     print(widget.chat.chatId);
     print(widget.chat.name);
+    print("AVATAR CHAT" + widget.chat.avatar);
     return Scaffold(
       appBar: AppBar(
         shape: const Border(
             bottom:
                 BorderSide(width: 0.2, color: Color.fromARGB(255, 0, 0, 0))),
         //centerTitle: true,
-        title: Text(
-          widget.chat.name,
-          style: const TextStyle(
-              fontSize: 15,
-              color: Color.fromARGB(255, 0, 0,
-                  0)), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
+        title: ListTile(
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage(widget.chat.avatar),
+            backgroundColor: Colors.white,
+          ),
+          title: Text(
+            widget.chat.name,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color.fromARGB(255, 39, 77, 126),
+            ), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
+          ),
+          subtitle: const Text('3 участника'),
+          onTap: chatSettings,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.search),
+                splashRadius: 1,
+              ),
+              IconButton(
+                onPressed: chatSettings,
+                icon: const Icon(Icons.settings),
+                splashRadius: 1,
+              )
+            ],
+          ),
         ),
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
+        titleSpacing: 0,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         shadowColor: const Color.fromARGB(1, 255, 255, 255),
       ),
       body: Center(
         child: Column(children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height - 130,
+          Expanded(
             child: ListView.builder(
               reverse: true,
               padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 3),
@@ -250,36 +384,35 @@ class _ChatPageState extends State<ChatPage> {
           //поле отправки сообщений
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            child: Expanded(
-              child: TextField(
-                onEditingComplete: sendMessages,
-                controller: myController,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.only(
-                      right: 10, top: 10, bottom: 10, left: 15),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.send),
-                    splashRadius: 20,
-                    onPressed: sendMessages,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                      borderSide: const BorderSide(
-                          width: 1, color: Color.fromARGB(255, 37, 87, 153))),
-                  border: OutlineInputBorder(
+            child: TextField(
+              onEditingComplete: sendMessages,
+              controller: myController,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.only(
+                    right: 10, top: 10, bottom: 10, left: 15),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  splashRadius: 1,
+                  onPressed: sendMessages,
+                ),
+                focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5.0),
                     borderSide: const BorderSide(
-                      width: 0.2,
-                      style: BorderStyle.none,
-                    ),
+                        width: 1, color: Color.fromARGB(255, 37, 87, 153))),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5.0),
+                  borderSide: const BorderSide(
+                    width: 0.2,
+                    style: BorderStyle.none,
                   ),
-                  //filled: true,
-                  hintText:
-                      'Введите сообщение... Для чата ${widget.chat.chatId}',
                 ),
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
+                //filled: true,
+                hintText: 'Введите сообщение... Для чата ${widget.chat.chatId}',
               ),
+              keyboardType: TextInputType.multiline,
+              maxLines: 5,
+              minLines: 1,
+              textAlignVertical: TextAlignVertical.top,
             ),
           )
         ]),

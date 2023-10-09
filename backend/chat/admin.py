@@ -38,7 +38,7 @@ class CustomUserAdmin(UserAdmin):
 #admin.site.register(CustomUserChangeForm, CustomUserAdmin)
 
 
-admin.site.register(Chat)
+
 admin.site.register(UserProfile)
 admin.site.register(User, CustomUserAdmin)
 
@@ -50,4 +50,8 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(ChatMembers)
 class ChatMembersAdmin(admin.ModelAdmin):
-    list_display = ("chat_id", "user_id")
+    list_display = ("chat_id", "user_id", 'joined_at', 'left_at')
+
+@admin.register(Chat)
+class ChatMembersAdmin(admin.ModelAdmin):
+    list_display = ("chat_id", 'chat_name', 'user_id', 'created_at', 'updated_at')

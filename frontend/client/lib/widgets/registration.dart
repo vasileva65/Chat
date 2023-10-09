@@ -69,7 +69,8 @@ class _RegistrationPage extends State<RegistrationPage> {
 
       return Auth(userData.userId, response.data['access'], true);
     } on DioError catch (e) {
-      print(e.response);
+      print("RES");
+      print(e.response!.data);
       //print(e.response!.data['password'][0]);
       if (e.response!.data['password'] != null) {
         return Auth('', '', false, authError: e.response!.data['password'][0]);

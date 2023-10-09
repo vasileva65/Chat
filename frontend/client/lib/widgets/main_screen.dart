@@ -35,9 +35,9 @@ class _MainScreenState extends State<MainScreen> {
                     widget.auth,
                     widget.userData,
                     widget.chat,
-                    onChatUpdated: (chatId, name) {
+                    onChatUpdated: (chatId, name, avatar) {
                       setState(() {
-                        widget.chat = Chats(chatId, name, '');
+                        widget.chat = Chats(chatId, name, avatar);
                       });
                     },
                   ))),
