@@ -49,14 +49,14 @@ class _RegistrationPage extends State<RegistrationPage> {
       Response response = await dio.post(
         'http://localhost:8000/register/',
         data: {
-          'name': nameController.text,
-          'lastname': nameController.text,
-          'middlename': nameController.text,
+          'first_name': nameController.text,
+          'last_name': lastnameController.text,
+          'middle_name': middlenameController.text,
           'password': passController.text,
           'password2': passController2.text,
         },
       );
-
+      print(response);
       await getUserProfileData(response);
 
       print("user data userId");
@@ -80,20 +80,21 @@ class _RegistrationPage extends State<RegistrationPage> {
   }
 
   Future getUserProfileData(Response res) async {
-    Response returnedResult = await dio.get('http://localhost:8000/register',
-        options: Options(headers: {
-          'Authorization': "Bearer ${res.data['access']}",
-        }));
+    Response returnedResult =
+        await dio.get('http://localhost:8000/user/profile',
+            options: Options(headers: {
+              'Authorization': "Bearer ${res.data['access']}",
+            }));
 
     print(returnedResult.data);
     UserProfile user = UserProfile('', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
-        returnedResult.data[0]['user_id'].toString(),
-        returnedResult.data[0]['first_name'].toString(),
-        returnedResult.data[0]['last_name'].toString(),
-        returnedResult.data[0]['middle_name'].toString(),
-        returnedResult.data[0]['avatar'].toString(),
+        returnedResult.data[0]['id'].toString(),
+        returnedResult.data[0]['user']['first_name'],
+        returnedResult.data[0]['user']['last_name'],
+        returnedResult.data[0]['user']['middle_name'],
+        returnedResult.data[0]['avatar'],
       );
     }
     print("here is the result");
@@ -101,6 +102,8 @@ class _RegistrationPage extends State<RegistrationPage> {
 
     setState(() {
       userData = user;
+      print('userdata changed');
+      print(userData.lastname.toString() + userData.name + userData.middlename);
     });
   }
 
@@ -150,7 +153,7 @@ class _RegistrationPage extends State<RegistrationPage> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: TextFormField(
                       onEditingComplete: signIn,
-                      controller: usernameController,
+                      controller: nameController,
                       decoration: const InputDecoration(
                           focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
