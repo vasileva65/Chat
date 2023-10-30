@@ -31,9 +31,11 @@ class ChatMembersSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
+    members = ChatMembersSerializer(many=True)
+
     class Meta:
         model = Chat
-        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at']
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'members', 'group_chat']
 
 
 class MessageSerializer(serializers.ModelSerializer):

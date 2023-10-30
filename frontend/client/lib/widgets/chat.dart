@@ -217,9 +217,9 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ))),
         content: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 0, 40, 0),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: SizedBox(
-            width: 250,
+            width: 270,
             child: Column(
               children: [
                 Container(
@@ -292,6 +292,8 @@ class _ChatPageState extends State<ChatPage> {
     print('doing rebuild');
     print(widget.chat.chatId);
     print(widget.chat.name);
+    print("COUNT");
+    print(widget.chat.membersCount);
     print("AVATAR CHAT" + widget.chat.avatar);
     return Scaffold(
       appBar: AppBar(
@@ -312,7 +314,7 @@ class _ChatPageState extends State<ChatPage> {
               color: Color.fromARGB(255, 39, 77, 126),
             ), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
           ),
-          subtitle: const Text('3 участника'),
+          subtitle: Text(widget.chat.membersCount.toString() + ' участника'),
           onTap: chatSettings,
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,

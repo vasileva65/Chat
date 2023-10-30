@@ -2,5 +2,6 @@ class Chats {
   String name;
   int chatId;
   String avatar;
-  Chats(this.chatId, this.name, this.avatar);
+  int membersCount;
+  Chats(this.chatId, this.name, this.avatar, this.membersCount);
 }

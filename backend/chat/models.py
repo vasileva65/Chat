@@ -21,7 +21,7 @@ class User(AbstractUser):
 
 class UserProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to ='user_photos/', default='default.jpg', height_field=None, width_field=None)
+    avatar = models.ImageField(upload_to ='user_photos/', default='user_photos/default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
 
@@ -40,9 +40,10 @@ class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True)
     chat_name = models.CharField(max_length=20, unique=True)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to ='chat_photos/', default='default.jpg', height_field=None, width_field=None)
+    avatar = models.ImageField(upload_to ='chat_photos/', default='chat_photos/default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
+    group_chat = models.BooleanField(default=False)
     # TODO: add last read concept
 
     def __str__(self):

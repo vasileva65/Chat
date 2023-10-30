@@ -25,7 +25,7 @@ class _RegistrationPage extends State<RegistrationPage> {
   String errorText = '';
 
   late UserProfile userData;
-  Chats chat = Chats(0, '', '');
+  Chats chat = Chats(0, '', '', 0);
 
   Future signIn() async {
     Auth auth = await register();
