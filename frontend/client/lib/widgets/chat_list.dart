@@ -25,15 +25,20 @@ class _ChatListState extends State<ChatList> {
   List<Chats> dublicateItems = [];
   List<UserProfile> users = [];
   List<UserProfile> dublicateUsers = [];
+  List<UserProfile> selectedUsers = [];
   bool isSelected = false;
   final dio = Dio();
   late Chats chat;
   ScrollController scrollController = ScrollController();
-  TextEditingController searchController = TextEditingController();
+  TextEditingController searchChatController = TextEditingController();
+  TextEditingController searchUserController = TextEditingController();
 
   final nameController = TextEditingController();
   final lastnameController = TextEditingController();
   final middlenameController = TextEditingController();
+  final chatNameController = TextEditingController();
+
+  late List<bool> _isChecked;
 
   Future getChats() async {
     Response returnedResult = await dio.get('http://localhost:8000/chatmembers',
@@ -75,7 +80,7 @@ class _ChatListState extends State<ChatList> {
       Response response = await dio.post('http://localhost:8000/chats/',
           data: {
             'user_id': widget.auth.userId,
-            'chat_name': '',
+            'chat_name': chatNameController.text,
           },
           options: Options(headers: {
             'Authorization': "Bearer ${widget.auth.token}",
@@ -128,6 +133,7 @@ class _ChatListState extends State<ChatList> {
     setState(() {
       users = result;
       dublicateUsers = result;
+      _isChecked = List<bool>.filled(users.length, false);
     });
   }
 
@@ -138,10 +144,11 @@ class _ChatListState extends State<ChatList> {
     getChats();
     items = dublicateItems;
     print("init state called");
+
     getUsers();
   }
 
-  void filterSearchResults(String query) {
+  void filterSearchChatsResults(String query) {
     setState(() {
       items = dublicateItems
           .where(
@@ -297,102 +304,132 @@ class _ChatListState extends State<ChatList> {
                 const Text("Создать чат"),
               ],
             ))),
-        content: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: SizedBox(
-            width: 270,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    child: InkWell(
-                      splashColor: Colors.black26,
-                      onTap: () {},
-                      child: Ink.image(
-                        image: NetworkImage(''),
-                        height: 120,
-                        width: 120,
+        content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: SizedBox(
+              width: 270,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                    child: Material(
+                      elevation: 8,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                      child: InkWell(
+                        splashColor: Colors.black26,
+                        onTap: () {},
+                        child: Ink.image(
+                          image: const AssetImage('assets/images/default.jpg'),
+                          height: 120,
+                          width: 120,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: TextFormField(
-                    //onEditingComplete: signIn,
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                width: 1,
-                                color: Color.fromARGB(255, 37, 87, 153))),
-                        border: OutlineInputBorder(),
-                        labelText: 'Название чата',
-                        hintText: 'Введите название'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextFormField(
+                      //onEditingComplete: signIn,
+                      controller: chatNameController,
+                      decoration: const InputDecoration(
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  width: 1,
+                                  color: Color.fromARGB(255, 37, 87, 153))),
+                          border: OutlineInputBorder(),
+                          labelText: 'Название чата',
+                          hintText: 'Введите название'),
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                  child: const TextField(
-                    //cursorColor: Color.fromARGB(255, 255, 255, 255),
-                    style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                    onChanged: null,
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                    child: TextField(
+                      onChanged: (query) {
+                        setState(() {
+                          users = dublicateUsers.where((item) {
+                            return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                                    .contains(query) ||
+                                item.name.toLowerCase() +
+                                        item.lastname.toLowerCase() ==
+                                    query.toLowerCase() ||
+                                item.name
+                                    .toLowerCase()
+                                    .contains(query.toLowerCase()) ||
+                                item.lastname
+                                    .toLowerCase()
+                                    .contains(query.toLowerCase());
+                          }).toList();
+                        });
+                      },
+                      controller: searchUserController,
+                      //cursorColor: Color.fromARGB(255, 255, 255, 255),
+                      style:
+                          const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                      decoration: const InputDecoration(
+                          //suffixIconColor: Color.fromARGB(255, 255, 255, 255),
+                          suffixIconConstraints:
+                              BoxConstraints(minWidth: 32, minHeight: 40),
+                          hintText: "Найти пользователя",
+                          hintStyle: TextStyle(
+                              //color: Color.fromARGB(255, 255, 255, 255),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w100),
+                          suffixIcon: Icon(Icons.search),
+                          isDense: true,
+                          contentPadding: EdgeInsets.only(
+                              right: 10, top: 10, bottom: 10, left: 15),
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  width: 1,
+                                  color: Color.fromARGB(255, 37, 87, 153))),
+                          border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  //color: Color.fromARGB(255, 255, 255, 255)),
+                                  // borderRadius:
+                                  //     BorderRadius.all(Radius.circular(15.0)
+                                  ))),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemCount: users.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                              child: CheckboxListTile(
+                                value: _isChecked[index],
+                                title: Text(
+                                    '${users[index].name} ${users[index].lastname}'),
+                                secondary: CircleAvatar(
+                                    backgroundColor:
+                                        const Color.fromARGB(1, 255, 255, 255),
+                                    backgroundImage:
+                                        NetworkImage(users[index].avatar)),
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isChecked[index] = value!;
 
-                    decoration: InputDecoration(
-                        //suffixIconColor: Color.fromARGB(255, 255, 255, 255),
-                        suffixIconConstraints:
-                            BoxConstraints(minWidth: 32, minHeight: 40),
-                        hintText: "Найти пользователя",
-                        hintStyle: TextStyle(
-                            //color: Color.fromARGB(255, 255, 255, 255),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w100),
-                        suffixIcon: Icon(Icons.search),
-                        isDense: true,
-                        contentPadding: EdgeInsets.only(
-                            right: 10, top: 10, bottom: 10, left: 15),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                width: 1,
-                                color: Color.fromARGB(255, 37, 87, 153))),
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                //color: Color.fromARGB(255, 255, 255, 255)),
-                                // borderRadius:
-                                //     BorderRadius.all(Radius.circular(15.0)
-                                ))),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                      padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: users.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                          child: ListTile(
-                            title:
-                                Text(users[index].name + users[index].lastname),
-                            leading: CircleAvatar(
-                                backgroundColor:
-                                    Color.fromARGB(1, 255, 255, 255),
-                                backgroundImage:
-                                    NetworkImage(users[index].avatar)),
-                            onTap: () {},
-                          ),
-                        );
-                      }),
-                )
-              ],
+                                    if (_isChecked[index]) {
+                                      selectedUsers.add(users[index]);
+                                    } else {
+                                      selectedUsers.remove(users[index]);
+                                    }
+                                  });
+                                },
+                              ));
+                        }),
+                  )
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
         actions: <Widget>[
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -487,9 +524,9 @@ class _ChatListState extends State<ChatList> {
                   //cursorColor: Color.fromARGB(255, 255, 255, 255),
                   style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
                   onChanged: (value) {
-                    filterSearchResults(value);
+                    filterSearchChatsResults(value);
                   },
-                  controller: searchController,
+                  controller: searchChatController,
                   decoration: const InputDecoration(
                       //suffixIconColor: Color.fromARGB(255, 255, 255, 255),
                       suffixIconConstraints:

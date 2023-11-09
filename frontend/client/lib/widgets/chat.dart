@@ -314,7 +314,9 @@ class _ChatPageState extends State<ChatPage> {
               color: Color.fromARGB(255, 39, 77, 126),
             ), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
           ),
-          subtitle: Text(widget.chat.membersCount.toString() + ' участника'),
+          subtitle: Text(widget.chat.membersCount > 1
+              ? widget.chat.membersCount.toString() + ' участника'
+              : widget.chat.membersCount.toString() + ' участник'),
           onTap: chatSettings,
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,
