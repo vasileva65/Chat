@@ -17,6 +17,57 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  void usernameDialog(BuildContext context, UserProfile userData) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Добро пожаловать в корпоративный чат!',
+          textAlign: TextAlign.center,
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              const Text(
+                'Ваше имя пользователя:',
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                userData.username,
+                textAlign: TextAlign.center,
+              ),
+              const Text(
+                'Пожалуйста, запомните его для дальнейшего \nвхода в приложение',
+                textAlign: TextAlign.center,
+              )
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.all(16.0),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: () => Navigator.pop(context, 'Понятно'),
+            child: const Text('Понятно'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      usernameDialog(context, widget.userData);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     print('build called');

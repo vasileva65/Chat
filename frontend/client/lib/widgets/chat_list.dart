@@ -122,6 +122,7 @@ class _ChatListState extends State<ChatList> {
       if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId) {
         UserProfile user = UserProfile(
             returnedResult.data[i]['user_id'].toString(),
+            returnedResult.data[i]['user']['username'],
             returnedResult.data[i]['user']['first_name'],
             returnedResult.data[i]['user']['last_name'],
             returnedResult.data[i]['user']['middle_name'],

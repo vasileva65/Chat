@@ -107,6 +107,7 @@ class _ChatPageState extends State<ChatPage> {
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       UserProfile profile = UserProfile(
           returnedResult.data[i]['user_id'].toString(),
+          returnedResult.data[i]['user']['username'],
           returnedResult.data[i]['user']['first_name'],
           returnedResult.data[i]['user']['last_name'],
           returnedResult.data[i]['user']['middle_name'],

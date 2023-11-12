@@ -33,7 +33,8 @@ class _RegistrationPage extends State<RegistrationPage> {
     if (auth.authenticated) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => ZeroPage(auth, userData)),
+        MaterialPageRoute(
+            builder: (context) => MainScreen(auth, userData, chat: chat)),
         (Route<dynamic> route) => true,
       );
     } else {
@@ -87,10 +88,11 @@ class _RegistrationPage extends State<RegistrationPage> {
             }));
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '', '', '', '');
+    UserProfile user = UserProfile('', '', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
         returnedResult.data[0]['id'].toString(),
+        returnedResult.data[0]['user']['username'],
         returnedResult.data[0]['user']['first_name'],
         returnedResult.data[0]['user']['last_name'],
         returnedResult.data[0]['user']['middle_name'],
