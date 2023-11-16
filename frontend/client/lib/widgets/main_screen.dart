@@ -10,8 +10,11 @@ import 'zero_page.dart';
 class MainScreen extends StatefulWidget {
   Auth auth;
   UserProfile userData;
-  MainScreen(this.auth, this.userData, {super.key, required this.chat});
+  MainScreen(this.auth, this.userData,
+      {super.key, required this.chat, this.showUsernameDialog = false});
   Chats chat;
+  bool showUsernameDialog;
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -28,32 +31,57 @@ class _MainScreenState extends State<MainScreen> {
         content: SingleChildScrollView(
           child: Column(
             children: [
-              const Text(
-                'Ваше имя пользователя:',
-                textAlign: TextAlign.center,
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Text(
+                  'Ваше имя пользователя:',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
               ),
-              Text(
-                userData.username,
-                textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Text(
+                  userData.username,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
-              const Text(
-                'Пожалуйста, запомните его для дальнейшего \nвхода в приложение',
-                textAlign: TextAlign.center,
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: Text(
+                  'Пожалуйста, запомните его для дальнейшего \nвхода в приложение',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
               )
             ],
           ),
         ),
         actions: <Widget>[
-          TextButton(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.all(16.0),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.all(16.0),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context, 'Принято'),
+                  child: const Text('Принято'),
+                ),
               ),
-            ),
-            onPressed: () => Navigator.pop(context, 'Понятно'),
-            child: const Text('Понятно'),
+            ],
           ),
         ],
       ),
@@ -64,7 +92,13 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      usernameDialog(context, widget.userData);
+      if (widget.showUsernameDialog) {
+        usernameDialog(context, widget.userData);
+        // Устанавливаем флаг в false, чтобы не показывать диалог в будущем
+        setState(() {
+          widget.showUsernameDialog = false;
+        });
+      }
     });
   }
 

@@ -34,7 +34,8 @@ class _RegistrationPage extends State<RegistrationPage> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-            builder: (context) => MainScreen(auth, userData, chat: chat)),
+            builder: (context) => MainScreen(auth, userData,
+                chat: chat, showUsernameDialog: true)),
         (Route<dynamic> route) => true,
       );
     } else {

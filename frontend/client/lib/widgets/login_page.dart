@@ -35,11 +35,8 @@ class _LoginPage extends State<LoginPage> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-            builder: (context) => MainScreen(
-                  auth,
-                  userData,
-                  chat: chat,
-                )),
+            builder: (context) => MainScreen(auth, userData,
+                chat: chat, showUsernameDialog: false)),
         (Route<dynamic> route) => false,
       );
     } else {
