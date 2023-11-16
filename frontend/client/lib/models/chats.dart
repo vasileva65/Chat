@@ -3,5 +3,6 @@ class Chats {
   int chatId;
   String avatar;
   int membersCount;
-  Chats(this.chatId, this.name, this.avatar, this.membersCount);
+  int adminId;
+  Chats(this.chatId, this.name, this.avatar, this.membersCount, this.adminId);
 }

@@ -1,3 +1,4 @@
+import 'package:client/dialogs/chat_dialogs.dart';
 import 'package:client/models/chats.dart';
 import 'package:client/models/message.dart';
 import 'package:client/models/userProfile.dart';
@@ -56,27 +57,7 @@ class _ChatPageState extends State<ChatPage> {
         if (e.response!.data['body'].toString() ==
             "[Please remove any profanity/swear words.]") {
           print(e.response!.data);
-          return showDialog<String>(
-            context: context,
-            builder: (BuildContext context) => AlertDialog(
-              title: const Text('Обнаружена ненормативная лексика'),
-              content: const Text(
-                  'Пожалуйста, перепишите сообщение без \nиспользования ненормативной лексики. \n\nВ противном случае оно не будет отправлено.'),
-              actions: <Widget>[
-                TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.all(16.0),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context, 'Переписать'),
-                  child: const Text('Переписать'),
-                ),
-              ],
-            ),
-          );
+          return ChatDialogs.profanityCheckDialog(context);
         }
       }
       return;
@@ -186,107 +167,109 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.userData.avatar);
   }
 
-  _getCloseButton(context) {
-    return Align(
-      alignment: Alignment.topRight,
-      child: IconButton(
-        splashRadius: 1,
-        icon: const Icon(
-          Icons.clear,
-          color: Colors.black,
-        ),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
+  // _getCloseButton(context) {
+  //   return Align(
+  //     alignment: Alignment.topRight,
+  //     child: IconButton(
+  //       splashRadius: 1,
+  //       icon: const Icon(
+  //         Icons.clear,
+  //         color: Colors.black,
+  //       ),
+  //       onPressed: () {
+  //         Navigator.pop(context);
+  //       },
+  //     ),
+  //   );
+  // }
 
-  void chatSettings() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        titlePadding: const EdgeInsets.all(0.0),
-        title: Container(
-            padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
-            child: Center(
-                child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _getCloseButton(context),
-                const Text("Настройки чата"),
-              ],
-            ))),
-        content: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: SizedBox(
-            width: 270,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    child: InkWell(
-                      splashColor: Colors.black26,
-                      onTap: () {},
-                      child: Ink.image(
-                        image: NetworkImage(widget.userData.avatar),
-                        height: 120,
-                        width: 120,
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: TextFormField(
-                    //onEditingComplete: signIn,
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                width: 1,
-                                color: Color.fromARGB(255, 37, 87, 153))),
-                        border: OutlineInputBorder(),
-                        labelText: 'Название чата',
-                        hintText: 'Введите название'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              style: ButtonStyle(
-                  backgroundColor: const MaterialStatePropertyAll<Color>(
-                      Color.fromARGB(255, 37, 87, 153)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: const Text(
-                  "Сохранить",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w300),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // void chatSettings() {
+  //   if (widget.chat.adminId.toString() == widget.userData.userId) {
+  //     showDialog(
+  //       context: context,
+  //       builder: (ctx) => AlertDialog(
+  //         titlePadding: const EdgeInsets.all(0.0),
+  //         title: Container(
+  //             padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+  //             child: Center(
+  //                 child: Column(
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 _getCloseButton(context),
+  //                 const Text("Настройки чата"),
+  //               ],
+  //             ))),
+  //         content: Padding(
+  //           padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+  //           child: SizedBox(
+  //             width: 270,
+  //             child: Column(
+  //               children: [
+  //                 Container(
+  //                   padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+  //                   child: Material(
+  //                     elevation: 8,
+  //                     shape: const CircleBorder(),
+  //                     clipBehavior: Clip.antiAliasWithSaveLayer,
+  //                     child: InkWell(
+  //                       splashColor: Colors.black26,
+  //                       onTap: () {},
+  //                       child: Ink.image(
+  //                         image: NetworkImage(widget.userData.avatar),
+  //                         height: 120,
+  //                         width: 120,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 Container(
+  //                   padding: const EdgeInsets.symmetric(vertical: 8),
+  //                   child: TextFormField(
+  //                     //onEditingComplete: signIn,
+  //                     controller: nameController,
+  //                     decoration: const InputDecoration(
+  //                         focusedBorder: OutlineInputBorder(
+  //                             borderSide: BorderSide(
+  //                                 width: 1,
+  //                                 color: Color.fromARGB(255, 37, 87, 153))),
+  //                         border: OutlineInputBorder(),
+  //                         labelText: 'Название чата',
+  //                         hintText: 'Введите название'),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //         actions: <Widget>[
+  //           Padding(
+  //             padding: const EdgeInsets.all(8.0),
+  //             child: TextButton(
+  //               onPressed: () {
+  //                 Navigator.of(ctx).pop();
+  //               },
+  //               style: ButtonStyle(
+  //                   backgroundColor: const MaterialStatePropertyAll<Color>(
+  //                       Color.fromARGB(255, 37, 87, 153)),
+  //                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+  //                       RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(5.0),
+  //                   ))),
+  //               child: Container(
+  //                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+  //                 child: const Text(
+  //                   "Сохранить",
+  //                   style: TextStyle(
+  //                       color: Colors.white, fontWeight: FontWeight.w300),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   } else {}
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +301,15 @@ class _ChatPageState extends State<ChatPage> {
           subtitle: Text(widget.chat.membersCount > 1
               ? widget.chat.membersCount.toString() + ' участника'
               : widget.chat.membersCount.toString() + ' участник'),
-          onTap: chatSettings,
+          onTap: () {
+            ChatDialogs.chatSettings(
+              context,
+              widget.chat.adminId,
+              widget.userData.userId,
+              widget.userData.avatar,
+              nameController,
+            );
+          },
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,
           trailing: Row(
@@ -330,7 +321,15 @@ class _ChatPageState extends State<ChatPage> {
                 splashRadius: 1,
               ),
               IconButton(
-                onPressed: chatSettings,
+                onPressed: () {
+                  ChatDialogs.chatSettings(
+                    context,
+                    widget.chat.adminId,
+                    widget.userData.userId,
+                    widget.userData.avatar,
+                    nameController,
+                  );
+                },
                 icon: const Icon(Icons.settings),
                 splashRadius: 1,
               )

@@ -4,6 +4,7 @@ import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/chat_list.dart';
 import 'package:client/models/auth.dart';
 
+import '../dialogs/mainscreen_dialogs.dart';
 import '../models/chats.dart';
 import 'zero_page.dart';
 
@@ -20,80 +21,80 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  void usernameDialog(BuildContext context, UserProfile userData) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Добро пожаловать в корпоративный чат!',
-          textAlign: TextAlign.center,
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-                child: Text(
-                  'Ваше имя пользователя:',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
-                child: Text(
-                  userData.username,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                child: Text(
-                  'Пожалуйста, запомните его для дальнейшего \nвхода в приложение',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.all(16.0),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context, 'Принято'),
-                  child: const Text('Принято'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // void usernameDialog(BuildContext context, UserProfile userData) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text(
+  //         'Добро пожаловать в корпоративный чат!',
+  //         textAlign: TextAlign.center,
+  //       ),
+  //       content: SingleChildScrollView(
+  //         child: Column(
+  //           children: [
+  //             const Padding(
+  //               padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+  //               child: Text(
+  //                 'Ваше имя пользователя:',
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                 ),
+  //               ),
+  //             ),
+  //             Padding(
+  //               padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+  //               child: Text(
+  //                 userData.username,
+  //                 textAlign: TextAlign.center,
+  //                 style: const TextStyle(
+  //                     fontSize: 18, fontWeight: FontWeight.bold),
+  //               ),
+  //             ),
+  //             const Padding(
+  //               padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+  //               child: Text(
+  //                 'Пожалуйста, запомните его для дальнейшего \nвхода в приложение',
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                 ),
+  //               ),
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //       actions: <Widget>[
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             Padding(
+  //               padding: const EdgeInsets.only(bottom: 10),
+  //               child: TextButton(
+  //                 style: TextButton.styleFrom(
+  //                   padding: const EdgeInsets.all(16.0),
+  //                   textStyle: const TextStyle(
+  //                     fontSize: 16,
+  //                     fontWeight: FontWeight.w600,
+  //                   ),
+  //                 ),
+  //                 onPressed: () => Navigator.pop(context, 'Принято'),
+  //                 child: const Text('Принято'),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.showUsernameDialog) {
-        usernameDialog(context, widget.userData);
+        MainScreenDialogs.usernameDialog(context, widget.userData);
         // Устанавливаем флаг в false, чтобы не показывать диалог в будущем
         setState(() {
           widget.showUsernameDialog = false;
@@ -120,9 +121,11 @@ class _MainScreenState extends State<MainScreen> {
                     widget.auth,
                     widget.userData,
                     widget.chat,
-                    onChatUpdated: (chatId, name, avatar, membersCount) {
+                    onChatUpdated:
+                        (chatId, name, avatar, membersCount, adminId) {
                       setState(() {
-                        widget.chat = Chats(chatId, name, avatar, membersCount);
+                        widget.chat =
+                            Chats(chatId, name, avatar, membersCount, adminId);
                       });
                     },
                   ))),
