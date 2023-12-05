@@ -12,6 +12,7 @@ from rest_framework import (
     generics
 )
 from chat.serializers import (
+    CreateChatSerializer,
     UserSerializer, 
     ChatSerializer, 
     MessageSerializer,
@@ -28,6 +29,8 @@ from rest_framework.permissions import (
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework import serializers
 
 from django.contrib.auth import get_user_model
 #from .models import User
@@ -51,35 +54,35 @@ class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        user_ids = request.data.get('user_ids')
-        group_chat = request.data.get('group_chat', False)
+    # def create(self, request, *args, **kwargs):
+    #     user_ids = request.data.get('user_ids')
+    #     group_chat = request.data.get('group_chat', False)
 
-        if user_ids:
-            users = User.objects.filter(id__in=user_ids)
+    #     if user_ids:
+    #         users = User.objects.filter(id__in=user_ids)
 
-            if len(users) != len(user_ids):
-                return Response({'error': 'Invalid user ids'}, status=status.HTTP_400_BAD_REQUEST)
+    #         if len(users) != len(user_ids):
+    #             return Response({'error': 'Invalid user ids'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Проверяем, существует ли уже чат с этими пользователями
-            chat = Chat.objects.filter(users__in=users).distinct()
+    #         # Проверяем, существует ли уже чат с этими пользователями
+    #         chat = Chat.objects.filter(users__in=users).distinct()
 
-            if chat:
-                return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    #         if chat:
+    #             return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Создаем новый чат
-            if group_chat:
-                chat_name = request.data.get('chat_name')
-            else:
-                chat_name = ', '.join([user.first_name + ' ' + user.last_name for user in users])
-            chat = Chat(chat_name=chat_name, group_chat=group_chat)
-            chat.save()
-            chat.users.set(users)
+    #         # Создаем новый чат
+    #         if group_chat:
+    #             chat_name = request.data.get('chat_name')
+    #         else:
+    #             chat_name = ', '.join([user.first_name + ' ' + user.last_name for user in users])
+    #         chat = Chat(chat_name=chat_name, group_chat=group_chat)
+    #         chat.save()
+    #         chat.users.set(users)
 
-            serializer = ChatSerializer(chat)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         serializer = ChatSerializer(chat)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+    #     return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -110,6 +113,42 @@ class ChatViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+    @action(detail=False, methods=['post'], serializer_class=CreateChatSerializer)
+    def create_chat(self, request, *args, **kwargs):
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        
+        # print(serializer.errors)
+
+        # self.perform_create(serializer)
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except serializers.ValidationError as e:
+            print(e)
+            return Response({'error': 'Validation error'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        user_ids = serializer.validated_data['user_ids']
+        admin_id = serializer.validated_data['admin_id']
+        chat_name = serializer.validated_data['chat_name']
+        avatar = serializer.validated_data['avatar'] or 'chat_photos/default.jpg'
+
+        chat = Chat(chat_name=chat_name, group_chat=True, avatar=avatar, user_id=admin_id)
+        chat.save()
+
+        users = User.objects.filter(id__in=user_ids)
+        chat.users.set(users)
+
+        for user in users:
+            ChatMembers.objects.create(chat_id=chat, user_id=user)
+
+        serializer.instance = chat
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):

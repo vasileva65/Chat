@@ -31,11 +31,23 @@ class ChatMembersSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    members = ChatMembersSerializer(many=True)
 
     class Meta:
         model = Chat
-        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'members', 'group_chat']
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat']
+
+
+class CreateChatSerializer(serializers.ModelSerializer):
+    user_ids = serializers.ListField(write_only=True)
+    admin_id = serializers.IntegerField(write_only=True)
+    chat_name = serializers.CharField(write_only=True)
+    avatar = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    group_chat = serializers.BooleanField(write_only=True, default=True)
+
+    class Meta:
+        model = Chat
+        fields = ['user_ids', 'admin_id', 'chat_name', 'avatar', 'group_chat']
+    
 
 
 class MessageSerializer(serializers.ModelSerializer):

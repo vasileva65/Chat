@@ -21,6 +21,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('', include('chat.urls')),
+    
 ]
 urlpatterns += [
     path('api-auth/', include('rest_framework.urls')),
