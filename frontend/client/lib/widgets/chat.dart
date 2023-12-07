@@ -305,7 +305,7 @@ class _ChatPageState extends State<ChatPage> {
             ChatDialogs.chatSettings(
               context,
               widget.chat.adminId,
-              widget.userData.userId,
+              widget.userData.userId.toString(),
               widget.userData.avatar,
               nameController,
             );
@@ -325,7 +325,7 @@ class _ChatPageState extends State<ChatPage> {
                   ChatDialogs.chatSettings(
                     context,
                     widget.chat.adminId,
-                    widget.userData.userId,
+                    widget.userData.userId.toString(),
                     widget.userData.avatar,
                     nameController,
                   );

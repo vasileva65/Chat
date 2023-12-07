@@ -69,7 +69,7 @@ class _RegistrationPage extends State<RegistrationPage> {
       // PATCH /user/profile/<id>
       print(response.data['access']);
 
-      return Auth(userData.userId, response.data['access'], true);
+      return Auth(userData.userId.toString(), response.data['access'], true);
     } on DioError catch (e) {
       print("RES");
       print(e.response!.data);
@@ -92,7 +92,7 @@ class _RegistrationPage extends State<RegistrationPage> {
     UserProfile user = UserProfile('', '', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
-        returnedResult.data[0]['id'].toString(),
+        returnedResult.data[0]['id'],
         returnedResult.data[0]['user']['username'],
         returnedResult.data[0]['user']['first_name'],
         returnedResult.data[0]['user']['last_name'],

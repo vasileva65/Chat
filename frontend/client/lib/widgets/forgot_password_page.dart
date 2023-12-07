@@ -60,7 +60,7 @@ class _ChangePassPage extends State<ChangePassPage> {
       // GET /user/profile/<id>
       // PATCH /user/profile/<id>
       print(response.data['access']);
-      return Auth(userData.userId, response.data['access'], true);
+      return Auth(userData.userId.toString(), response.data['access'], true);
     } on DioError catch (e) {
       if (e.response!.data['detail'] == null) {
         return Auth('', '', false,
@@ -84,7 +84,7 @@ class _ChangePassPage extends State<ChangePassPage> {
     UserProfile user = UserProfile('', '', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
-        returnedResult.data[0]['user_id'].toString(),
+        returnedResult.data[0]['user_id'],
         returnedResult.data[0]['username'].toString(),
         returnedResult.data[0]['first_name'].toString(),
         returnedResult.data[0]['last_name'].toString(),

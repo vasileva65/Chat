@@ -72,10 +72,14 @@ class _ChatListState extends State<ChatList> {
       print(result);
     }
 
-    setState(() {
-      items = result;
-      dublicateItems = result;
-    });
+    if (mounted) {
+      setState(() {
+        items = result;
+        dublicateItems = result;
+      });
+      scrollController.animateTo(0.0,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    }
   }
 
   Future addNewChat() async {
@@ -85,8 +89,9 @@ class _ChatListState extends State<ChatList> {
           await dio.post('http://localhost:8000/chats/create_chat/',
               data: {
                 'chat_name': chatNameController.text,
-                'user_ids':
-                    selectedUsers.map((userId) => userId.toString()).toList(),
+                'user_ids': selectedUsers
+                    .map((user) => user.userId.toString())
+                    .toList(),
                 'avatar': null,
                 'admin_id': widget.userData.userId,
                 'group_chat': true,
@@ -112,7 +117,7 @@ class _ChatListState extends State<ChatList> {
     //print('max scroll extent: ${items.length}');
 
     scrollController.animateTo(0.0,
-        duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
   }
 
   Future getUsers() async {
@@ -190,7 +195,7 @@ class _ChatListState extends State<ChatList> {
       builder: (ctx) => AlertDialog(
         titlePadding: const EdgeInsets.all(0.0),
         title: Container(
-            padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
             child: Center(
                 child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -306,7 +311,7 @@ class _ChatListState extends State<ChatList> {
       builder: (ctx) => AlertDialog(
         titlePadding: const EdgeInsets.all(0.0),
         title: Container(
-            padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
             child: Center(
                 child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -447,7 +452,7 @@ class _ChatListState extends State<ChatList> {
             child: TextButton(
               onPressed: () {
                 addNewChat();
-                //Navigator.of(ctx).pop();
+                Navigator.of(ctx).pop();
               },
               style: ButtonStyle(
                   backgroundColor: const MaterialStatePropertyAll<Color>(

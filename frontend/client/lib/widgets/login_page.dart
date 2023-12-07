@@ -60,7 +60,7 @@ class _LoginPage extends State<LoginPage> {
       await getUserProfileData(response);
 
       print("user data userId");
-      print(userData.userId +
+      print(userData.userId.toString() +
           userData.lastname +
           userData.middlename +
           userData.name);
@@ -69,7 +69,7 @@ class _LoginPage extends State<LoginPage> {
       // GET /user/profile/<id>
       // PATCH /user/profile/<id>
       print(response.data['access']);
-      return Auth(userData.userId, response.data['access'], true);
+      return Auth(userData.userId.toString(), response.data['access'], true);
     } on DioError catch (e) {
       if (e.response!.data['detail'] == null) {
         return Auth('', '', false, authError: 'Поле не может быть пустым');

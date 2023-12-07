@@ -139,15 +139,22 @@ class ChatViewSet(viewsets.ModelViewSet):
         chat_name = serializer.validated_data['chat_name']
         avatar = serializer.validated_data['avatar'] or 'chat_photos/default.jpg'
 
-        chat = Chat(chat_name=chat_name, group_chat=True, avatar=avatar, user_id=admin_id)
+        admin_user = get_user_model().objects.get(id=admin_id)
+        print("ADMIN:") 
+        print(admin_user) 
+        chat = Chat(chat_name=chat_name, group_chat=True, avatar=avatar, user_id=admin_user)
         chat.save()
-
-        users = User.objects.filter(id__in=user_ids)
-        chat.users.set(users)
+        print("CHAT SAVED")
+        print(type(user_ids))
+        users = get_user_model().objects.filter(id__in=user_ids)
+        print("USERS: ")
+        print(users) 
+        #chat.users.set(users)
 
         for user in users:
             ChatMembers.objects.create(chat_id=chat, user_id=user)
-
+        ChatMembers.objects.create(chat_id=chat, user_id=admin_user)
+        print("ChatMembers created successfully")
         serializer.instance = chat
 
 

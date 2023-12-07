@@ -6,6 +6,7 @@ from django.conf import settings
 from .manager import CustomUserManager
 from django.db.models.signals import post_save
 
+
 class User(AbstractUser):
     
     middle_name = models.CharField(max_length=150, blank=True)
@@ -36,9 +37,6 @@ def create_profile(sender, instance, created, **kwargs):
 
 post_save.connect(create_profile, sender=User)
 
-def default_avatar():
-    return None
-
 class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True)
     chat_name = models.CharField(max_length=20, unique=True)
@@ -49,7 +47,7 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True,null=True)
     group_chat = models.BooleanField(default=False)
     # TODO: add last read concept
-
+    
     def __str__(self):
         return self.chat_name
 
