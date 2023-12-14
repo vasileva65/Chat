@@ -117,13 +117,6 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], serializer_class=CreateChatSerializer)
     def create_chat(self, request, *args, **kwargs):
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        
-        # print(serializer.errors)
-
-        # self.perform_create(serializer)
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -138,18 +131,18 @@ class ChatViewSet(viewsets.ModelViewSet):
         admin_id = serializer.validated_data['admin_id']
         chat_name = serializer.validated_data['chat_name']
         avatar = serializer.validated_data['avatar'] or 'chat_photos/default.jpg'
+        group_chat = serializer.validated_data['group_chat']
 
         admin_user = get_user_model().objects.get(id=admin_id)
         print("ADMIN:") 
         print(admin_user) 
-        chat = Chat(chat_name=chat_name, group_chat=True, avatar=avatar, user_id=admin_user)
+        chat = Chat(chat_name=chat_name, group_chat=group_chat, avatar=avatar, user_id=admin_user)
         chat.save()
         print("CHAT SAVED")
         print(type(user_ids))
         users = get_user_model().objects.filter(id__in=user_ids)
         print("USERS: ")
-        print(users) 
-        #chat.users.set(users)
+        print(users)
 
         for user in users:
             ChatMembers.objects.create(chat_id=chat, user_id=user)
