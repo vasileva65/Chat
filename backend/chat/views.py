@@ -31,6 +31,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import serializers
+from django.db.models import Count
 
 from django.contrib.auth import get_user_model
 #from .models import User
@@ -54,6 +55,10 @@ class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = Chat.objects.annotate(people_count=Count('chatmembers')).all()
+        return queryset
+    
     # def create(self, request, *args, **kwargs):
     #     user_ids = request.data.get('user_ids')
     #     group_chat = request.data.get('group_chat', False)

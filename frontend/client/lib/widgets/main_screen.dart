@@ -121,11 +121,11 @@ class _MainScreenState extends State<MainScreen> {
                     widget.auth,
                     widget.userData,
                     widget.chat,
-                    onChatUpdated:
-                        (chatId, name, avatar, membersCount, adminId) {
+                    onChatUpdated: (chatId, name, avatar, membersCount, adminId,
+                        isGroupChat) {
                       setState(() {
-                        widget.chat =
-                            Chats(chatId, name, avatar, membersCount, adminId);
+                        widget.chat = Chats(chatId, name, avatar, membersCount,
+                            adminId, isGroupChat);
                       });
                     },
                   ))),

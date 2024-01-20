@@ -7,8 +7,8 @@ import 'package:client/models/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/userProfile.dart';
 
-typedef ChatUpdated = void Function(
-    int chatId, String name, String avatar, int membersCount, int adminId);
+typedef ChatUpdated = void Function(int chatId, String name, String avatar,
+    int membersCount, int adminId, String isGroupChat);
 
 class ChatList extends StatefulWidget {
   Auth auth;
@@ -69,7 +69,8 @@ class _ChatListState extends State<ChatList> {
             returnedResult.data[i]['chat_name'],
             returnedResult.data[i]['avatar'],
             returnedResult.data[i]['people_count'],
-            returnedResult.data[i]['user_id']);
+            returnedResult.data[i]['user_id'],
+            returnedResult.data[i]['group_chat']);
         print("CHATS");
         print(chat);
         result.add(chat);
@@ -796,14 +797,19 @@ class _ChatListState extends State<ChatList> {
                         height: 200,
                         child: ListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            itemCount: items.length,
+                            itemCount: items
+                                .where((item) => item.isGroupChat == "True")
+                                .length,
                             itemBuilder: (context, index) {
+                              var groupItems = items
+                                  .where((item) => item.isGroupChat == "True")
+                                  .toList();
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 5),
                                 child: ListTile(
                                   title: Text(
-                                    items[index].name,
+                                    groupItems[index].name,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
@@ -814,18 +820,19 @@ class _ChatListState extends State<ChatList> {
                                     backgroundColor:
                                         Color.fromARGB(1, 255, 255, 255),
                                     backgroundImage:
-                                        NetworkImage(items[index].avatar),
+                                        NetworkImage(groupItems[index].avatar),
                                   ),
                                   selectedTileColor:
                                       Color.fromARGB(17, 255, 255, 255),
                                   selected: isSelected,
                                   onTap: () {
                                     widget.onChatUpdated(
-                                        items[index].chatId,
-                                        items[index].name,
-                                        items[index].avatar,
-                                        items[index].membersCount,
-                                        items[index].adminId);
+                                        groupItems[index].chatId,
+                                        groupItems[index].name,
+                                        groupItems[index].avatar,
+                                        groupItems[index].membersCount,
+                                        groupItems[index].adminId,
+                                        groupItems[index].isGroupChat);
                                   },
                                   hoverColor: Colors.transparent,
                                   splashColor: Colors.transparent,
@@ -836,7 +843,12 @@ class _ChatListState extends State<ChatList> {
                       ),
                     ],
                   ),
-                  ListTile(
+                  ExpansionTile(
+                    onExpansionChanged: (expanded) {
+                      setState(() {
+                        isExpanded = expanded;
+                      });
+                    },
                     title: const Text(
                       'Личные чаты',
                       style: TextStyle(fontSize: 18),
@@ -850,6 +862,56 @@ class _ChatListState extends State<ChatList> {
                       },
                       splashRadius: 1,
                     ),
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            itemCount: items
+                                .where((item) => item.isGroupChat == "False")
+                                .length,
+                            itemBuilder: (context, index) {
+                              var privateItems = items
+                                  .where((item) => item.isGroupChat == "False")
+                                  .toList();
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 5),
+                                child: ListTile(
+                                  title: Text(
+                                    privateItems[index].name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color.fromARGB(255, 39, 77, 126),
+                                    ),
+                                  ),
+                                  leading: CircleAvatar(
+                                    backgroundColor:
+                                        Color.fromARGB(1, 255, 255, 255),
+                                    backgroundImage: NetworkImage(
+                                        privateItems[index].avatar),
+                                  ),
+                                  selectedTileColor:
+                                      Color.fromARGB(17, 255, 255, 255),
+                                  selected: isSelected,
+                                  onTap: () {
+                                    widget.onChatUpdated(
+                                        privateItems[index].chatId,
+                                        privateItems[index].name,
+                                        privateItems[index].avatar,
+                                        privateItems[index].membersCount,
+                                        privateItems[index].adminId,
+                                        privateItems[index].isGroupChat);
+                                  },
+                                  hoverColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                ),
+                              );
+                            },
+                            controller: scrollController),
+                      ),
+                    ],
                   ),
                 ],
               ),

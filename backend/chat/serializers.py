@@ -21,21 +21,27 @@ class ChatMembersSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(source='chat_id.avatar', read_only=True)
     chat_name = serializers.CharField(source='chat_id.chat_name', read_only=True)
     people_count = serializers.SerializerMethodField(read_only=True)
-
+    group_chat = serializers.CharField(source='chat_id.group_chat', read_only=True)
+    
     def get_people_count(self, obj):
         return obj.chat_id.chatmembers_set.count()
     
     class Meta:
         model = ChatMembers
-        fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at', 'people_count']
+        fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at', 'people_count', 'group_chat']
 
 
 class ChatSerializer(serializers.ModelSerializer):
+    people_count = serializers.SerializerMethodField(read_only=True)
 
+    def get_people_count(self, obj):
+        return obj.chatmembers_set.count()
+    
     class Meta:
         model = Chat
-        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat']
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat', 'people_count']
 
+    
 
 class CreateChatSerializer(serializers.ModelSerializer):
     user_ids = serializers.ListField(write_only=True)
@@ -128,11 +134,3 @@ class RegisterSerializer(serializers.ModelSerializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
-    
-
-    
-    
-  
-    
-    
-    

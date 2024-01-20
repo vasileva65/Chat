@@ -21,7 +21,7 @@ class _ChangePassPage extends State<ChangePassPage> {
   String errorText = '';
 
   late UserProfile userData;
-  Chats chat = Chats(0, '', '', 0, 0);
+  Chats chat = Chats(0, '', '', 0, 0, '');
 
   Future signIn() async {
     Auth auth = await register();

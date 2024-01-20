@@ -52,6 +52,18 @@ class MessageAdmin(admin.ModelAdmin):
 class ChatMembersAdmin(admin.ModelAdmin):
     list_display = ("chat_id", "user_id", 'joined_at', 'left_at')
 
+    def group_chat(self, obj):
+        return obj.group_chat
+    
+    group_chat.admin_order_field = 'group_chat'
+    group_chat.boolean = True
+    group_chat.short_description = 'Group Chat'
+
 @admin.register(Chat)
-class ChatMembersAdmin(admin.ModelAdmin):
-    list_display = ("chat_id", 'chat_name', 'user_id', 'created_at', 'updated_at')
+class ChatAdmin(admin.ModelAdmin):
+    list_display = ("chat_id", 'chat_name', 'user_id', 'group_chat', 'people_count', 'created_at', 'updated_at')
+    
+    def people_count(self, obj):
+        return obj.chatmembers_set.count()
+    
+    
