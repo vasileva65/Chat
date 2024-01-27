@@ -134,13 +134,22 @@ class ChatViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user_ids = serializer.validated_data['user_ids']
         admin_id = serializer.validated_data['admin_id']
-        chat_name = serializer.validated_data['chat_name']
+        #chat_name = serializer.validated_data['chat_name']
         avatar = serializer.validated_data['avatar'] or 'chat_photos/default.jpg'
         group_chat = serializer.validated_data['group_chat']
 
         admin_user = get_user_model().objects.get(id=admin_id)
         print("ADMIN:") 
         print(admin_user) 
+
+        if group_chat:
+        # If it's a group chat, use the provided chat_name
+            chat_name = serializer.validated_data['chat_name']
+        else:
+        # If it's a personal chat, dynamically generate the chat name
+            other_user = get_user_model().objects.get(id=user_ids[0])  # Assuming it's a one-on-one chat
+            chat_name = f"{admin_user.first_name} {admin_user.last_name} and {other_user.first_name} {other_user.last_name}"
+        
         chat = Chat(chat_name=chat_name, group_chat=group_chat, avatar=avatar, user_id=admin_user)
         chat.save()
         print("CHAT SAVED")

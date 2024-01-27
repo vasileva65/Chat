@@ -32,7 +32,8 @@ class _ChatListState extends State<ChatList> {
   UserProfile? selectedUser;
   final dio = Dio();
   late Chats chat;
-  ScrollController scrollController = ScrollController();
+  ScrollController scrollGroupChatController = ScrollController();
+  ScrollController scrollPrivateChatController = ScrollController();
   TextEditingController searchChatController = TextEditingController();
   TextEditingController searchUserController = TextEditingController();
 
@@ -40,9 +41,9 @@ class _ChatListState extends State<ChatList> {
   final lastnameController = TextEditingController();
   final middlenameController = TextEditingController();
   final chatNameController = TextEditingController();
-  int _selectedUserIndex = -1;
-  late List<bool> _isChecked;
-
+  //late List<bool> _isChecked;
+  //late Map<String, bool> _isChecked; // Используем Map с типом ключа String
+  late Set<String> selectedUserIds;
   Chats? selectedChat;
 
   bool isExpanded = false;
@@ -83,8 +84,8 @@ class _ChatListState extends State<ChatList> {
         items = result;
         dublicateItems = result;
       });
-      if (scrollController.hasClients) {
-        scrollController.animateTo(0.0,
+      if (scrollGroupChatController.hasClients) {
+        scrollGroupChatController.animateTo(0.0,
             duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     }
@@ -122,8 +123,8 @@ class _ChatListState extends State<ChatList> {
     print('AddNewChat called');
     await getChats();
 
-    if (scrollController.hasClients) {
-      scrollController.animateTo(0.0,
+    if (scrollGroupChatController.hasClients) {
+      scrollGroupChatController.animateTo(0.0,
           duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     }
   }
@@ -159,8 +160,8 @@ class _ChatListState extends State<ChatList> {
     print('AddNewPersonalChat called');
     await getChats();
 
-    if (scrollController.hasClients) {
-      scrollController.animateTo(0.0,
+    if (scrollGroupChatController.hasClients) {
+      scrollGroupChatController.animateTo(0.0,
           duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     }
   }
@@ -194,19 +195,27 @@ class _ChatListState extends State<ChatList> {
     setState(() {
       users = result;
       dublicateUsers = result;
-      _isChecked = List<bool>.filled(users.length, false);
+      selectedUserIds = Set<String>();
+      // _isChecked = Map<String, bool>.fromIterable(
+      //   users,
+      //   key: (user) => user.userId,
+      //   value: (_) => false,
+      // );
+      //_isChecked = List<bool>.filled(users.length, false);
     });
   }
 
   @override
   void initState() {
     items = dublicateItems;
+    users = dublicateUsers;
     super.initState();
     getChats();
     items = dublicateItems;
     print("init state called");
 
     getUsers();
+    users = dublicateUsers;
   }
 
   void selectChat(Chats chat) {
@@ -236,7 +245,31 @@ class _ChatListState extends State<ChatList> {
     });
   }
 
-  _getCloseButton(context) {
+  void filterUsers(String query) {
+    print("Query: $query");
+    print("Original users: $dublicateUsers");
+    setState(() {
+      if (query.isEmpty) {
+        // If the query is empty, show all users
+        users = dublicateUsers.toList();
+      } else {
+        users = dublicateUsers.where((item) {
+          bool matches =
+              '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                      .contains(query.toLowerCase()) ||
+                  item.name.toLowerCase() + item.lastname.toLowerCase() ==
+                      query.toLowerCase() ||
+                  item.name.toLowerCase().contains(query.toLowerCase()) ||
+                  item.lastname.toLowerCase().contains(query.toLowerCase());
+          print("Item: $item, Matches: $matches");
+          return matches;
+        }).toList();
+      }
+      print("Updated users: $users");
+    });
+  }
+
+  _getCloseButton(BuildContext context, VoidCallback onClose) {
     return Align(
       alignment: Alignment.topRight,
       child: IconButton(
@@ -246,6 +279,7 @@ class _ChatListState extends State<ChatList> {
           color: Colors.black,
         ),
         onPressed: () {
+          onClose();
           Navigator.pop(context);
         },
       ),
@@ -368,160 +402,230 @@ class _ChatListState extends State<ChatList> {
   void addGroupChat() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        titlePadding: const EdgeInsets.all(0.0),
-        title: Container(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-            child: Center(
-                child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _getCloseButton(context),
-                const Text("Создать чат"),
-              ],
-            ))),
-        content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-            child: SizedBox(
-              width: 270,
-              child: Column(
+      builder: (ctx) => WillPopScope(
+        onWillPop: () async {
+          // Сбрасываем поля при закрытии диалога
+          chatNameController.clear();
+          searchUserController.clear();
+          //_isChecked = List<bool>.filled(users.length, false);
+          // _isChecked = Map<String, bool>.from(
+          //     _isChecked); // Создаем копию текущего состояния
+
+          // for (String userId in _isChecked.keys) {
+          //   _isChecked[userId] = false; // Устанавливаем все значения в false
+          // }
+          selectedUserIds.clear();
+          filterUsers('');
+
+          return true; // Разрешаем закрытие диалога
+        },
+        child: AlertDialog(
+          titlePadding: const EdgeInsets.all(0.0),
+          title: Container(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              child: Center(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                    child: Material(
-                      elevation: 8,
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: InkWell(
-                        splashColor: Colors.black26,
-                        onTap: () {},
-                        child: Ink.image(
-                          image: const AssetImage('assets/images/default.jpg'),
-                          height: 120,
-                          width: 120,
+                  _getCloseButton(context, () {
+                    setState(() {
+                      chatNameController.clear();
+                      searchUserController.clear();
+                      //_isChecked = List<bool>.filled(users.length, false);
+                      // _isChecked = Map<String, bool>.from(
+                      //     _isChecked); // Создаем копию текущего состояния
+
+                      // for (String userId in _isChecked.keys) {
+                      //   _isChecked[userId] =
+                      //       false; // Устанавливаем все значения в false
+                      // }
+                      selectedUserIds.clear();
+                      filterUsers('');
+                    });
+                  }),
+                  const Text("Создать чат"),
+                ],
+              ))),
+          content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: SizedBox(
+                width: 270,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                      child: Material(
+                        elevation: 8,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: InkWell(
+                          splashColor: Colors.black26,
+                          onTap: () {},
+                          child: Ink.image(
+                            image:
+                                const AssetImage('assets/images/default.jpg'),
+                            height: 120,
+                            width: 120,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      controller: chatNameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Название чата',
-                          hintText: 'Введите название'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: TextFormField(
+                        controller: chatNameController,
+                        decoration: const InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border: OutlineInputBorder(),
+                            labelText: 'Название чата',
+                            hintText: 'Введите название'),
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                    child: TextField(
-                      onChanged: (query) {
-                        setState(() {
-                          users = dublicateUsers.where((item) {
-                            return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
-                                    .contains(query) ||
-                                item.name.toLowerCase() +
-                                        item.lastname.toLowerCase() ==
-                                    query.toLowerCase() ||
-                                item.name
-                                    .toLowerCase()
-                                    .contains(query.toLowerCase()) ||
-                                item.lastname
-                                    .toLowerCase()
-                                    .contains(query.toLowerCase());
-                          }).toList();
-                        });
-                      },
-                      controller: searchUserController,
-                      style:
-                          const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                      decoration: const InputDecoration(
-                          suffixIconConstraints:
-                              BoxConstraints(minWidth: 32, minHeight: 40),
-                          hintText: "Найти пользователя",
-                          hintStyle: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w100),
-                          suffixIcon: Icon(Icons.search),
-                          isDense: true,
-                          contentPadding: EdgeInsets.only(
-                              right: 10, top: 10, bottom: 10, left: 15),
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(borderSide: BorderSide())),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-                        scrollDirection: Axis.vertical,
-                        shrinkWrap: true,
-                        itemCount: users.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                              child: CheckboxListTile(
-                                value: _isChecked[index],
-                                title: Text(
-                                    '${users[index].name} ${users[index].lastname}'),
-                                secondary: CircleAvatar(
-                                    backgroundColor:
-                                        const Color.fromARGB(1, 255, 255, 255),
-                                    backgroundImage:
-                                        NetworkImage(users[index].avatar)),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _isChecked[index] = value!;
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                      child: TextField(
+                        onChanged:
+                            // (query) {
+                            //   filterUsers(query);
+                            // },
+                            (query) {
+                          setState(() {
+                            users = dublicateUsers.where((item) {
+                              return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                                      .contains(query) ||
+                                  item.name.toLowerCase() +
+                                          item.lastname.toLowerCase() ==
+                                      query.toLowerCase() ||
+                                  item.name
+                                      .toLowerCase()
+                                      .contains(query.toLowerCase()) ||
+                                  item.lastname
+                                      .toLowerCase()
+                                      .contains(query.toLowerCase());
+                            }).toList();
 
-                                    if (_isChecked[index]) {
-                                      selectedUsers.add(users[index]);
-                                    } else {
-                                      selectedUsers.remove(users[index]);
-                                    }
-                                  });
-                                },
-                              ));
-                        }),
-                  )
-                ],
+                            // Обновляем состояние галочек
+                            // _isChecked = Map<String, bool>.fromIterable(
+                            //   users,
+                            //   key: (user) => user.userId,
+                            //   value: (user) => _isChecked[user.userId] ?? false,
+                            // );
+                          });
+                        },
+                        controller: searchUserController,
+                        style: const TextStyle(
+                            color: Color.fromARGB(255, 0, 0, 0)),
+                        decoration: const InputDecoration(
+                            suffixIconConstraints:
+                                BoxConstraints(minWidth: 32, minHeight: 40),
+                            hintText: "Найти пользователя",
+                            hintStyle: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w100),
+                            suffixIcon: Icon(Icons.search),
+                            isDense: true,
+                            contentPadding: EdgeInsets.only(
+                                right: 10, top: 10, bottom: 10, left: 15),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border:
+                                OutlineInputBorder(borderSide: BorderSide())),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          itemCount: users.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                                child: CheckboxListTile(
+                                  value: selectedUserIds
+                                      .contains(users[index].userId),
+                                  //_isChecked[users[index].userId] ??
+                                  //false,
+                                  ////_isChecked[index],
+                                  title: Text(
+                                      '${users[index].name} ${users[index].lastname}'),
+                                  secondary: CircleAvatar(
+                                      backgroundColor: const Color.fromARGB(
+                                          1, 255, 255, 255),
+                                      backgroundImage:
+                                          NetworkImage(users[index].avatar)),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value != null) {
+                                        //int originalIndex = dublicateUsers.indexOf(users[index]);
+                                        //_isChecked[originalIndex] = value;
+                                        //_isChecked[users[index].userId] = value;
+                                        if (value) {
+                                          selectedUserIds
+                                              .add(users[index].userId);
+                                          //selectedUsers.add(users[index]);
+                                        } else {
+                                          selectedUserIds
+                                              .remove(users[index].userId);
+                                          //selectedUsers.remove(users[index]);
+                                        }
+                                      }
+                                    });
+                                  },
+                                ));
+                          }),
+                    )
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton(
-              onPressed: () {
-                addNewGroupChat();
-                Navigator.of(ctx).pop();
-              },
-              style: ButtonStyle(
-                  backgroundColor: const MaterialStatePropertyAll<Color>(
-                      Color.fromARGB(255, 37, 87, 153)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: const Text(
-                  "Сохранить",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w300),
+            );
+          }),
+          actions: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextButton(
+                onPressed: () {
+                  addNewGroupChat();
+                  Navigator.of(ctx).pop();
+                  // Clear the text field controllers
+                  chatNameController.clear();
+                  searchUserController.clear();
+                  selectedUserIds.clear();
+                  // _isChecked = Map<String, bool>.from(
+                  //     _isChecked); // Создаем копию текущего состояния
+
+                  // for (String userId in _isChecked.keys) {
+                  //   _isChecked[userId] =
+                  //       false; // Устанавливаем все значения в false
+                  // }
+                  //_isChecked = List<bool>.filled(users.length, false);
+                  // Clear the selected users list
+                },
+                style: ButtonStyle(
+                    backgroundColor: const MaterialStatePropertyAll<Color>(
+                        Color.fromARGB(255, 37, 87, 153)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ))),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: const Text(
+                    "Сохранить",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w300),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -537,7 +641,14 @@ class _ChatListState extends State<ChatList> {
                 child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _getCloseButton(context),
+                _getCloseButton(context, () {
+                  // Clear the selected users list when the close button is pressed
+                  setState(() {
+                    searchUserController.clear();
+                    selectedUser = null;
+                    filterUsers('');
+                  });
+                }),
                 const Text("Создать чат"),
               ],
             ))),
@@ -567,23 +678,13 @@ class _ChatListState extends State<ChatList> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      controller: chatNameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Название чата',
-                          hintText: 'Введите название'),
-                    ),
-                  ),
-                  Container(
                     padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                     child: TextField(
-                      onChanged: (query) {
+                      onChanged:
+                          // (query) {
+                          //   filterUsers(query);
+                          // },
+                          (query) {
                         setState(() {
                           users = dublicateUsers.where((item) {
                             return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
@@ -660,8 +761,10 @@ class _ChatListState extends State<ChatList> {
             padding: const EdgeInsets.all(8.0),
             child: TextButton(
               onPressed: () {
-                addNewGroupChat();
+                addNewPersonalChat();
                 Navigator.of(ctx).pop();
+                searchUserController.clear();
+                selectedUser = null;
               },
               style: ButtonStyle(
                   backgroundColor: const MaterialStatePropertyAll<Color>(
@@ -839,7 +942,7 @@ class _ChatListState extends State<ChatList> {
                                 ),
                               );
                             },
-                            controller: scrollController),
+                            controller: scrollGroupChatController),
                       ),
                     ],
                   ),
@@ -909,7 +1012,7 @@ class _ChatListState extends State<ChatList> {
                                 ),
                               );
                             },
-                            controller: scrollController),
+                            controller: scrollPrivateChatController),
                       ),
                     ],
                   ),
