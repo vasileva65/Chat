@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:client/models/chats.dart';
 import 'package:client/models/auth.dart';
 import 'package:image_picker/image_picker.dart';
+import '../functions/extract_name.dart';
 import '../models/userProfile.dart';
 
 typedef ChatUpdated = void Function(int chatId, String name, String avatar,
@@ -135,9 +136,8 @@ class _ChatListState extends State<ChatList> {
       Response response =
           await dio.post('http://localhost:8000/chats/create_chat/',
               data: {
-                'chat_name':
-                    '${widget.userData.lastname} +  ${selectedUser?.lastname}',
-                'user_ids': selectedUser?.userId,
+                'chat_name': null,
+                'user_ids': [selectedUser?.userId],
                 'avatar': null,
                 'admin_id': widget.userData.userId,
                 'group_chat': false,
@@ -407,13 +407,6 @@ class _ChatListState extends State<ChatList> {
           // Сбрасываем поля при закрытии диалога
           chatNameController.clear();
           searchUserController.clear();
-          //_isChecked = List<bool>.filled(users.length, false);
-          // _isChecked = Map<String, bool>.from(
-          //     _isChecked); // Создаем копию текущего состояния
-
-          // for (String userId in _isChecked.keys) {
-          //   _isChecked[userId] = false; // Устанавливаем все значения в false
-          // }
           selectedUserIds.clear();
           filterUsers('');
 
@@ -431,14 +424,6 @@ class _ChatListState extends State<ChatList> {
                     setState(() {
                       chatNameController.clear();
                       searchUserController.clear();
-                      //_isChecked = List<bool>.filled(users.length, false);
-                      // _isChecked = Map<String, bool>.from(
-                      //     _isChecked); // Создаем копию текущего состояния
-
-                      // for (String userId in _isChecked.keys) {
-                      //   _isChecked[userId] =
-                      //       false; // Устанавливаем все значения в false
-                      // }
                       selectedUserIds.clear();
                       filterUsers('');
                     });
@@ -489,11 +474,7 @@ class _ChatListState extends State<ChatList> {
                     Container(
                       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                       child: TextField(
-                        onChanged:
-                            // (query) {
-                            //   filterUsers(query);
-                            // },
-                            (query) {
+                        onChanged: (query) {
                           setState(() {
                             users = dublicateUsers.where((item) {
                               return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
@@ -508,13 +489,6 @@ class _ChatListState extends State<ChatList> {
                                       .toLowerCase()
                                       .contains(query.toLowerCase());
                             }).toList();
-
-                            // Обновляем состояние галочек
-                            // _isChecked = Map<String, bool>.fromIterable(
-                            //   users,
-                            //   key: (user) => user.userId,
-                            //   value: (user) => _isChecked[user.userId] ?? false,
-                            // );
                           });
                         },
                         controller: searchUserController,
@@ -982,7 +956,10 @@ class _ChatListState extends State<ChatList> {
                                     const EdgeInsets.symmetric(vertical: 5),
                                 child: ListTile(
                                   title: Text(
-                                    privateItems[index].name,
+                                    extractDisplayName(
+                                        privateItems[index].name,
+                                        widget.userData.name,
+                                        widget.userData.lastname),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,

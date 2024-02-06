@@ -148,7 +148,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         else:
         # If it's a personal chat, dynamically generate the chat name
             other_user = get_user_model().objects.get(id=user_ids[0])  # Assuming it's a one-on-one chat
-            chat_name = f"{admin_user.first_name} {admin_user.last_name} and {other_user.first_name} {other_user.last_name}"
+            chat_name = f"{admin_user.first_name} {admin_user.last_name} - {other_user.first_name} {other_user.last_name}"
         
         chat = Chat(chat_name=chat_name, group_chat=group_chat, avatar=avatar, user_id=admin_user)
         chat.save()

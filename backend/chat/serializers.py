@@ -46,7 +46,7 @@ class ChatSerializer(serializers.ModelSerializer):
 class CreateChatSerializer(serializers.ModelSerializer):
     user_ids = serializers.ListField(write_only=True)
     admin_id = serializers.IntegerField(write_only=True)
-    chat_name = serializers.CharField(write_only=True)
+    chat_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     avatar = serializers.ImageField(write_only=True, required=False, allow_null=True)
     group_chat = serializers.BooleanField(write_only=True, default=True)
 
@@ -72,7 +72,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     class Meta:
         model = UserProfile
-        fields = ['url', 'user_id', 'user', 'avatar', 'created_at', 'updated_at']
+        fields = ['url', 'id', 'user_id', 'user', 'avatar', 'created_at', 'updated_at']
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

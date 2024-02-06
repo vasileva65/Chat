@@ -5,10 +5,15 @@ from profanity.validators import validate_is_profane
 from django.conf import settings
 from .manager import CustomUserManager
 from django.db.models.signals import post_save
-
+from django.core.validators import MinLengthValidator
 
 class User(AbstractUser):
-    
+    first_name = models.CharField(max_length=150, validators=[
+        MinLengthValidator(limit_value=1, message=("Имя не может быть пустым."))
+    ])
+    last_name = models.CharField(max_length=100, validators=[
+    MinLengthValidator(limit_value=1, message=("Фамилия не может быть пустой."))
+])
     middle_name = models.CharField(max_length=150, blank=True)
 
     objects = CustomUserManager()
@@ -19,7 +24,12 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-
+    def save(self, *args, **kwargs):
+        self.firstname = self.first_name.capitalize()
+        self.lastname = self.last_name.capitalize()
+        self.middle_name = self.middle_name.capitalize()
+        super().save(*args, **kwargs)
+    
 class UserProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to ='user_photos/', default='user_photos/default.jpg', height_field=None, width_field=None)
@@ -39,12 +49,12 @@ post_save.connect(create_profile, sender=User)
 
 class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True)
-    chat_name = models.CharField(max_length=20, unique=True)
+    chat_name = models.CharField(max_length=50, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to ='chat_photos/', default='chat_photos/default.jpg', null=True,
         blank=True, height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True,null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     group_chat = models.BooleanField(default=False)
     # TODO: add last read concept
     

@@ -38,8 +38,17 @@ class CustomUserAdmin(UserAdmin):
 #admin.site.register(CustomUserChangeForm, CustomUserAdmin)
 
 
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'get_username')
+    search_fields = ('user_id', 'user__username')
 
-admin.site.register(UserProfile)
+    def get_username(self, obj):
+        return obj.user.username
+    
+    get_username.short_description = 'Username'
+    
+admin.site.register(UserProfile, UserProfileAdmin)
+
 admin.site.register(User, CustomUserAdmin)
 
 

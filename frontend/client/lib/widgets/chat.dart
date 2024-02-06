@@ -13,6 +13,8 @@ import 'package:client/models/userProfile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
+import '../functions/extract_name.dart';
+
 class ChatPage extends StatefulWidget {
   Auth auth;
   UserProfile userData;
@@ -31,7 +33,8 @@ class _ChatPageState extends State<ChatPage> {
   ScrollController scrollController = ScrollController();
   bool _isExpanded = false;
   final nameController = TextEditingController();
-
+  List<UserProfile> members = [];
+  List<UserProfile> dublicateMembers = [];
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
 
@@ -167,109 +170,267 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.userData.avatar);
   }
 
-  // _getCloseButton(context) {
-  //   return Align(
-  //     alignment: Alignment.topRight,
-  //     child: IconButton(
-  //       splashRadius: 1,
-  //       icon: const Icon(
-  //         Icons.clear,
-  //         color: Colors.black,
-  //       ),
-  //       onPressed: () {
-  //         Navigator.pop(context);
-  //       },
-  //     ),
-  //   );
-  // }
+  Future<List<int>> getChatMembersIds() async {
+    try {
+      Response response = await dio.get('http://localhost:8000/chatmembers',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("fetching users");
+      print(response.data);
 
-  // void chatSettings() {
-  //   if (widget.chat.adminId.toString() == widget.userData.userId) {
-  //     showDialog(
-  //       context: context,
-  //       builder: (ctx) => AlertDialog(
-  //         titlePadding: const EdgeInsets.all(0.0),
-  //         title: Container(
-  //             padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-  //             child: Center(
-  //                 child: Column(
-  //               mainAxisAlignment: MainAxisAlignment.center,
-  //               children: [
-  //                 _getCloseButton(context),
-  //                 const Text("Настройки чата"),
-  //               ],
-  //             ))),
-  //         content: Padding(
-  //           padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-  //           child: SizedBox(
-  //             width: 270,
-  //             child: Column(
-  //               children: [
-  //                 Container(
-  //                   padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-  //                   child: Material(
-  //                     elevation: 8,
-  //                     shape: const CircleBorder(),
-  //                     clipBehavior: Clip.antiAliasWithSaveLayer,
-  //                     child: InkWell(
-  //                       splashColor: Colors.black26,
-  //                       onTap: () {},
-  //                       child: Ink.image(
-  //                         image: NetworkImage(widget.userData.avatar),
-  //                         height: 120,
-  //                         width: 120,
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 Container(
-  //                   padding: const EdgeInsets.symmetric(vertical: 8),
-  //                   child: TextFormField(
-  //                     //onEditingComplete: signIn,
-  //                     controller: nameController,
-  //                     decoration: const InputDecoration(
-  //                         focusedBorder: OutlineInputBorder(
-  //                             borderSide: BorderSide(
-  //                                 width: 1,
-  //                                 color: Color.fromARGB(255, 37, 87, 153))),
-  //                         border: OutlineInputBorder(),
-  //                         labelText: 'Название чата',
-  //                         hintText: 'Введите название'),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           Padding(
-  //             padding: const EdgeInsets.all(8.0),
-  //             child: TextButton(
-  //               onPressed: () {
-  //                 Navigator.of(ctx).pop();
-  //               },
-  //               style: ButtonStyle(
-  //                   backgroundColor: const MaterialStatePropertyAll<Color>(
-  //                       Color.fromARGB(255, 37, 87, 153)),
-  //                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-  //                       RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(5.0),
-  //                   ))),
-  //               child: Container(
-  //                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-  //                 child: const Text(
-  //                   "Сохранить",
-  //                   style: TextStyle(
-  //                       color: Colors.white, fontWeight: FontWeight.w300),
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   } else {}
-  // }
+      List<int> memberIds = [];
+      List<UserProfile> result = [];
+
+      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
+        if (widget.chat.chatId == response.data[i]['chat_id']) {
+          memberIds.add(response.data[i]['user_id']);
+        }
+      }
+      print(memberIds);
+      return memberIds;
+    } catch (e) {
+      print('Error fetching chat members: $e');
+      return []; // или возвращайте пустой список или другое значение по умолчанию
+    }
+  }
+
+  Future getChatMembersDetails() async {
+    List<int> memberIds = await getChatMembersIds();
+
+    List<UserProfile> result = [];
+
+    for (int memberId in memberIds) {
+      try {
+        Response returnedResult = await dio.get(
+          'http://localhost:8000/userprofiles/',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }),
+        );
+        print("DETAILS");
+        print(returnedResult.data);
+        print(memberId);
+        for (int i = 0;
+            i < (returnedResult.data as List<dynamic>).length;
+            i++) {
+          if (returnedResult.data[i]['user_id'] == memberId) {
+            UserProfile user = UserProfile(
+              returnedResult.data[i]['user_id'].toString(),
+              returnedResult.data[i]['user']['username'],
+              returnedResult.data[i]['user']['first_name'],
+              returnedResult.data[i]['user']['last_name'],
+              returnedResult.data[i]['user']['middle_name'],
+              returnedResult.data[i]['avatar'],
+            );
+
+            result.add(user);
+          }
+        }
+      } catch (e) {
+        print('Error fetching user profile: $e');
+        // обработка ошибок, если не удается получить данные пользователя
+      }
+    }
+  }
+
+  _getCloseButton(context) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: IconButton(
+        splashRadius: 1,
+        icon: const Icon(
+          Icons.clear,
+          color: Colors.black,
+        ),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  void groupChatSettings() {
+    print("called groupChat");
+    if (widget.chat.adminId.toString() == widget.userData.userId) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          titlePadding: const EdgeInsets.all(0.0),
+          title: Container(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              child: Center(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _getCloseButton(context),
+                  const Text("Настройки чата"),
+                ],
+              ))),
+          content: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: SizedBox(
+              width: 270,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                    child: Material(
+                      elevation: 8,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                      child: InkWell(
+                        splashColor: Colors.black26,
+                        onTap: () {},
+                        child: Ink.image(
+                          image: NetworkImage(widget.userData.avatar),
+                          height: 120,
+                          width: 120,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextFormField(
+                      //onEditingComplete: signIn,
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  width: 1,
+                                  color: Color.fromARGB(255, 37, 87, 153))),
+                          border: OutlineInputBorder(),
+                          labelText: 'Название чата',
+                          hintText: 'Введите название'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                style: ButtonStyle(
+                    backgroundColor: const MaterialStatePropertyAll<Color>(
+                        Color.fromARGB(255, 37, 87, 153)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ))),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: const Text(
+                    "Сохранить",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w300),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    //если пользователь не админ чата
+    else {}
+  }
+
+  void privateChatSettings() {
+    print("called privateChat");
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        titlePadding: const EdgeInsets.all(0.0),
+        title: Container(
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+            child: Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _getCloseButton(context),
+                const Text("Настройки чата"),
+              ],
+            ))),
+        content: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          child: SizedBox(
+            width: 270,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                  child: Material(
+                    elevation: 8,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    child: InkWell(
+                      splashColor: Colors.black26,
+                      onTap: () {},
+                      child: Ink.image(
+                        image: NetworkImage(widget.userData.avatar),
+                        height: 120,
+                        width: 120,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(widget.chat.name,
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount: members.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                        );
+                      }),
+                )
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextButton(
+              onPressed: () {
+                getChatMembersDetails();
+                Navigator.of(ctx).pop();
+              },
+              style: ButtonStyle(
+                  backgroundColor: const MaterialStatePropertyAll<Color>(
+                      Color.fromARGB(255, 37, 87, 153)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ))),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                child: const Text(
+                  "Сохранить",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w300),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +452,8 @@ class _ChatPageState extends State<ChatPage> {
             backgroundColor: Colors.white,
           ),
           title: Text(
-            widget.chat.name,
+            extractDisplayName(widget.chat.name, widget.userData.name,
+                widget.userData.lastname),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
@@ -302,13 +464,8 @@ class _ChatPageState extends State<ChatPage> {
               ? widget.chat.membersCount.toString() + ' участника'
               : widget.chat.membersCount.toString() + ' участник'),
           onTap: () {
-            ChatDialogs.chatSettings(
-              context,
-              widget.chat.adminId,
-              widget.userData.userId.toString(),
-              widget.userData.avatar,
-              nameController,
-            );
+            if (widget.chat.isGroupChat == "True") groupChatSettings();
+            if (widget.chat.isGroupChat == "False") privateChatSettings();
           },
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,
@@ -322,13 +479,8 @@ class _ChatPageState extends State<ChatPage> {
               ),
               IconButton(
                 onPressed: () {
-                  ChatDialogs.chatSettings(
-                    context,
-                    widget.chat.adminId,
-                    widget.userData.userId.toString(),
-                    widget.userData.avatar,
-                    nameController,
-                  );
+                  if (widget.chat.isGroupChat == "True") groupChatSettings();
+                  if (widget.chat.isGroupChat == "False") privateChatSettings();
                 },
                 icon: const Icon(Icons.settings),
                 splashRadius: 1,

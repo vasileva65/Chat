@@ -3,6 +3,8 @@ import os
 import re
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
+from django.contrib.auth.password_validation import CommonPasswordValidator
+
 
 
 class NumberValidator(object):
@@ -12,13 +14,13 @@ class NumberValidator(object):
     def validate(self, password, user=None):
         if not re.findall('\d', password):
             raise ValidationError(
-                _("Пароль должен содерать хотя бы одну цифру от 0 до 9."),
+                _("Пароль должен содерать хотя бы одну цифру от 0 до 9"),
                 code='password_no_number',
             )
 
     def get_help_text(self):
         return _(
-            "Пароль должен содерать хотя бы одну цифру от 0 до 9."
+            "Пароль должен содерать хотя бы одну цифру от 0 до 9"
         )
 
 
@@ -26,13 +28,13 @@ class CharacterValidator(object):
     def validate(self, password, user=None):
         if not re.findall('[a-z]', password):
             raise ValidationError(
-                _("Пароль должен содержать хотя бы одну букву латинского алфавита."),
+                _("Пароль должен содержать хотя бы одну букву латинского алфавита"),
                 code='password_no_lower',
             )
 
     def get_help_text(self):
         return _(
-            "Пароль должен содержать хотя бы одну букву латинского алфавита."
+            "Пароль должен содержать хотя бы одну букву латинского алфавита"
         )
 
 
@@ -50,7 +52,8 @@ class SymbolValidator(object):
             "Пароль должен содержать хотя бы один символ: " +
             "()[]{}|\`~!@#$%^&*_-+=;:'\",<>./?"
         )
-    
+
+ 
 class CommonPasswordValidator:
     
     DEFAULT_PASSWORD_LIST_PATH = os.path.join(
@@ -70,9 +73,9 @@ class CommonPasswordValidator:
     def validate(self, password, user=None):
         if password.lower().strip() in self.passwords:
             raise ValidationError(
-                _("Этот пароль слишком распространен."),
+                _("Этот пароль слишком распространен"),
                 code='password_too_common',
             )
 
     def get_help_text(self):
-        return _("Your password can't be a commonly used password.")
+        return _("Your password can't be a commonly used password")
