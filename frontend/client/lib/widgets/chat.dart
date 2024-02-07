@@ -132,6 +132,7 @@ class _ChatPageState extends State<ChatPage> {
     fetchMessages();
     getPhotos();
     getChatMembersDetails();
+    nameController.text = widget.chat.name;
   }
 
   void _printLatestValue() {
@@ -275,7 +276,7 @@ class _ChatPageState extends State<ChatPage> {
                 ],
               ))),
           content: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
             child: SizedBox(
               width: 270,
               child: Column(
@@ -312,6 +313,51 @@ class _ChatPageState extends State<ChatPage> {
                           hintText: 'Введите название'),
                     ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(0, 35, 0, 5),
+                    child: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Участники чата',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount: members.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                          child: ListTile(
+                            title: Container(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                "${members[index].name} ${members[index].lastname}",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromARGB(255, 39, 77, 126),
+                                ),
+                              ),
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              backgroundImage:
+                                  NetworkImage(members[index].avatar),
+                            ),
+                            minVerticalPadding: 15.0,
+                            onTap: () {},
+                          ),
+                        );
+                      },
+                      controller: privateChatSettingsScrollController,
+                    ),
+                  )
                 ],
               ),
             ),
@@ -365,7 +411,7 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ))),
         content: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
           child: SizedBox(
             width: 270,
             child: Column(
@@ -508,52 +554,100 @@ class _ChatPageState extends State<ChatPage> {
                 icon: const Icon(Icons.search),
                 splashRadius: 1,
               ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'viewProfile') {
-                    // Вызовите метод для просмотра профиля
-                    //viewProfile();
-                  } else if (value == 'leaveChat') {
-                    // Вызовите метод для выхода из чата
-                    //leaveChat();
-                  }
-                },
-                icon: const Icon(Icons.settings),
-                offset: const Offset(0, 40),
-                tooltip: '',
-                splashRadius: 1,
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: 'viewProfile',
-                    child: Row(
-                      children: const [
-                        Icon(
-                          Icons.person,
-                          color: Colors.black,
-                        ), // Иконка для "Посмотреть профиль"
-                        SizedBox(width: 4), // Пробел между иконкой и текстом
-                        Text('Посмотреть профиль'),
-                      ],
+              if (widget.chat.isGroupChat == "True")
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'viewChatInfo') {
+                      // Вызовите метод для просмотра информации чата
+                      //viewProfile();
+                    } else if (value == 'leaveChat') {
+                      // Вызовите метод для выхода из чата
+                      //leaveChat();
+                    }
+                  },
+                  icon: const Icon(Icons.settings),
+                  offset: const Offset(0, 40),
+                  tooltip: '',
+                  splashRadius: 1,
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'viewChatInfo',
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.black,
+                          ), // Иконка для "Посмотреть профиль"
+                          SizedBox(width: 4), // Пробел между иконкой и текстом
+                          Text('Информация о чате'),
+                        ],
+                      ),
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'leaveChat',
-                    child: Row(
-                      children: const [
-                        Icon(
-                          Icons.exit_to_app,
-                          color: Colors.red,
-                        ), // Иконка для "Выйти из чата"
-                        SizedBox(width: 4), // Пробел между иконкой и текстом
-                        Text(
-                          'Выйти из чата',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ],
+                    PopupMenuItem<String>(
+                      value: 'leaveChat',
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.exit_to_app,
+                            color: Colors.red,
+                          ), // Иконка для "Выйти из чата"
+                          SizedBox(width: 4), // Пробел между иконкой и текстом
+                          Text(
+                            'Выйти из чата',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'viewProfile') {
+                      // Вызовите метод для просмотра профиля
+                      //viewProfile();
+                    } else if (value == 'leaveChat') {
+                      // Вызовите метод для выхода из чата
+                      //leaveChat();
+                    }
+                  },
+                  icon: const Icon(Icons.settings),
+                  offset: const Offset(0, 40),
+                  tooltip: '',
+                  splashRadius: 1,
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'viewProfile',
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.person,
+                            color: Colors.black,
+                          ),
+                          SizedBox(width: 4),
+                          Text('Посмотреть профиль'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'leaveChat',
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.exit_to_app,
+                            color: Colors.red,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Выйти из чата',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               // IconButton(
               //   onPressed: () {
               //     showMenu(
