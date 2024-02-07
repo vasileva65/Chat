@@ -31,6 +31,7 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> items = [];
   List<UserProfile> profiles = [];
   ScrollController scrollController = ScrollController();
+  ScrollController privateChatSettingsScrollController = ScrollController();
   bool _isExpanded = false;
   final nameController = TextEditingController();
   List<UserProfile> members = [];
@@ -130,6 +131,7 @@ class _ChatPageState extends State<ChatPage> {
 
     fetchMessages();
     getPhotos();
+    getChatMembersDetails();
   }
 
   void _printLatestValue() {
@@ -209,12 +211,13 @@ class _ChatPageState extends State<ChatPage> {
           }),
         );
         print("DETAILS");
-        print(returnedResult.data);
+        //print(returnedResult.data);
         print(memberId);
         for (int i = 0;
             i < (returnedResult.data as List<dynamic>).length;
             i++) {
           if (returnedResult.data[i]['user_id'] == memberId) {
+            print(returnedResult.data[i]);
             UserProfile user = UserProfile(
               returnedResult.data[i]['user_id'].toString(),
               returnedResult.data[i]['user']['username'],
@@ -232,6 +235,10 @@ class _ChatPageState extends State<ChatPage> {
         // обработка ошибок, если не удается получить данные пользователя
       }
     }
+
+    setState(() {
+      members = result;
+    });
   }
 
   _getCloseButton(context) {
@@ -382,21 +389,45 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(widget.chat.name,
+                  child: Text(
+                      extractDisplayName(widget.chat.name, widget.userData.name,
+                          widget.userData.lastname),
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
                 ),
                 Expanded(
                   child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: members.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                        );
-                      }),
+                    padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: members.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                        child: ListTile(
+                          title: Container(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              "${members[index].name} ${members[index].lastname}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromARGB(255, 39, 77, 126),
+                              ),
+                            ),
+                          ),
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                NetworkImage(members[index].avatar),
+                          ),
+                          minVerticalPadding: 15.0,
+                          onTap: () {},
+                        ),
+                      );
+                    },
+                    controller: privateChatSettingsScrollController,
+                  ),
                 )
               ],
             ),
@@ -477,14 +508,87 @@ class _ChatPageState extends State<ChatPage> {
                 icon: const Icon(Icons.search),
                 splashRadius: 1,
               ),
-              IconButton(
-                onPressed: () {
-                  if (widget.chat.isGroupChat == "True") groupChatSettings();
-                  if (widget.chat.isGroupChat == "False") privateChatSettings();
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'viewProfile') {
+                    // Вызовите метод для просмотра профиля
+                    //viewProfile();
+                  } else if (value == 'leaveChat') {
+                    // Вызовите метод для выхода из чата
+                    //leaveChat();
+                  }
                 },
                 icon: const Icon(Icons.settings),
+                offset: const Offset(0, 40),
+                tooltip: '',
                 splashRadius: 1,
-              )
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'viewProfile',
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.person,
+                          color: Colors.black,
+                        ), // Иконка для "Посмотреть профиль"
+                        SizedBox(width: 4), // Пробел между иконкой и текстом
+                        Text('Посмотреть профиль'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'leaveChat',
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.exit_to_app,
+                          color: Colors.red,
+                        ), // Иконка для "Выйти из чата"
+                        SizedBox(width: 4), // Пробел между иконкой и текстом
+                        Text(
+                          'Выйти из чата',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // IconButton(
+              //   onPressed: () {
+              //     showMenu(
+              //       context: context,
+              //       position: RelativeRect.fromRect(
+              //         Rect.fromPoints(
+              //           const Offset(0, 0),
+              //           Offset(MediaQuery.of(context).size.width, 0),
+              //         ),
+              //         Offset.zero & MediaQuery.of(context).size,
+              //       ),
+              //       items: [
+              //         const PopupMenuItem<String>(
+              //           value: 'viewProfile',
+              //           child: Text('Посмотреть профиль'),
+              //         ),
+              //         const PopupMenuItem<String>(
+              //           value: 'leaveChat',
+              //           child: Text('Выйти из чата'),
+              //         ),
+              //       ],
+              //       elevation: 8.0,
+              //     ).then((value) {
+              //       if (value == 'viewProfile') {
+              //         // Вызовите метод для просмотра профиля
+              //         //viewProfile();
+              //       } else if (value == 'leaveChat') {
+              //         // Вызовите метод для выхода из чата
+              //         //leaveChat();
+              //       }
+              //     });
+              //   },
+              //   icon: const Icon(Icons.settings),
+              //   splashRadius: 1,
+              // )
             ],
           ),
         ),
