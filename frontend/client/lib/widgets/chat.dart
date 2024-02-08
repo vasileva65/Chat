@@ -35,6 +35,7 @@ class _ChatPageState extends State<ChatPage> {
   bool _isExpanded = false;
   final nameController = TextEditingController();
   List<UserProfile> members = [];
+  List<int> admins = [];
   List<UserProfile> dublicateMembers = [];
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
@@ -91,7 +92,7 @@ class _ChatPageState extends State<ChatPage> {
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       UserProfile profile = UserProfile(
-          returnedResult.data[i]['user_id'].toString(),
+          returnedResult.data[i]['user_id'],
           returnedResult.data[i]['user']['username'],
           returnedResult.data[i]['user']['first_name'],
           returnedResult.data[i]['user']['last_name'],
@@ -173,6 +174,31 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.userData.avatar);
   }
 
+  Future<List<int>> getChatAdminsIds() async {
+    try {
+      Response response = await dio.get('http://localhost:8000/chatadmins',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("fetching users");
+      print(response.data);
+
+      List<int> adminIds = [];
+
+      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
+        if (widget.chat.chatId == response.data[i]['chat_id']) {
+          adminIds.add(response.data[i]['user_id']);
+        }
+      }
+      print("ADMIN IDS");
+      print(adminIds);
+      return adminIds;
+    } catch (e) {
+      print('Error fetching chat members: $e');
+      return []; // или возвращайте пустой список или другое значение по умолчанию
+    }
+  }
+
   Future<List<int>> getChatMembersIds() async {
     try {
       Response response = await dio.get('http://localhost:8000/chatmembers',
@@ -183,7 +209,6 @@ class _ChatPageState extends State<ChatPage> {
       print(response.data);
 
       List<int> memberIds = [];
-      List<UserProfile> result = [];
 
       for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
         if (widget.chat.chatId == response.data[i]['chat_id']) {
@@ -200,6 +225,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future getChatMembersDetails() async {
     List<int> memberIds = await getChatMembersIds();
+    List<int> adminIds = await getChatAdminsIds();
 
     List<UserProfile> result = [];
 
@@ -220,7 +246,7 @@ class _ChatPageState extends State<ChatPage> {
           if (returnedResult.data[i]['user_id'] == memberId) {
             print(returnedResult.data[i]);
             UserProfile user = UserProfile(
-              returnedResult.data[i]['user_id'].toString(),
+              returnedResult.data[i]['user_id'],
               returnedResult.data[i]['user']['username'],
               returnedResult.data[i]['user']['first_name'],
               returnedResult.data[i]['user']['last_name'],
@@ -239,6 +265,7 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       members = result;
+      admins = adminIds;
     });
   }
 
@@ -260,7 +287,7 @@ class _ChatPageState extends State<ChatPage> {
 
   void groupChatSettings() {
     print("called groupChat");
-    if (widget.chat.adminId.toString() == widget.userData.userId) {
+    if (widget.chat.adminId == widget.userData.userId) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -314,7 +341,7 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.fromLTRB(0, 35, 0, 5),
+                    padding: const EdgeInsets.fromLTRB(0, 35, 0, 0),
                     child: const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -331,6 +358,12 @@ class _ChatPageState extends State<ChatPage> {
                       shrinkWrap: true,
                       itemCount: members.length,
                       itemBuilder: (context, index) {
+                        print("MEMBER ID ${members[index].userId}");
+
+                        print("ADMIN IDS: ${admins}");
+                        bool isAdmin = admins.contains(members[index].userId);
+                        print(
+                            "User ID: ${members[index].userId}, isAdmin: $isAdmin");
                         return Padding(
                           padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
                           child: ListTile(
@@ -345,6 +378,15 @@ class _ChatPageState extends State<ChatPage> {
                                 ),
                               ),
                             ),
+                            subtitle: isAdmin
+                                ? const Text(
+                                    'Администратор',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .red, // Любой цвет, который вы хотите использовать
+                                    ),
+                                  )
+                                : null, // Если не администратор, то trailing будет пустым;
                             leading: CircleAvatar(
                               backgroundColor: Colors.white,
                               backgroundImage:

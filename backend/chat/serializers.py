@@ -30,6 +30,12 @@ class ChatMembersSerializer(serializers.ModelSerializer):
         model = ChatMembers
         fields = ['url', 'chat_id', 'chat_name', 'avatar', 'user_id', 'joined_at', 'left_at', 'people_count', 'group_chat']
 
+class ChatAdminsSerializer(serializers.ModelSerializer):
+    chat_name = serializers.CharField(source='chat_id.chat_name', read_only=True)
+    
+    class Meta:
+        model = ChatMembers
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'joined_at', 'left_at']
 
 class ChatSerializer(serializers.ModelSerializer):
     people_count = serializers.SerializerMethodField(read_only=True)

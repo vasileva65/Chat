@@ -2,7 +2,8 @@ import logging
 
 import requests
 from chat.models import (
-    Chat, 
+    Chat,
+    ChatAdmins, 
     Message,
     UserProfile, 
     ChatMembers
@@ -19,7 +20,8 @@ from chat.serializers import (
     UserProfileSerializer,
     MyTokenObtainPairSerializer,
     RegisterSerializer, 
-    ChatMembersSerializer
+    ChatMembersSerializer,
+    ChatAdminsSerializer
 )
 from rest_framework import permissions
 from rest_framework.permissions import (
@@ -139,6 +141,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         group_chat = serializer.validated_data['group_chat']
 
         admin_user = get_user_model().objects.get(id=admin_id)
+        
         print("ADMIN:") 
         print(admin_user) 
 
@@ -160,7 +163,9 @@ class ChatViewSet(viewsets.ModelViewSet):
 
         for user in users:
             ChatMembers.objects.create(chat_id=chat, user_id=user)
+
         ChatMembers.objects.create(chat_id=chat, user_id=admin_user)
+        ChatAdmins.objects.create(chat_id=chat, user_id=admin_user)
         print("ChatMembers created successfully")
         serializer.instance = chat
 
@@ -186,6 +191,15 @@ class ChatMembersViewSet(viewsets.ModelViewSet):
     """
     queryset = ChatMembers.objects.all()
     serializer_class = ChatMembersSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class ChatAdminsViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows chats to be viewed or edited.
+    """
+    queryset = ChatAdmins.objects.all()
+    serializer_class = ChatAdminsSerializer
     permission_classes = [IsAuthenticated]
     
 

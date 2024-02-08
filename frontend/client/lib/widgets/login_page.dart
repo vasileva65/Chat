@@ -88,10 +88,10 @@ class _LoginPage extends State<LoginPage> {
             }));
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '', '', '', '', '');
+    UserProfile user = UserProfile(0, '', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
-        returnedResult.data[0]['user_id'].toString(),
+        returnedResult.data[0]['user_id'],
         returnedResult.data[0]['user']['username'],
         returnedResult.data[0]['user']['first_name'],
         returnedResult.data[0]['user']['last_name'],

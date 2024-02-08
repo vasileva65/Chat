@@ -81,7 +81,7 @@ class _ChangePassPage extends State<ChangePassPage> {
             );
 
     print(returnedResult.data);
-    UserProfile user = UserProfile('', '', '', '', '', '');
+    UserProfile user = UserProfile(0, '', '', '', '', '');
     if ((returnedResult.data as List<dynamic>).length > 0) {
       user = UserProfile(
         returnedResult.data[0]['user_id'],

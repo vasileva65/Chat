@@ -1,5 +1,5 @@
 class UserProfile {
-  String userId;
+  int userId;
   String username;
   String name;
   String lastname;

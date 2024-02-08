@@ -1,11 +1,7 @@
-from asyncio import format_helpers
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.db.models import Count
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import *
-from django.urls import reverse
-from django.utils.http import urlencode
 from django.contrib.auth import get_user_model
 #from .models import User
 User = get_user_model()
@@ -59,6 +55,17 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(ChatMembers)
 class ChatMembersAdmin(admin.ModelAdmin):
+    list_display = ("chat_id", "user_id", 'joined_at', 'left_at')
+
+    def group_chat(self, obj):
+        return obj.group_chat
+    
+    group_chat.admin_order_field = 'group_chat'
+    group_chat.boolean = True
+    group_chat.short_description = 'Group Chat'
+
+@admin.register(ChatAdmins)
+class ChatAdminsAdmin(admin.ModelAdmin):
     list_display = ("chat_id", "user_id", 'joined_at', 'left_at')
 
     def group_chat(self, obj):

@@ -182,7 +182,7 @@ class _ChatListState extends State<ChatList> {
 
       if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId) {
         UserProfile user = UserProfile(
-            returnedResult.data[i]['user_id'].toString(),
+            returnedResult.data[i]['user_id'],
             returnedResult.data[i]['user']['username'],
             returnedResult.data[i]['user']['first_name'],
             returnedResult.data[i]['user']['last_name'],
@@ -541,8 +541,8 @@ class _ChatListState extends State<ChatList> {
                                         //_isChecked[originalIndex] = value;
                                         //_isChecked[users[index].userId] = value;
                                         if (value) {
-                                          selectedUserIds
-                                              .add(users[index].userId);
+                                          selectedUserIds.add(
+                                              users[index].userId.toString());
                                           //selectedUsers.add(users[index]);
                                         } else {
                                           selectedUserIds
