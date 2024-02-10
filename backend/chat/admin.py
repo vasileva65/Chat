@@ -3,6 +3,9 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import *
 from django.contrib.auth import get_user_model
+from django import forms
+from django.db.models import Q
+
 #from .models import User
 User = get_user_model()
 
@@ -64,9 +67,23 @@ class ChatMembersAdmin(admin.ModelAdmin):
     group_chat.boolean = True
     group_chat.short_description = 'Group Chat'
 
-@admin.register(ChatAdmins)
+
+class ChatAdminsForm(forms.ModelForm):
+    class Meta:
+        model = ChatAdmins
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super(ChatAdminsForm, self).__init__(*args, **kwargs)
+        if 'instance' in kwargs and kwargs['instance']:
+            chat_id = kwargs['instance'].chat_id_id
+            self.fields['user_id'].queryset = get_user_model().objects.filter(
+                Q(chatmembers__chat_id=chat_id) | Q(chatadmins__chat_id=chat_id)
+            ).distinct()
+
 class ChatAdminsAdmin(admin.ModelAdmin):
     list_display = ("chat_id", "user_id", 'joined_at', 'left_at')
+    form = ChatAdminsForm
 
     def group_chat(self, obj):
         return obj.group_chat
@@ -74,6 +91,9 @@ class ChatAdminsAdmin(admin.ModelAdmin):
     group_chat.admin_order_field = 'group_chat'
     group_chat.boolean = True
     group_chat.short_description = 'Group Chat'
+
+admin.site.register(ChatAdmins, ChatAdminsAdmin)
+    
 
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):

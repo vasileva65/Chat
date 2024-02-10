@@ -37,6 +37,8 @@ class _ChatPageState extends State<ChatPage> {
   List<UserProfile> members = [];
   List<int> admins = [];
   List<UserProfile> dublicateMembers = [];
+
+  late UserProfile secondMember;
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
 
@@ -303,7 +305,7 @@ class _ChatPageState extends State<ChatPage> {
                 ],
               ))),
           content: SizedBox(
-            width: 340,
+            width: 320,
             child: Column(
               children: [
                 Container(
@@ -377,13 +379,20 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                           ),
                           trailing: isAdmin
-                              ? const Text(
-                                  'Администратор',
-                                  style: TextStyle(
-                                    color: Colors
-                                        .red, // Любой цвет, который вы хотите использовать
+                              ? const Tooltip(
+                                  message: 'Администратор',
+                                  child: Icon(
+                                    Icons.star,
+                                    color: Colors.orange,
                                   ),
                                 )
+                              // const Text(
+                              //     'Администратор',
+                              //     style: TextStyle(
+                              //       color: Colors
+                              //           .red, // Любой цвет, который вы хотите использовать
+                              //     ),
+                              //   )
                               : null, // Если не администратор, то trailing будет пустым;
                           leading: CircleAvatar(
                             backgroundColor: Colors.white,
@@ -433,8 +442,8 @@ class _ChatPageState extends State<ChatPage> {
     else {}
   }
 
-  void privateChatSettings() {
-    print("called privateChat");
+  void userPage(UserProfile user) {
+    print("called userPage");
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -446,11 +455,11 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _getCloseButton(context),
-                const Text("Настройки чата"),
+                Text('${user.name} ${user.lastname}'),
               ],
             ))),
         content: SizedBox(
-          width: 340,
+          width: 320,
           child: Column(
             children: [
               Container(
@@ -490,9 +499,10 @@ class _ChatPageState extends State<ChatPage> {
                       child: ListTile(
                         title: Container(
                           padding: const EdgeInsets.only(bottom: 6),
-                          child: Text(
-                            "${members[index].name} ${members[index].lastname}",
-                            style: const TextStyle(
+                          child: const Text(
+                            //"${members[index].name} ${members[index].lastname}",
+                            "Профиль пользователя",
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: Color.fromARGB(255, 39, 77, 126),
@@ -552,6 +562,13 @@ class _ChatPageState extends State<ChatPage> {
     print("COUNT");
     print(widget.chat.membersCount);
     print("AVATAR CHAT" + widget.chat.avatar);
+    if (members.length == 2) {
+      for (int i = 0; i < members.length; i++) {
+        if (members[i].userId != widget.userData.userId) {
+          secondMember = members[i];
+        }
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         shape: const Border(
@@ -577,7 +594,7 @@ class _ChatPageState extends State<ChatPage> {
               : widget.chat.membersCount.toString() + ' участник'),
           onTap: () {
             if (widget.chat.isGroupChat == "True") groupChatSettings();
-            if (widget.chat.isGroupChat == "False") privateChatSettings();
+            if (widget.chat.isGroupChat == "False") userPage(secondMember);
           },
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,
