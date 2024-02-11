@@ -300,9 +300,10 @@ class _ChatPageState extends State<ChatPage> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
+          contentPadding: EdgeInsets.all(5),
           titlePadding: const EdgeInsets.all(0.0),
           title: Container(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
               child: Center(
                   child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -311,213 +312,225 @@ class _ChatPageState extends State<ChatPage> {
                   const Text("Настройки чата"),
                 ],
               ))),
-          content: SingleChildScrollView(
-            controller: privateChatSettingsScrollController,
-            child: SizedBox(
-              width: 320,
-              height: MediaQuery.of(context).size.height,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                    child: Material(
-                      elevation: 8,
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: InkWell(
-                        splashColor: Colors.black26,
-                        onTap: () {},
-                        child: Ink.image(
-                          image: NetworkImage(widget.userData.avatar),
-                          height: 120,
-                          width: 120,
+          content: Scrollbar(
+            interactive: false, // Отключаем интерактивность ползунка
+            thumbVisibility: false,
+            thickness: 6.0, // Регулирует толщину ползунка
+            radius:
+                Radius.circular(4.0), // Регулирует скругление углов ползунка
+            //controller: privateChatSettingsScrollController,
+            child: ScrollConfiguration(
+              behavior:
+                  ScrollConfiguration.of(context).copyWith(scrollbars: false),
+              child: SizedBox(
+                width: 360,
+                height: MediaQuery.of(context).size.height,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: ListView(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                        child: Material(
+                          elevation: 8,
+                          shape: const CircleBorder(),
+                          clipBehavior: Clip.antiAliasWithSaveLayer,
+                          child: InkWell(
+                            splashColor: Colors.black26,
+                            onTap: () {},
+                            child: Ink.image(
+                              image: NetworkImage(widget.userData.avatar),
+                              height: 120,
+                              width: 120,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      //onEditingComplete: signIn,
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Название чата',
-                          hintText: 'Введите название'),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(0, 35, 0, 0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Администраторы',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            splashRadius: 1,
-                            onPressed: () {
-                              // Действие при нажатии на кнопку плюс
-                            },
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          //onEditingComplete: signIn,
+                          controller: nameController,
+                          decoration: const InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 1,
+                                      color: Color.fromARGB(255, 37, 87, 153))),
+                              border: OutlineInputBorder(),
+                              labelText: 'Название чата',
+                              hintText: 'Введите название'),
+                        ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
-                      scrollDirection: Axis.vertical,
-                      //shrinkWrap: true,
-                      itemCount: adminMembers.length,
-                      itemBuilder: (context, index) {
-                        print("MEMBER ID ${sortedMembers[index].userId}");
-
-                        print("ADMIN IDS: ${admins}");
-                        //bool isAdmin =
-                        //    admins.contains(sortedMembers[index].userId);
-                        // print(
-                        //     "User ID: ${sortedMembers[index].userId}, isAdmin: $isAdmin");
-
-                        print(regularMembers);
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                          child: ListTile(
-                            title: Container(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Text(
-                                "${adminMembers[index].name} ${adminMembers[index].lastname}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromARGB(255, 39, 77, 126),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(0, 35, 0, 0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Администраторы',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ),
-                            ),
-                            trailing: const Tooltip(
-                              message: "Удалить администратора",
-                              child: Icon(
-                                Icons.group_remove_outlined,
-                                color: Colors.black,
+                              IconButton(
+                                icon: const Icon(Icons.add),
+                                splashRadius: 1,
+                                onPressed: () {
+                                  // Действие при нажатии на кнопку плюс
+                                },
                               ),
-                            ),
-
-                            // const Text(
-                            //     'Администратор',
-                            //     style: TextStyle(
-                            //       color: Colors
-                            //           .red, // Любой цвет, который вы хотите использовать
-                            //     ),
-                            //   )
-                            //: null, // Если не администратор, то trailing будет пустым;
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              backgroundImage:
-                                  NetworkImage(adminMembers[index].avatar),
-                            ),
-                            minVerticalPadding: 15.0,
-                            onTap: () {},
+                            ],
                           ),
-                        );
-                      },
-                      //controller: privateChatSettingsScrollController,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(0, 35, 0, 0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Участники чата',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            splashRadius: 1,
-                            onPressed: () {
-                              // Действие при нажатии на кнопку плюс
-                            },
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
-                      scrollDirection: Axis.vertical,
-                      //shrinkWrap: true,
-                      itemCount: regularMembers.length,
-                      itemBuilder: (context, index) {
-                        print("MEMBER ID ${sortedMembers[index].userId}");
+                      ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
 
-                        print("ADMIN IDS: ${admins}");
-                        bool isAdmin =
-                            admins.contains(sortedMembers[index].userId);
-                        print(
-                            "User ID: ${sortedMembers[index].userId}, isAdmin: $isAdmin");
+                        itemCount: adminMembers.length,
+                        itemBuilder: (context, index) {
+                          print("MEMBER ID ${sortedMembers[index].userId}");
 
-                        print(regularMembers);
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                          child: ListTile(
-                            title: Container(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Text(
-                                "${regularMembers[index].name} ${regularMembers[index].lastname}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromARGB(255, 39, 77, 126),
+                          print("ADMIN IDS: ${admins}");
+                          //bool isAdmin =
+                          //    admins.contains(sortedMembers[index].userId);
+                          // print(
+                          //     "User ID: ${sortedMembers[index].userId}, isAdmin: $isAdmin");
+
+                          print(regularMembers);
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                            child: ListTile(
+                              title: Container(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  "${adminMembers[index].name} ${adminMembers[index].lastname}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color.fromARGB(255, 39, 77, 126),
+                                  ),
                                 ),
                               ),
-                            ),
-                            trailing: const Tooltip(
-                              message: 'Удалить участника',
-                              child: Icon(
-                                Icons.group_remove_outlined,
-                                color: Colors.black,
+                              trailing: const Tooltip(
+                                message: "Удалить администратора",
+                                child: Icon(
+                                  Icons.group_remove_outlined,
+                                  color: Colors.black,
+                                ),
                               ),
+
+                              // const Text(
+                              //     'Администратор',
+                              //     style: TextStyle(
+                              //       color: Colors
+                              //           .red, // Любой цвет, который вы хотите использовать
+                              //     ),
+                              //   )
+                              //: null, // Если не администратор, то trailing будет пустым;
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    NetworkImage(adminMembers[index].avatar),
+                              ),
+                              minVerticalPadding: 15.0,
+                              onTap: () {},
                             ),
-                            // const Text(
-                            //     'Администратор',
-                            //     style: TextStyle(
-                            //       color: Colors
-                            //           .red, // Любой цвет, который вы хотите использовать
-                            //     ),
-                            //   )
-                            // Если не администратор, то trailing будет пустым;
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              backgroundImage:
-                                  NetworkImage(regularMembers[index].avatar),
-                            ),
-                            minVerticalPadding: 15.0,
-                            onTap: () {},
+                          );
+                        },
+                        //controller: privateChatSettingsScrollController,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Участники чата',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add),
+                                splashRadius: 1,
+                                onPressed: () {
+                                  // Действие при нажатии на кнопку плюс
+                                },
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      //controller: privateChatSettingsScrollController,
-                    ),
-                  )
-                ],
+                        ),
+                      ),
+                      ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+
+                        itemCount: regularMembers.length,
+                        itemBuilder: (context, index) {
+                          print("MEMBER ID ${sortedMembers[index].userId}");
+
+                          print("ADMIN IDS: ${admins}");
+                          bool isAdmin =
+                              admins.contains(sortedMembers[index].userId);
+                          print(
+                              "User ID: ${sortedMembers[index].userId}, isAdmin: $isAdmin");
+
+                          print(regularMembers);
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                            child: ListTile(
+                              title: Container(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  "${regularMembers[index].name} ${regularMembers[index].lastname}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color.fromARGB(255, 39, 77, 126),
+                                  ),
+                                ),
+                              ),
+                              trailing: const Tooltip(
+                                message: 'Удалить участника',
+                                child: Icon(
+                                  Icons.group_remove_outlined,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              // const Text(
+                              //     'Администратор',
+                              //     style: TextStyle(
+                              //       color: Colors
+                              //           .red, // Любой цвет, который вы хотите использовать
+                              //     ),
+                              //   )
+                              // Если не администратор, то trailing будет пустым;
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    NetworkImage(regularMembers[index].avatar),
+                              ),
+                              minVerticalPadding: 15.0,
+                              onTap: () {},
+                            ),
+                          );
+                        },
+                        //controller: privateChatSettingsScrollController,
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -558,6 +571,7 @@ class _ChatPageState extends State<ChatPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        contentPadding: EdgeInsets.all(5),
         titlePadding: const EdgeInsets.all(0.0),
         title: Container(
             padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
@@ -572,68 +586,72 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ))),
         content: SizedBox(
-          width: 320,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                child: Material(
-                  elevation: 8,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  child: InkWell(
-                    splashColor: Colors.black26,
-                    onTap: () {},
-                    child: Ink.image(
-                      image: NetworkImage(widget.userData.avatar),
-                      height: 120,
-                      width: 120,
+          width: 360,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                  child: Material(
+                    elevation: 8,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    child: InkWell(
+                      splashColor: Colors.black26,
+                      onTap: () {},
+                      child: Ink.image(
+                        image: NetworkImage(widget.userData.avatar),
+                        height: 120,
+                        width: 120,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                    extractDisplayName(widget.chat.name, widget.userData.name,
-                        widget.userData.lastname),
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemCount: members.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                      child: ListTile(
-                        title: Container(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text(
-                            "${members[index].name} ${members[index].lastname}",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color.fromARGB(255, 39, 77, 126),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                      extractDisplayName(widget.chat.name, widget.userData.name,
+                          widget.userData.lastname),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: members.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                        child: ListTile(
+                          title: Container(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              "${members[index].name} ${members[index].lastname}",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromARGB(255, 39, 77, 126),
+                              ),
                             ),
                           ),
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                NetworkImage(members[index].avatar),
+                          ),
+                          minVerticalPadding: 15.0,
+                          onTap: () {},
                         ),
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.white,
-                          backgroundImage: NetworkImage(members[index].avatar),
-                        ),
-                        minVerticalPadding: 15.0,
-                        onTap: () {},
-                      ),
-                    );
-                  },
-                  controller: privateChatSettingsScrollController,
-                ),
-              )
-            ],
+                      );
+                    },
+                    controller: privateChatSettingsScrollController,
+                  ),
+                )
+              ],
+            ),
           ),
         ),
         actions: <Widget>[
