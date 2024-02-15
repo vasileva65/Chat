@@ -196,12 +196,6 @@ class _ChatListState extends State<ChatList> {
       users = result;
       dublicateUsers = result;
       selectedUserIds = Set<String>();
-      // _isChecked = Map<String, bool>.fromIterable(
-      //   users,
-      //   key: (user) => user.userId,
-      //   value: (_) => false,
-      // );
-      //_isChecked = List<bool>.filled(users.length, false);
     });
   }
 
