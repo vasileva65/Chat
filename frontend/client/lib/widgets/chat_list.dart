@@ -196,6 +196,12 @@ class _ChatListState extends State<ChatList> {
       users = result;
       dublicateUsers = result;
       selectedUserIds = Set<String>();
+      // _isChecked = Map<String, bool>.fromIterable(
+      //   users,
+      //   key: (user) => user.userId,
+      //   value: (_) => false,
+      // );
+      //_isChecked = List<bool>.filled(users.length, false);
     });
   }
 
@@ -511,7 +517,7 @@ class _ChatListState extends State<ChatList> {
                               padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
                               child: CheckboxListTile(
                                 value: selectedUserIds
-                                    .contains(users[index].userId),
+                                    .contains(users[index].userId.toString()),
                                 //_isChecked[users[index].userId] ??
                                 //false,
                                 ////_isChecked[index],
