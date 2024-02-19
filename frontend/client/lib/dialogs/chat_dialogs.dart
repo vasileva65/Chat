@@ -6,8 +6,25 @@ import 'package:flutter/material.dart';
 
 import '../models/userProfile.dart';
 
+_getCloseButton(context) {
+  return Align(
+    alignment: Alignment.topRight,
+    child: IconButton(
+      splashRadius: 1,
+      icon: const Icon(
+        Icons.clear,
+        color: Colors.black,
+      ),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    ),
+  );
+}
+
 class GroupChatSettingsDialog extends StatelessWidget {
   final List<int> admins;
+  final List<UserProfile> users;
   final UserProfile user;
   final List<UserProfile> members;
   final List<UserProfile> outOfChatMembers;
@@ -16,28 +33,13 @@ class GroupChatSettingsDialog extends StatelessWidget {
 
   GroupChatSettingsDialog({
     required this.admins,
+    required this.users,
     required this.user,
     required this.members,
     required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
   });
-
-  _getCloseButton(context) {
-    return Align(
-      alignment: Alignment.topRight,
-      child: IconButton(
-        splashRadius: 1,
-        icon: const Icon(
-          Icons.clear,
-          color: Colors.black,
-        ),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +270,16 @@ class GroupChatSettingsDialog extends StatelessWidget {
                                 icon: const Icon(Icons.add),
                                 splashRadius: 1,
                                 onPressed: () {
-                                  //addGroupMembers();
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AddMembersDialog(
+                                        users: users,
+                                        members: members,
+                                        outOfChatMembers: outOfChatMembers,
+                                      );
+                                    },
+                                  );
                                 },
                               ),
                             ),
@@ -406,6 +417,138 @@ class GroupChatSettingsDialog extends StatelessWidget {
       //     },
       //     child: Text('Добавить участника'),
       //   ),
+    );
+  }
+}
+
+class AddMembersDialog extends StatefulWidget {
+  List<UserProfile> users;
+  List<UserProfile> members;
+  final List<UserProfile> outOfChatMembers;
+
+  AddMembersDialog({
+    required this.users,
+    required this.members,
+    required this.outOfChatMembers,
+  });
+  @override
+  _AddMembersDialogState createState() => _AddMembersDialogState();
+}
+
+class _AddMembersDialogState extends State<AddMembersDialog> {
+  TextEditingController searchUserController = TextEditingController();
+  List<UserProfile> dublicateOutOfChatMembers = [];
+  List<UserProfile> outOfChatMembers = [];
+  List<UserProfile> selectedUsers = [];
+
+  @override
+  Widget build(BuildContext context) {
+    print("ADD MEMBER CALLED");
+    outOfChatMembers =
+        widget.users.where((user) => !widget.members.contains(user)).toList();
+    dublicateOutOfChatMembers = outOfChatMembers;
+    return AlertDialog(
+      titlePadding: const EdgeInsets.all(0.0),
+      title: Container(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+          child: Center(
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _getCloseButton(context),
+              const Text("Добавить участников"),
+            ],
+          ))),
+      content: SizedBox(
+        width: 300,
+        child: Column(children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+            child: TextField(
+              onChanged: (query) {
+                setState(() {
+                  widget.users = dublicateOutOfChatMembers.where((item) {
+                    return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                            .contains(query) ||
+                        item.name.toLowerCase() + item.lastname.toLowerCase() ==
+                            query.toLowerCase() ||
+                        item.name.toLowerCase().contains(query.toLowerCase()) ||
+                        item.lastname
+                            .toLowerCase()
+                            .contains(query.toLowerCase());
+                  }).toList();
+                });
+              },
+              controller: searchUserController,
+              style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+              decoration: const InputDecoration(
+                  suffixIconConstraints:
+                      BoxConstraints(minWidth: 32, minHeight: 40),
+                  hintText: "Найти пользователя",
+                  hintStyle:
+                      TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
+                  suffixIcon: Icon(Icons.search),
+                  isDense: true,
+                  contentPadding:
+                      EdgeInsets.only(right: 10, top: 10, bottom: 10, left: 15),
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          width: 1, color: Color.fromARGB(255, 37, 87, 153))),
+                  border: OutlineInputBorder(borderSide: BorderSide())),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                scrollDirection: Axis.vertical,
+                shrinkWrap: true,
+                itemCount: widget.users.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                      child: CheckboxListTile(
+                        value: widget.outOfChatMembers
+                            .contains(widget.users[index]),
+                        //_isChecked[users[index].userId] ??
+                        //false,
+                        ////_isChecked[index],
+                        title: Text(
+                            '${widget.users[index].name} ${widget.users[index].lastname}'),
+                        secondary: CircleAvatar(
+                            backgroundColor:
+                                const Color.fromARGB(1, 255, 255, 255),
+                            backgroundImage:
+                                NetworkImage(widget.users[index].avatar)),
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value != null) {
+                              //int originalIndex = dublicateUsers.indexOf(users[index]);
+                              //_isChecked[originalIndex] = value;
+                              //_isChecked[users[index].userId] = value;
+                              if (value) {
+                                widget.outOfChatMembers
+                                    .add(widget.users[index]);
+                                //selectedUsers.add(users[index]);
+                              } else {
+                                widget.outOfChatMembers
+                                    .remove(widget.users[index]);
+                                //selectedUsers.remove(users[index]);
+                              }
+                            }
+                          });
+                        },
+                      ));
+                }),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // После выбора пользователей, передаем данные обратно
+              Navigator.pop(context, selectedUsers);
+            },
+            child: const Text('Завершить выбор'),
+          ),
+        ]),
+      ),
     );
   }
 }
