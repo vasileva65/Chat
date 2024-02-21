@@ -28,7 +28,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
   final List<UserProfile> users;
   final UserProfile user;
   final List<UserProfile> members;
-  final List<UserProfile> outOfChatMembers;
+  //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
   final Chats chat;
   List<UserProfile> selectedUsers;
@@ -38,7 +38,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
     required this.users,
     required this.user,
     required this.members,
-    required this.outOfChatMembers,
+    //required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
     required this.selectedUsers,
@@ -50,7 +50,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
         users: users,
         user: user,
         members: members,
-        outOfChatMembers: outOfChatMembers,
+        //outOfChatMembers: outOfChatMembers,
         nameController: nameController,
         chat: chat,
       );
@@ -61,7 +61,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
   final List<UserProfile> users;
   final UserProfile user;
   final List<UserProfile> members;
-  final List<UserProfile> outOfChatMembers;
+  //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
   final Chats chat;
 
@@ -70,7 +70,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     required this.users,
     required this.user,
     required this.members,
-    required this.outOfChatMembers,
+    //required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
   });
@@ -78,6 +78,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
   @override
   Widget build(BuildContext context) {
     print("called groupChat");
+    String chatName = nameController.text;
     List<UserProfile> adminMembers =
         members.where((member) => admins.contains(member.userId)).toList();
 
@@ -88,7 +89,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     return WillPopScope(
       onWillPop: () async {
         // Сбрасываем поля при закрытии диалога
-        nameController.clear();
+        nameController.text = chatName;
 
         return true; // Разрешаем закрытие диалога
       },
@@ -102,7 +103,9 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _getCloseButton(context, () {
-                  setState(() {});
+                  setState(() {
+                    nameController.text = chatName;
+                  });
                 }),
                 const Text("Информация о чате"),
               ],
@@ -178,7 +181,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          nameController.text,
+                          chatName,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.w500),
@@ -205,7 +208,30 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                   icon: const Icon(Icons.add),
                                   splashRadius: 1,
                                   onPressed: () {
-                                    // Действие при нажатии на кнопку плюс
+                                    print(" called add users");
+                                    showDialog(
+                                        context: context,
+                                        barrierDismissible: true,
+                                        builder: (BuildContext context) =>
+                                            AddAdmins(
+                                              users: users,
+                                              members: members,
+                                              admins: adminMembers,
+                                              onSelectionComplete:
+                                                  (List<UserProfile>
+                                                      selectedUsers) {
+                                                // Обработка выбранных пользователей
+                                                print(
+                                                    'Selected users: $selectedUsers');
+                                                setState(() {
+                                                  // Обновляем выбранных пользователей
+                                                  widget.selectedUsers =
+                                                      selectedUsers;
+                                                });
+                                                Navigator.pop(
+                                                    context); // Закрыть вложенное диалоговое окно
+                                              },
+                                            ));
                                   },
                                 ),
                               ),
@@ -324,8 +350,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                 AddMembers(
                                                   users: users,
                                                   members: members,
-                                                  outOfChatMembers:
-                                                      outOfChatMembers,
                                                   onSelectionComplete:
                                                       (List<UserProfile>
                                                           selectedUsers) {
@@ -484,14 +508,12 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
 class AddMembers extends StatefulWidget {
   List<UserProfile> users;
   List<UserProfile> members;
-  List<UserProfile> outOfChatMembers;
 
   final Function(List<UserProfile> selectedUsers) onSelectionComplete;
 
   AddMembers({
     required this.users,
     required this.members,
-    required this.outOfChatMembers,
     required this.onSelectionComplete,
   });
   @override
@@ -545,7 +567,7 @@ class _AddMembersState extends State<AddMembers> {
     print("USER IDS: ${widget.users.map((user) => user.userId).toList()}");
     print("MEMBERS IDS: ${widget.members.map((user) => user.userId).toList()}");
     print(
-        "OUT OF CHAT USERS IDS: ${widget.outOfChatMembers.map((user) => user.userId).toList()}");
+        "OUT OF CHAT USERS IDS: ${outOfChatMembers.map((user) => user.userId).toList()}");
 
     return WillPopScope(
         onWillPop: () async {
@@ -578,7 +600,7 @@ class _AddMembersState extends State<AddMembers> {
                 child: TextField(
                   onChanged: (query) {
                     setState(() {
-                      widget.outOfChatMembers =
+                      outOfChatMembers =
                           dublicateOutOfChatMembers.where((item) {
                         return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
                                 .contains(query) ||
@@ -618,26 +640,25 @@ class _AddMembersState extends State<AddMembers> {
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     scrollDirection: Axis.vertical,
                     shrinkWrap: true,
-                    itemCount: widget.outOfChatMembers.length,
+                    itemCount: outOfChatMembers.length,
                     itemBuilder: (context, index) {
                       // print("outOfChatMembers");
                       // print(widget.outOfChatMembers);
                       return Padding(
                           padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
                           child: CheckboxListTile(
-                            value: selectedUserIds.contains(widget
-                                .outOfChatMembers[index].userId
-                                .toString()),
+                            value: selectedUserIds.contains(
+                                outOfChatMembers[index].userId.toString()),
                             //_isChecked[users[index].userId] ??
                             //false,
                             ////_isChecked[index],
                             title: Text(
-                                '${widget.outOfChatMembers[index].name} ${widget.outOfChatMembers[index].lastname}'),
+                                '${outOfChatMembers[index].name} ${outOfChatMembers[index].lastname}'),
                             secondary: CircleAvatar(
                                 backgroundColor:
                                     const Color.fromARGB(1, 255, 255, 255),
                                 backgroundImage: NetworkImage(
-                                    widget.outOfChatMembers[index].avatar)),
+                                    outOfChatMembers[index].avatar)),
                             onChanged: (bool? value) {
                               setState(() {
                                 if (value != null) {
@@ -645,14 +666,233 @@ class _AddMembersState extends State<AddMembers> {
                                   //_isChecked[originalIndex] = value;
                                   //_isChecked[users[index].userId] = value;
                                   if (value) {
-                                    selectedUserIds.add(widget
-                                        .outOfChatMembers[index].userId
+                                    selectedUserIds.add(outOfChatMembers[index]
+                                        .userId
                                         .toString());
                                     //selectedUsers.add(users[index]);
                                   } else {
-                                    selectedUserIds.remove(widget
-                                        .outOfChatMembers[index].userId
+                                    selectedUserIds.remove(
+                                        outOfChatMembers[index]
+                                            .userId
+                                            .toString());
+                                    //selectedUsers.remove(users[index]);
+                                  }
+                                }
+                              });
+                            },
+                          ));
+                    }),
+              ),
+
+              // onPressed: () {
+              //   // После выбора пользователей, передаем данные обратно
+              //   Navigator.pop(context, selectedUsers);
+              // },
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ButtonStyle(
+                      backgroundColor: const MaterialStatePropertyAll<Color>(
+                          Color.fromARGB(255, 37, 87, 153)),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ))),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                    child: const Text(
+                      "Завершить выбор",
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w300),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ));
+  }
+}
+
+class AddAdmins extends StatefulWidget {
+  List<UserProfile> users;
+  List<UserProfile> members;
+  List<UserProfile> admins;
+
+  final Function(List<UserProfile> selectedUsers) onSelectionComplete;
+
+  AddAdmins({
+    required this.users,
+    required this.members,
+    required this.admins,
+    required this.onSelectionComplete,
+  });
+  @override
+  _AddAdminsState createState() => _AddAdminsState();
+}
+
+class _AddAdminsState extends State<AddAdmins> {
+  TextEditingController searchUserController = TextEditingController();
+  List<UserProfile> dublicateOutOfChatAdmins = [];
+  List<UserProfile> outOfChatAdmins = [];
+
+  List<UserProfile> selectedUsers = [];
+  late Set<String> selectedUserIds = Set<String>();
+
+  void filterUsers(String query) {
+    print("Query: $query");
+    print("Original users: $dublicateOutOfChatAdmins");
+    setState(() {
+      if (query.isEmpty) {
+        // If the query is empty, show all users
+        outOfChatAdmins = dublicateOutOfChatAdmins.toList();
+      } else {
+        outOfChatAdmins = dublicateOutOfChatAdmins.where((item) {
+          bool matches =
+              '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                      .contains(query.toLowerCase()) ||
+                  item.name.toLowerCase() + item.lastname.toLowerCase() ==
+                      query.toLowerCase() ||
+                  item.name.toLowerCase().contains(query.toLowerCase()) ||
+                  item.lastname.toLowerCase().contains(query.toLowerCase());
+          print("Item: $item, Matches: $matches");
+          return matches;
+        }).toList();
+      }
+      print("Updated outOfChatMembers: $outOfChatAdmins");
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print("members == users ??");
+    print(widget.admins == widget.users);
+    print("ADD MEMBER CALLED");
+    print("USERS IN ADD MEMBERS");
+    //print(widget.users);
+    List<UserProfile> adminMembers = widget.members
+        .where((member) => widget.admins.contains(member))
+        .toList();
+
+    outOfChatAdmins =
+        widget.users.where((user) => !adminMembers.contains(user)).toList();
+
+    dublicateOutOfChatAdmins = outOfChatAdmins;
+    print("outOfChatMembers == users ??");
+    print(outOfChatAdmins == widget.users);
+    print("USER IDS: ${widget.users.map((user) => user.userId).toList()}");
+    print("ADMINS IDS: ${adminMembers.map((user) => user.userId).toList()}");
+    print(
+        "OUT OF CHAT ADMINS IDS: ${outOfChatAdmins.map((user) => user.userId).toList()}");
+
+    return WillPopScope(
+        onWillPop: () async {
+          // Сбрасываем поля при закрытии диалога
+          //nameController.clear();
+
+          return true; // Разрешаем закрытие диалога
+        },
+        child: AlertDialog(
+          titlePadding: const EdgeInsets.all(0.0),
+          title: Container(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+              child: Center(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _getCloseButton(context, () {
+                    setState(() {
+                      selectedUserIds.clear();
+                    });
+                  }),
+                  const Text("Добавить участников"),
+                ],
+              ))),
+          content: SizedBox(
+            width: 320,
+            child: Column(children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                child: TextField(
+                  onChanged: (query) {
+                    setState(() {
+                      outOfChatAdmins = dublicateOutOfChatAdmins.where((item) {
+                        return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                                .contains(query) ||
+                            item.name.toLowerCase() +
+                                    item.lastname.toLowerCase() ==
+                                query.toLowerCase() ||
+                            item.name
+                                .toLowerCase()
+                                .contains(query.toLowerCase()) ||
+                            item.lastname
+                                .toLowerCase()
+                                .contains(query.toLowerCase());
+                      }).toList();
+                    });
+                  },
+                  controller: searchUserController,
+                  style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                  decoration: const InputDecoration(
+                      suffixIconConstraints:
+                          BoxConstraints(minWidth: 32, minHeight: 40),
+                      hintText: "Найти пользователя",
+                      hintStyle:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
+                      suffixIcon: Icon(Icons.search),
+                      isDense: true,
+                      contentPadding: EdgeInsets.only(
+                          right: 10, top: 10, bottom: 10, left: 15),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              width: 1,
+                              color: Color.fromARGB(255, 37, 87, 153))),
+                      border: OutlineInputBorder(borderSide: BorderSide())),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: outOfChatAdmins.length,
+                    itemBuilder: (context, index) {
+                      // print("outOfChatMembers");
+                      // print(widget.outOfChatMembers);
+                      return Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                          child: CheckboxListTile(
+                            value: selectedUserIds.contains(
+                                outOfChatAdmins[index].userId.toString()),
+                            //_isChecked[users[index].userId] ??
+                            //false,
+                            ////_isChecked[index],
+                            title: Text(
+                                '${outOfChatAdmins[index].name} ${outOfChatAdmins[index].lastname}'),
+                            secondary: CircleAvatar(
+                                backgroundColor:
+                                    const Color.fromARGB(1, 255, 255, 255),
+                                backgroundImage: NetworkImage(
+                                    outOfChatAdmins[index].avatar)),
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value != null) {
+                                  //int originalIndex = dublicateUsers.indexOf(users[index]);
+                                  //_isChecked[originalIndex] = value;
+                                  //_isChecked[users[index].userId] = value;
+                                  if (value) {
+                                    selectedUserIds.add(outOfChatAdmins[index]
+                                        .userId
                                         .toString());
+                                    //selectedUsers.add(users[index]);
+                                  } else {
+                                    selectedUserIds.remove(
+                                        outOfChatAdmins[index]
+                                            .userId
+                                            .toString());
                                     //selectedUsers.remove(users[index]);
                                   }
                                 }

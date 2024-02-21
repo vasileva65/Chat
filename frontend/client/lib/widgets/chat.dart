@@ -988,10 +988,10 @@ class _ChatPageState extends State<ChatPage> {
                         context: context,
                         builder: (context) => GroupChatSettingsDialog(
                           admins: admins,
-                          users: outOfChatMembers,
+                          users: users,
                           user: widget.userData,
                           members: members,
-                          outOfChatMembers: outOfChatMembers,
+                          //outOfChatMembers: outOfChatMembers,
                           nameController: nameController,
                           chat: widget.chat,
                           selectedUsers: selectedUsers,
