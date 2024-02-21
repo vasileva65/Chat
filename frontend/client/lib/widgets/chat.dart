@@ -166,6 +166,7 @@ class _ChatPageState extends State<ChatPage> {
     getPhotos();
     getChatMembersDetails();
     nameController.text = widget.chat.name;
+    getUsers();
   }
 
   void _printLatestValue() {
@@ -351,6 +352,8 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> addGroupMembers() async {
     outOfChatMembers = users.where((user) => !members.contains(user)).toList();
     dublicateOutOfChatMembers = outOfChatMembers;
+    print("outOfChatMembers == users ??");
+    print(outOfChatMembers == users);
     final result = await showDialog(
         context: context,
         builder: (ctx) => WillPopScope(
@@ -917,6 +920,10 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("WIDGET USERS");
+    print(users);
+    outOfChatMembers = users.where((user) => !members.contains(user)).toList();
+    dublicateOutOfChatMembers = outOfChatMembers;
     print('doing rebuild');
     print(widget.chat.chatId);
     print(widget.chat.name);
@@ -971,16 +978,23 @@ class _ChatPageState extends State<ChatPage> {
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'viewChatInfo') {
+                      print("USERS");
+                      print(users);
+                      print("OUT OF CHAT MEM");
+                      print(outOfChatMembers);
+                      print("CHAT MEMBERS");
+                      print(members);
                       showDialog(
                         context: context,
                         builder: (context) => GroupChatSettingsDialog(
                           admins: admins,
-                          users: users,
+                          users: outOfChatMembers,
                           user: widget.userData,
                           members: members,
                           outOfChatMembers: outOfChatMembers,
                           nameController: nameController,
                           chat: widget.chat,
+                          selectedUsers: selectedUsers,
                         ),
                       );
                     } else if (value == 'leaveChat') {
