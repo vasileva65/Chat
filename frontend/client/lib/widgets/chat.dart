@@ -961,7 +961,21 @@ class _ChatPageState extends State<ChatPage> {
               ? widget.chat.membersCount.toString() + ' участника'
               : widget.chat.membersCount.toString() + ' участник'),
           onTap: () {
-            if (widget.chat.isGroupChat == "True") groupChatSettings();
+            if (widget.chat.isGroupChat == "True") {
+              showDialog(
+                context: context,
+                builder: (context) => GroupChatSettingsDialog(
+                  admins: admins,
+                  users: users,
+                  user: widget.userData,
+                  members: members,
+                  //outOfChatMembers: outOfChatMembers,
+                  nameController: nameController,
+                  chat: widget.chat,
+                  selectedUsers: selectedUsers,
+                ),
+              );
+            }
             if (widget.chat.isGroupChat == "False") userPage(secondMember);
           },
           hoverColor: Colors.transparent,
