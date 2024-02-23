@@ -1,9 +1,11 @@
 // идея этого класса в том чтобы организовать передачу информации между диалоговыми окнами
 
 import 'package:client/models/chats.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../models/auth.dart';
 import '../models/userProfile.dart';
 
 _getCloseButton(BuildContext context, VoidCallback onClose) {
@@ -24,32 +26,36 @@ _getCloseButton(BuildContext context, VoidCallback onClose) {
 }
 
 class GroupChatSettingsDialog extends StatefulWidget {
-  final List<int> admins;
-  final List<UserProfile> users;
+  Auth auth;
+  //final List<int> admins;
+  //final List<UserProfile> users;
   final UserProfile user;
-  final List<UserProfile> members;
+  //final List<UserProfile> members;
   //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
   final Chats chat;
   List<UserProfile> selectedUsers;
+  // final Function(List<UserProfile> newMembers) onUpdateMembers;
 
   GroupChatSettingsDialog({
-    required this.admins,
-    required this.users,
+    required this.auth,
+    //required this.admins,
+    //required this.users,
     required this.user,
-    required this.members,
+    //required this.members,
     //required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
     required this.selectedUsers,
+    //required this.onUpdateMembers,
   });
 
   @override
   _GroupChatSettingsDialogState createState() => _GroupChatSettingsDialogState(
-        admins: admins,
-        users: users,
+        //admins: admins,
+        //users: users,
         user: user,
-        members: members,
+        //members: members,
         //outOfChatMembers: outOfChatMembers,
         nameController: nameController,
         chat: chat,
@@ -57,27 +63,208 @@ class GroupChatSettingsDialog extends StatefulWidget {
 }
 
 class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
-  final List<int> admins;
-  final List<UserProfile> users;
+  List<int> admins = [];
+  List<UserProfile> users = [];
   final UserProfile user;
-  final List<UserProfile> members;
+  List<UserProfile> members = [];
   //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
   final Chats chat;
+  List<UserProfile> adminMembers = [];
+  List<UserProfile> regularMembers = [];
+  bool isLoading = true;
 
   _GroupChatSettingsDialogState({
-    required this.admins,
-    required this.users,
+    //required this.admins,
+    //required this.users,
     required this.user,
-    required this.members,
+    //required this.members,
     //required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
   });
 
+  void updateRegularMembers(List<UserProfile> selectedUsers) {
+    setState(() {
+      widget.selectedUsers = selectedUsers;
+      regularMembers = members
+          .where((member) => !admins.contains(member.userId))
+          .toList()
+        ..addAll(selectedUsers);
+      print(
+          "REGULAR MEMBERS IDS: ${regularMembers.map((user) => user.userId).toList()}");
+    });
+  }
+
+  Future<List<int>> getChatAdminsIds() async {
+    var dio = Dio();
+    try {
+      Response response = await dio.get('http://localhost:8000/chatadmins',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("fetching users");
+      print(response.data);
+
+      List<int> adminIds = [];
+
+      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
+        if (widget.chat.chatId == response.data[i]['chat_id']) {
+          adminIds.add(response.data[i]['user_id']);
+        }
+      }
+      print("ADMIN IDS");
+      print(adminIds);
+      return adminIds;
+    } catch (e) {
+      print('Error fetching chat members: $e');
+      return []; // или возвращайте пустой список или другое значение по умолчанию
+    }
+  }
+
+  Future<List<int>> getChatMembersIds() async {
+    var dio = Dio();
+    try {
+      Response response = await dio.get('http://localhost:8000/chatmembers',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("fetching users");
+      print(response.data);
+
+      List<int> memberIds = [];
+
+      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
+        if (widget.chat.chatId == response.data[i]['chat_id']) {
+          memberIds.add(response.data[i]['user_id']);
+        }
+      }
+      print(memberIds);
+      return memberIds;
+    } catch (e) {
+      print('Error fetching chat members: $e');
+      return []; // или возвращайте пустой список или другое значение по умолчанию
+    }
+  }
+
+  Future getChatMembersDetails() async {
+    List<int> memberIds = await getChatMembersIds();
+    List<int> adminIds = await getChatAdminsIds();
+
+    List<UserProfile> result = [];
+    var dio = Dio();
+    for (int memberId in memberIds) {
+      try {
+        Response returnedResult = await dio.get(
+          'http://localhost:8000/userprofiles/',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }),
+        );
+        print("DETAILS");
+        //print(returnedResult.data);
+        print(memberId);
+        for (int i = 0;
+            i < (returnedResult.data as List<dynamic>).length;
+            i++) {
+          if (returnedResult.data[i]['user_id'] == memberId) {
+            print(returnedResult.data[i]);
+            UserProfile user = UserProfile(
+              returnedResult.data[i]['user_id'],
+              returnedResult.data[i]['user']['username'],
+              returnedResult.data[i]['user']['first_name'],
+              returnedResult.data[i]['user']['last_name'],
+              returnedResult.data[i]['user']['middle_name'],
+              returnedResult.data[i]['avatar'],
+            );
+
+            result.add(user);
+          }
+        }
+      } catch (e) {
+        print('Error fetching user profile: $e');
+        // обработка ошибок, если не удается получить данные пользователя
+      }
+    }
+
+    setState(() {
+      members = result;
+      admins = adminIds;
+    });
+  }
+
+  Future getUsers() async {
+    var dio = Dio();
+    Response returnedResult =
+        await dio.get('http://localhost:8000/userprofiles',
+            options: Options(headers: {
+              'Authorization': "Bearer ${widget.auth.token}",
+            }));
+    print("fetching users");
+    print(returnedResult.data);
+
+    List<UserProfile> result = [];
+
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      print(widget.auth.userId);
+
+      if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId) {
+        UserProfile user = UserProfile(
+            returnedResult.data[i]['user_id'],
+            returnedResult.data[i]['user']['username'],
+            returnedResult.data[i]['user']['first_name'],
+            returnedResult.data[i]['user']['last_name'],
+            returnedResult.data[i]['user']['middle_name'],
+            returnedResult.data[i]['avatar']);
+        result.add(user);
+      }
+    }
+
+    setState(() {
+      users = result;
+    });
+  }
+
+  Future<void> fetchData() async {
+    try {
+      await getChatMembersDetails();
+      await getUsers();
+      setState(() {
+        isLoading =
+            false; // После загрузки данных устанавливаем isLoading в false
+      });
+    } catch (error) {
+      print('Error fetching data: $error');
+      // Обработка ошибок при загрузке данных
+      setState(() {
+        isLoading =
+            false; // Даже в случае ошибки устанавливаем isLoading в false
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    print('doing init');
+    super.initState();
+    fetchData();
+  }
+
   @override
   Widget build(BuildContext context) {
     print("called groupChat");
+    if (isLoading) {
+      return const SizedBox(
+        height: 30,
+        width: 30,
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 3.0,
+            color: Colors.white,
+          ),
+        ),
+      ); // Покажите индикатор загрузки или другой виджет ожидания
+    }
     String chatName = nameController.text;
     List<UserProfile> adminMembers =
         members.where((member) => admins.contains(member.userId)).toList();
@@ -227,6 +414,10 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                   // Обновляем выбранных пользователей
                                                   widget.selectedUsers =
                                                       selectedUsers;
+                                                  regularMembers
+                                                      .addAll(selectedUsers);
+                                                  print(
+                                                      "REGULAR MEMBERS ${users.map((user) => user.userId).toList()}");
                                                 });
                                                 Navigator.pop(
                                                     context); // Закрыть вложенное диалоговое окно
@@ -258,7 +449,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                         print("CHAT ADMIN ID ${chat.adminId}");
                         print("USER ID ${user.userId}");
                         print("USERS IN SETTINGS");
-                        print(widget.users);
+                        print(users);
                         print(chat.adminId == user.userId);
                         if (admins.contains(user.userId)) {
                           return Padding(
@@ -348,22 +539,12 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                             barrierDismissible: true,
                                             builder: (BuildContext context) =>
                                                 AddMembers(
+                                                  chat: chat,
+                                                  auth: widget.auth,
                                                   users: users,
                                                   members: members,
                                                   onSelectionComplete:
-                                                      (List<UserProfile>
-                                                          selectedUsers) {
-                                                    // Обработка выбранных пользователей
-                                                    print(
-                                                        'Selected users: $selectedUsers');
-                                                    setState(() {
-                                                      // Обновляем выбранных пользователей
-                                                      widget.selectedUsers =
-                                                          selectedUsers;
-                                                    });
-                                                    Navigator.pop(
-                                                        context); // Закрыть вложенное диалоговое окно
-                                                  },
+                                                      updateRegularMembers,
                                                 ));
                                       }))
                           ],
@@ -506,12 +687,16 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
 }
 
 class AddMembers extends StatefulWidget {
+  Chats chat;
+  Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
 
   final Function(List<UserProfile> selectedUsers) onSelectionComplete;
 
   AddMembers({
+    required this.chat,
+    required this.auth,
     required this.users,
     required this.members,
     required this.onSelectionComplete,
@@ -549,6 +734,37 @@ class _AddMembersState extends State<AddMembers> {
       }
       print("Updated outOfChatMembers: $outOfChatMembers");
     });
+  }
+
+  Future addChatMembers(Chats chat) async {
+    print('add new group chat called');
+    try {
+      var dio = Dio();
+      Response response = await dio.patch(
+          'http://localhost:8000/chats/partial_update/${chat.chatId}/',
+          data: {
+            //'chat_name': chatNameController.text,
+            'user_ids':
+                selectedUsers.map((user) => user.userId.toString()).toList(),
+
+            //'admin_id': widget.userData.userId,
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      print('Error: $e');
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+      }
+      return;
+    }
+
+    print('AddMembers called');
   }
 
   @override
@@ -669,12 +885,15 @@ class _AddMembersState extends State<AddMembers> {
                                     selectedUserIds.add(outOfChatMembers[index]
                                         .userId
                                         .toString());
+                                    selectedUsers.add(outOfChatMembers[index]);
                                     //selectedUsers.add(users[index]);
                                   } else {
                                     selectedUserIds.remove(
                                         outOfChatMembers[index]
                                             .userId
                                             .toString());
+                                    selectedUsers
+                                        .remove(outOfChatMembers[index]);
                                     //selectedUsers.remove(users[index]);
                                   }
                                 }
@@ -692,7 +911,11 @@ class _AddMembersState extends State<AddMembers> {
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    addChatMembers(widget.chat);
+                    print(
+                        "SELECTED USER IDS: ${selectedUsers.map((user) => user.userId).toList()}");
+                    widget.onSelectionComplete(selectedUsers);
+                    Navigator.pop(context, selectedUsers);
                   },
                   style: ButtonStyle(
                       backgroundColor: const MaterialStatePropertyAll<Color>(
@@ -704,7 +927,7 @@ class _AddMembersState extends State<AddMembers> {
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                     child: const Text(
-                      "Завершить выбор",
+                      "Сохранить",
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.w300),
                     ),
@@ -910,7 +1133,7 @@ class _AddAdminsState extends State<AddAdmins> {
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.pop(context, selectedUsers);
                   },
                   style: ButtonStyle(
                       backgroundColor: const MaterialStatePropertyAll<Color>(

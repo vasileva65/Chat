@@ -28,6 +28,7 @@ router.register(r'chatadmins', ChatAdminsViewSet,basename="chatadmins")
 router.register(r'user/profile', UserProfileViewSet,basename="userprofile")
 router.register(r'userprofiles', AllUserProfileViewSet, basename="profiles")
 router.register(r'chats/create_chat', ChatViewSet, basename="create_chat")
+router.register(r'chats/partial_update', ChatViewSet, basename='partial_update')
 
 
 # The API URLs are now determined automatically by the router.

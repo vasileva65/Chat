@@ -61,37 +61,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         queryset = Chat.objects.annotate(people_count=Count('chatmembers')).all()
         return queryset
     
-    # def create(self, request, *args, **kwargs):
-    #     user_ids = request.data.get('user_ids')
-    #     group_chat = request.data.get('group_chat', False)
-
-    #     if user_ids:
-    #         users = User.objects.filter(id__in=user_ids)
-
-    #         if len(users) != len(user_ids):
-    #             return Response({'error': 'Invalid user ids'}, status=status.HTTP_400_BAD_REQUEST)
-            
-    #         # Проверяем, существует ли уже чат с этими пользователями
-    #         chat = Chat.objects.filter(users__in=users).distinct()
-
-    #         if chat:
-    #             return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
-            
-    #         # Создаем новый чат
-    #         if group_chat:
-    #             chat_name = request.data.get('chat_name')
-    #         else:
-    #             chat_name = ', '.join([user.first_name + ' ' + user.last_name for user in users])
-    #         chat = Chat(chat_name=chat_name, group_chat=group_chat)
-    #         chat.save()
-    #         chat.users.set(users)
-
-    #         serializer = ChatSerializer(chat)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-    #     return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         user_ids = request.data.get('user_ids')
 
@@ -102,16 +72,16 @@ class ChatViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Invalid user ids'}, status=status.HTTP_400_BAD_REQUEST)
 
             # Проверяем, существует ли уже чат с этими пользователями
-            chat = Chat.objects.filter(users__in=users).exclude(chat_id=instance.chat_id).distinct()
+            #chat = Chat.objects.filter(users__in=users).exclude(chat_id=instance.chat_id).distinct()
 
-            if chat:
-                return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
+            #if chat:
+            #    return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
             # Обновляем чат
-            instance.users.set(users)
-            instance.save()
+            for user in users:
+                ChatMembers.objects.create(chat_id=instance, user_id=user)
 
-            serializer = ChatSerializer(instance)
+            serializer = ChatSerializer(instance, context={'request': request})
             return Response(serializer.data)
 
         return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
