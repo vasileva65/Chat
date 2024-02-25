@@ -263,7 +263,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
             color: Colors.white,
           ),
         ),
-      ); // Покажите индикатор загрузки или другой виджет ожидания
+      );
     }
     String chatName = nameController.text;
     List<UserProfile> adminMembers =
@@ -275,10 +275,9 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     List<UserProfile> sortedMembers = [...adminMembers, ...regularMembers];
     return WillPopScope(
       onWillPop: () async {
-        // Сбрасываем поля при закрытии диалога
         nameController.text = chatName;
 
-        return true; // Разрешаем закрытие диалога
+        return true;
       },
       child: AlertDialog(
         contentPadding: EdgeInsets.fromLTRB(5, 5, 5, 20),
@@ -544,7 +543,18 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                   users: users,
                                                   members: members,
                                                   onSelectionComplete:
-                                                      updateRegularMembers,
+                                                      //updateRegularMembers,
+                                                      (List<UserProfile>
+                                                          selectedUsers) {
+                                                    // Обработка выбранных пользователей
+                                                    print(
+                                                        'Selected users: $selectedUsers');
+                                                    // Обновляем данные в основном виджете
+                                                    setState(() {
+                                                      members.addAll(
+                                                          selectedUsers);
+                                                    });
+                                                  },
                                                 ));
                                       }))
                           ],
