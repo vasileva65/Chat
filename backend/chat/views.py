@@ -63,7 +63,9 @@ class ChatViewSet(viewsets.ModelViewSet):
     
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        user_ids = request.data.get('user_ids')
+
+        admin_ids = request.data.get('admin_ids', [])
+        user_ids = request.data.get('user_ids', [])
 
         if user_ids:
             users = User.objects.filter(id__in=user_ids)
@@ -80,6 +82,25 @@ class ChatViewSet(viewsets.ModelViewSet):
             # Обновляем чат
             for user in users:
                 ChatMembers.objects.create(chat_id=instance, user_id=user)
+
+            serializer = ChatSerializer(instance, context={'request': request})
+            return Response(serializer.data)
+        
+        if admin_ids:
+            admins = User.objects.filter(id__in=admin_ids)
+
+            if len(admins) != len(admin_ids):
+                return Response({'error': 'Invalid admin ids'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Проверяем, существует ли уже чат с этими пользователями
+            #chat = Chat.objects.filter(users__in=users).exclude(chat_id=instance.chat_id).distinct()
+
+            #if chat:
+            #    return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Обновляем чат
+            for admin in admins:
+                ChatAdmins.objects.create(chat_id=instance, user_id=admin)
 
             serializer = ChatSerializer(instance, context={'request': request})
             return Response(serializer.data)

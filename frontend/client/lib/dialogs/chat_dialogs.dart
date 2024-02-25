@@ -34,7 +34,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
   //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
   final Chats chat;
-  List<UserProfile> selectedUsers;
+
   // final Function(List<UserProfile> newMembers) onUpdateMembers;
 
   GroupChatSettingsDialog({
@@ -46,7 +46,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
     //required this.outOfChatMembers,
     required this.nameController,
     required this.chat,
-    required this.selectedUsers,
+
     //required this.onUpdateMembers,
   });
 
@@ -83,18 +83,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     required this.nameController,
     required this.chat,
   });
-
-  void updateRegularMembers(List<UserProfile> selectedUsers) {
-    setState(() {
-      widget.selectedUsers = selectedUsers;
-      regularMembers = members
-          .where((member) => !admins.contains(member.userId))
-          .toList()
-        ..addAll(selectedUsers);
-      print(
-          "REGULAR MEMBERS IDS: ${regularMembers.map((user) => user.userId).toList()}");
-    });
-  }
 
   Future<List<int>> getChatAdminsIds() async {
     var dio = Dio();
@@ -229,6 +217,12 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     try {
       await getChatMembersDetails();
       await getUsers();
+      adminMembers =
+          members.where((member) => admins.contains(member.userId)).toList();
+
+      regularMembers =
+          members.where((member) => !admins.contains(member.userId)).toList();
+
       setState(() {
         isLoading =
             false; // После загрузки данных устанавливаем isLoading в false
@@ -266,11 +260,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
       );
     }
     String chatName = nameController.text;
-    List<UserProfile> adminMembers =
-        members.where((member) => admins.contains(member.userId)).toList();
-
-    List<UserProfile> regularMembers =
-        members.where((member) => !admins.contains(member.userId)).toList();
 
     List<UserProfile> sortedMembers = [...adminMembers, ...regularMembers];
     return WillPopScope(
@@ -400,6 +389,8 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                         barrierDismissible: true,
                                         builder: (BuildContext context) =>
                                             AddAdmins(
+                                              chat: chat,
+                                              auth: widget.auth,
                                               users: users,
                                               members: members,
                                               admins: adminMembers,
@@ -409,17 +400,14 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                 // Обработка выбранных пользователей
                                                 print(
                                                     'Selected users: $selectedUsers');
+                                                // Обновляем данные в основном виджете
                                                 setState(() {
-                                                  // Обновляем выбранных пользователей
-                                                  widget.selectedUsers =
-                                                      selectedUsers;
-                                                  regularMembers
+                                                  adminMembers
                                                       .addAll(selectedUsers);
-                                                  print(
-                                                      "REGULAR MEMBERS ${users.map((user) => user.userId).toList()}");
+                                                  regularMembers.removeWhere(
+                                                      (user) => selectedUsers
+                                                          .contains(user));
                                                 });
-                                                Navigator.pop(
-                                                    context); // Закрыть вложенное диалоговое окно
                                               },
                                             ));
                                   },
@@ -951,6 +939,8 @@ class _AddMembersState extends State<AddMembers> {
 }
 
 class AddAdmins extends StatefulWidget {
+  Chats chat;
+  Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
   List<UserProfile> admins;
@@ -958,6 +948,8 @@ class AddAdmins extends StatefulWidget {
   final Function(List<UserProfile> selectedUsers) onSelectionComplete;
 
   AddAdmins({
+    required this.chat,
+    required this.auth,
     required this.users,
     required this.members,
     required this.admins,
@@ -972,7 +964,7 @@ class _AddAdminsState extends State<AddAdmins> {
   List<UserProfile> dublicateOutOfChatAdmins = [];
   List<UserProfile> outOfChatAdmins = [];
 
-  List<UserProfile> selectedUsers = [];
+  List<UserProfile> selectedAdmins = [];
   late Set<String> selectedUserIds = Set<String>();
 
   void filterUsers(String query) {
@@ -999,6 +991,37 @@ class _AddAdminsState extends State<AddAdmins> {
     });
   }
 
+  Future addChatAdmins(Chats chat) async {
+    print('add new group chat called');
+    try {
+      var dio = Dio();
+      Response response = await dio.patch(
+          'http://localhost:8000/chats/partial_update/${chat.chatId}/',
+          data: {
+            //'chat_name': chatNameController.text,
+            'admin_ids':
+                selectedAdmins.map((user) => user.userId.toString()).toList(),
+
+            //'admin_id': widget.userData.userId,
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      print('Error: $e');
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+      }
+      return;
+    }
+
+    print('AddMembers called');
+  }
+
   @override
   Widget build(BuildContext context) {
     print("members == users ??");
@@ -1011,7 +1034,7 @@ class _AddAdminsState extends State<AddAdmins> {
         .toList();
 
     outOfChatAdmins =
-        widget.users.where((user) => !adminMembers.contains(user)).toList();
+        widget.members.where((user) => !adminMembers.contains(user)).toList();
 
     dublicateOutOfChatAdmins = outOfChatAdmins;
     print("outOfChatMembers == users ??");
@@ -1120,12 +1143,15 @@ class _AddAdminsState extends State<AddAdmins> {
                                     selectedUserIds.add(outOfChatAdmins[index]
                                         .userId
                                         .toString());
+                                    selectedAdmins.add(outOfChatAdmins[index]);
                                     //selectedUsers.add(users[index]);
                                   } else {
                                     selectedUserIds.remove(
                                         outOfChatAdmins[index]
                                             .userId
                                             .toString());
+                                    selectedAdmins
+                                        .remove(outOfChatAdmins[index]);
                                     //selectedUsers.remove(users[index]);
                                   }
                                 }
@@ -1143,7 +1169,11 @@ class _AddAdminsState extends State<AddAdmins> {
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: TextButton(
                   onPressed: () {
-                    Navigator.pop(context, selectedUsers);
+                    addChatAdmins(widget.chat);
+                    print(
+                        "SELECTED ADMINS IDS: ${selectedAdmins.map((user) => user.userId).toList()}");
+                    widget.onSelectionComplete(selectedAdmins);
+                    Navigator.pop(context, selectedAdmins);
                   },
                   style: ButtonStyle(
                       backgroundColor: const MaterialStatePropertyAll<Color>(

@@ -44,7 +44,6 @@ class _ChatPageState extends State<ChatPage> {
   List<UserProfile> outOfChatMembers = [];
   List<UserProfile> dublicateOutOfChatMembers = [];
   TextEditingController searchUserController = TextEditingController();
-  List<UserProfile> selectedUsers = [];
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
 
@@ -973,7 +972,6 @@ class _ChatPageState extends State<ChatPage> {
                   //outOfChatMembers: outOfChatMembers,
                   nameController: nameController,
                   chat: widget.chat,
-                  selectedUsers: selectedUsers,
                 ),
               );
             }
@@ -1010,7 +1008,6 @@ class _ChatPageState extends State<ChatPage> {
                           //outOfChatMembers: outOfChatMembers,
                           nameController: nameController,
                           chat: widget.chat,
-                          selectedUsers: selectedUsers,
                         ),
                       );
                     } else if (value == 'leaveChat') {
