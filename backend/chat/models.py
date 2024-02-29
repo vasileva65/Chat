@@ -6,6 +6,7 @@ from django.conf import settings
 from .manager import CustomUserManager
 from django.db.models.signals import post_save
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
 
 class User(AbstractUser):
     first_name = models.CharField(max_length=150, validators=[
@@ -108,6 +109,23 @@ class Message(models.Model):
         return self.body
 
 
-    
+class ActionLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    action_type = models.CharField(max_length=255)
+    target_object_id = models.PositiveIntegerField()
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user} - {self.action_type} on {self.target_object_id}"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.message}"
 
 

@@ -5,6 +5,7 @@ from .models import *
 from django.contrib.auth import get_user_model
 from django import forms
 from django.db.models import Q
+from django.contrib.admin.models import LogEntry
 
 #from .models import User
 User = get_user_model()
@@ -101,5 +102,12 @@ class ChatAdmin(admin.ModelAdmin):
     
     def people_count(self, obj):
         return obj.chatmembers_set.count()
+    
+@admin.register(ActionLog)
+class ActionLogAdmin(admin.ModelAdmin):
+    list_display = ['timestamp', 'user', 'action_type', 'target_object_id']
+    search_fields = ['user__username', 'action_type']
+    list_filter = ['action_type']
+
     
     
