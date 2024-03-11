@@ -1,7 +1,11 @@
+from datetime import timezone
+from datetime import datetime
+
 import logging
 
 import requests
 from chat.models import (
+    ActionLog,
     Chat,
     ChatAdmins, 
     Message,
@@ -39,6 +43,8 @@ from django.contrib.auth import get_user_model
 #from .models import User
 User = get_user_model()
 
+from django.shortcuts import get_object_or_404
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -62,8 +68,11 @@ class ChatViewSet(viewsets.ModelViewSet):
         return queryset
     
     def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-
+        print("partial update called")
+        chat = self.get_object()
+        user_id = request.data.get('user_id', None)
+        admin_id = request.data.get('admin_id', None)
+        print(admin_id)
         admin_ids = request.data.get('admin_ids', [])
         user_ids = request.data.get('user_ids', [])
 
@@ -73,17 +82,10 @@ class ChatViewSet(viewsets.ModelViewSet):
             if len(users) != len(user_ids):
                 return Response({'error': 'Invalid user ids'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Проверяем, существует ли уже чат с этими пользователями
-            #chat = Chat.objects.filter(users__in=users).exclude(chat_id=instance.chat_id).distinct()
-
-            #if chat:
-            #    return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Обновляем чат
             for user in users:
-                ChatMembers.objects.create(chat_id=instance, user_id=user)
+                ChatMembers.objects.create(chat_id=chat, user_id=user)
 
-            serializer = ChatSerializer(instance, context={'request': request})
+            serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
         
         if admin_ids:
@@ -92,18 +94,44 @@ class ChatViewSet(viewsets.ModelViewSet):
             if len(admins) != len(admin_ids):
                 return Response({'error': 'Invalid admin ids'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Проверяем, существует ли уже чат с этими пользователями
-            #chat = Chat.objects.filter(users__in=users).exclude(chat_id=instance.chat_id).distinct()
-
-            #if chat:
-            #    return Response({'error': 'Chat already exists'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Обновляем чат
             for admin in admins:
-                ChatAdmins.objects.create(chat_id=instance, user_id=admin)
+                ChatAdmins.objects.create(chat_id=chat, user_id=admin)
 
-            serializer = ChatSerializer(instance, context={'request': request})
+            serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
+        
+        if admin_id:
+            print("admin id close")
+            try:
+                print("try called")
+                chat_admin = ChatAdmins.objects.get(chat_id=chat, user_id=admin_id, left_at__isnull=True)
+                print(chat_admin)
+                chat_admin.left_at = datetime.now()
+                print(chat_admin.left_at)
+                chat_admin.save()
+                print("saved")
+            except ChatAdmins.DoesNotExist:
+                return Response({'error': 'Пользователь не является администратором этого чата'}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = ChatSerializer(chat, context={'request': request})
+            return Response(serializer.data)
+        if user_id:
+            print("user id close")
+            try:
+                print("try called")
+                chat_user = ChatMembers.objects.get(chat_id=chat, user_id=user_id, left_at__isnull=True)
+                print(chat_user)
+                chat_user.left_at = datetime.now()
+                print(chat_user.left_at)
+                chat_user.save()
+                print("saved")
+            except ChatMembers.DoesNotExist:
+                return Response({'error': 'Пользователь не является участником этого чата'}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = ChatSerializer(chat, context={'request': request})
+            return Response(serializer.data)
+        else:
+             return Response({'error': 'Неверные данные'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -112,7 +140,33 @@ class ChatViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+    #@action(detail=True, methods=['patch'])
+    # def remove_member_or_admin(self, request, *args, **kwargs):
+    #     print("removing called")
+    #     chat = self.get_object()
+    #     # user_id = request.data.get('user_id', '')
+    #     admin_id = request.data.get('admin_id')
+    #     admin_id = int(admin_id)
+    #     # if user_id:
+    #     #     try:
+    #     #         chat_member = ChatMembers.objects.get(chat_id=chat, user_id=user_id)
+    #     #         chat_member.left_at = timezone.now()
+    #     #         chat_member.save()
+    #     #     except ChatMembers.DoesNotExist:
+    #     #         return Response({'error': 'Пользователь не является участником этого чата'}, status=status.HTTP_404_NOT_FOUND)
+    #     if admin_id:
+    #         try:
+    #             chat_admin = ChatAdmins.objects.get(chat_id=chat, user_id=admin_id)
+    #             chat_admin.left_at = timezone.now()
+    #             chat_admin.save()
+    #         except ChatAdmins.DoesNotExist:
+    #             return Response({'error': 'Пользователь не является администратором этого чата'}, status=status.HTTP_404_NOT_FOUND)
+    #     else:
+    #          return Response({'error': 'Неверные данные'}, status=status.HTTP_400_BAD_REQUEST)
 
+    #     serializer = ChatSerializer(chat, context={'request': request})
+    #     return Response(serializer.data)
+    
     @action(detail=False, methods=['post'], serializer_class=CreateChatSerializer)
     def create_chat(self, request, *args, **kwargs):
         try:
