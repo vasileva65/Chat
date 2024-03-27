@@ -133,7 +133,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         else:
              return Response({'error': 'Неверные данные'}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+        
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
