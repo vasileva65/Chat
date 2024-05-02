@@ -2,6 +2,7 @@ import 'package:client/dialogs/chat_dialogs.dart';
 import 'package:client/models/chats.dart';
 import 'package:client/models/message.dart';
 import 'package:client/models/userProfile.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +14,7 @@ import 'package:client/models/userProfile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
+import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
 
 typedef ChatUpdated = void Function(int chatId, String name, String avatar,
@@ -278,41 +280,56 @@ class _ChatPageState extends State<ChatPage> {
   Future getChatMembersDetails() async {
     List<int> memberIds = await getChatMembersIds();
     List<int> adminIds = await getChatAdminsIds();
-
+    print("MEMBER IDS");
+    print(memberIds.length);
     List<UserProfile> result = [];
 
-    for (int memberId in memberIds) {
-      try {
-        Response returnedResult = await dio.get(
-          'http://localhost:8000/userprofiles/',
-          options: Options(headers: {
-            'Authorization': "Bearer ${widget.auth.token}",
-          }),
-        );
-        print("DETAILS");
-        //print(returnedResult.data);
-        print(memberId);
-        for (int i = 0;
-            i < (returnedResult.data as List<dynamic>).length;
-            i++) {
-          if (returnedResult.data[i]['user_id'] == memberId) {
-            print(returnedResult.data[i]);
-            UserProfile user = UserProfile(
-              returnedResult.data[i]['user_id'],
-              returnedResult.data[i]['user']['username'],
-              returnedResult.data[i]['user']['first_name'],
-              returnedResult.data[i]['user']['last_name'],
-              returnedResult.data[i]['user']['middle_name'],
-              returnedResult.data[i]['avatar'],
-            );
+    try {
+      Response returnedResult = await dio.get(
+        'http://localhost:8000/userprofiles/',
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+        }),
+      );
+      print("DETAILS");
+      //print(returnedResult.data);
 
-            result.add(user);
-          }
+      print((returnedResult.data as List<dynamic>).length);
+      for (int memberId in memberIds) {
+        print(memberId);
+        var userProfileData = returnedResult.data.firstWhere(
+          (profile) => profile['user_id'] == memberId,
+          orElse: () => null,
+        );
+        if (userProfileData != null) {
+          // Создаем UserProfile из полученных данных
+          UserProfile user = UserProfile(
+            userProfileData['user_id'],
+            userProfileData['user']['username'],
+            userProfileData['user']['first_name'],
+            userProfileData['user']['last_name'],
+            userProfileData['user']['middle_name'],
+            userProfileData['avatar'],
+          );
+          // if (returnedResult.data[i]['user_id'] == memberId) {
+          //   print(returnedResult.data[i]);
+          //   UserProfile user = UserProfile(
+          //     returnedResult.data[i]['user_id'],
+          //     returnedResult.data[i]['user']['username'],
+          //     returnedResult.data[i]['user']['first_name'],
+          //     returnedResult.data[i]['user']['last_name'],
+          //     returnedResult.data[i]['user']['middle_name'],
+          //     returnedResult.data[i]['avatar'],
+          //   );
+
+          result.add(user);
         }
-      } catch (e) {
-        print('Error fetching user profile: $e');
-        // обработка ошибок, если не удается получить данные пользователя
       }
+      print("RESULT COUNT");
+      print(result.length);
+    } catch (e) {
+      print('Error fetching user profile: $e');
+      // обработка ошибок, если не удается получить данные пользователя
     }
 
     setState(() {
@@ -418,9 +435,12 @@ class _ChatPageState extends State<ChatPage> {
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Отдел',
+                    users
+                        .where((user) => user.userId != widget.userData.userId)
+                        .map((user) => user.userId)
+                        .toString(),
                     textAlign: TextAlign.left,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
@@ -478,6 +498,10 @@ class _ChatPageState extends State<ChatPage> {
         }
       }
     }
+    print("members:" + members.length.toString());
+    members.forEach((user) {
+      print('User ID: ${user.userId}');
+    });
     return Scaffold(
       appBar: AppBar(
         shape: const Border(
@@ -518,7 +542,26 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               );
             }
-            if (widget.chat.isGroupChat == "False") userPage(secondMember);
+            if (widget.chat.isGroupChat == "False") {
+              print("second mem:" +
+                  secondMember.name +
+                  " " +
+                  secondMember.lastname);
+              showDialog(
+                context: context,
+                builder: (context) => UserProfileDialog(
+                  auth: widget.auth,
+                  //admins: admins,
+                  //users: users,
+                  user: secondMember,
+                  //members: members,
+                  //outOfChatMembers: outOfChatMembers,
+                  nameController: nameController,
+                  chat: widget.chat,
+                  onChatUpdated: updateChatInfoCallback,
+                ),
+              );
+            }
           },
           hoverColor: Colors.transparent,
           splashColor: Colors.transparent,

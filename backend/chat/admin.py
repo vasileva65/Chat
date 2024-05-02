@@ -109,6 +109,14 @@ class ActionLogAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'action_type']
     list_filter = ['action_type']
 
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('department_id', 'head_id', 'department_name')
+
+@admin.register(DepartmentEployee)
+class DepartmentEployeeAdmin(admin.ModelAdmin):
+    list_display = ('department_id', 'user_id', 'joined_at', 'left_at')
+
     
 
     

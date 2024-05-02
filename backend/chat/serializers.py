@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group
 from backend.generator import generate_username
-from chat.models import Chat, ChatMembers, Message, UserProfile
+from chat.models import Chat, ChatMembers, Department, DepartmentEployee, Message, UserProfile
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
@@ -73,12 +73,25 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = ['url', 'message_id', 'sender_id', 'sender_username', 'sender_first_name', 'sender_last_name', 'avatar', 'chat_id', 'body', 'created_at']
 
 
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['department_id', 'head_id', 'department_name']
 
+class DepartmentEmployeeSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer()
+    class Meta:
+        model = DepartmentEployee
+        fields = ['department', 'role']
+
+       
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+    department_employee = DepartmentEmployeeSerializer(source='user.departmentemployee_set.first', read_only=True)
+    
     class Meta:
         model = UserProfile
-        fields = ['url', 'id', 'user_id', 'user', 'avatar', 'created_at', 'updated_at']
+        fields = ['url', 'id', 'user_id', 'user', 'avatar', 'department_employee', 'created_at', 'updated_at']
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

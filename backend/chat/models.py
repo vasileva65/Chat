@@ -30,8 +30,8 @@ class User(AbstractUser):
         return self.username
 
     def save(self, *args, **kwargs):
-        self.firstname = self.first_name.capitalize()
-        self.lastname = self.last_name.capitalize()
+        self.first_name = self.first_name.capitalize()
+        self.last_name = self.last_name.capitalize()
         self.middle_name = self.middle_name.capitalize()
         super().save(*args, **kwargs)
 
@@ -138,6 +138,36 @@ class Message(models.Model):
     def __str__(self):
         return self.body
 
+class Department(models.Model):
+    department_id = models.AutoField(primary_key=True, verbose_name='ID подразделения')
+    head_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID главы подразделения')
+    department_name = models.CharField(max_length=255, unique=True, null=True, blank=True, verbose_name='Название')
+
+    def __str__(self):
+        return self.department_name
+
+    class Meta:
+        verbose_name = 'Подразделение'
+        verbose_name_plural = 'Подразделения'
+
+class DepartmentEployee(models.Model):
+    department_id = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='ID подразделения')
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID пользователя')
+    role = models.TextField(verbose_name='Должность', blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True, verbose_name='Время присоединения')
+    left_at = models.DateTimeField(null=True, blank=True, verbose_name='Время выхода из подразделения')
+    
+    class Meta:
+        verbose_name = 'Участник подразделения'
+        verbose_name_plural = 'Участники подразделения'
+
+    def __str__(self):
+        return self.department_id.department_name + ' ' + self.user_id.username
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.left_at = None
+        super().save(*args, **kwargs)
 
 class ActionLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID пользователя')
