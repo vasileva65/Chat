@@ -87,8 +87,7 @@ class DepartmentEmployeeSerializer(serializers.ModelSerializer):
        
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
-    department_employee = DepartmentEmployeeSerializer(source='user.departmentemployee_set.first', read_only=True)
-    
+    department_employee = DepartmentEmployeeSerializer(source='user_profile__department', read_only=True)
     class Meta:
         model = UserProfile
         fields = ['url', 'id', 'user_id', 'user', 'avatar', 'department_employee', 'created_at', 'updated_at']

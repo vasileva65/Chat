@@ -111,8 +111,8 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
           }),
         );
         print("DETAILS");
-        //print(returnedResult.data);
-        print(memberId);
+        print(returnedResult.data);
+
         for (int i = 0;
             i < (returnedResult.data as List<dynamic>).length;
             i++) {
@@ -266,14 +266,12 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                      extractDisplayName(widget.chat.name, widget.user.name,
-                          widget.user.lastname),
+                  child: Text("${user.name} ${user.lastname}",
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
                 ),
                 Text(
-                  'Отдел: ${user.lastname}',
+                  'Отдел: ',
                   textAlign: TextAlign.left,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
