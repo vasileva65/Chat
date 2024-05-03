@@ -13,7 +13,7 @@ void main() {
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Chat');
-    setWindowMinSize(const Size(450, 400));
+    setWindowMinSize(const Size(750, 500));
   }
 
   runApp(const MyApp());

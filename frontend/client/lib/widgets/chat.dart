@@ -558,7 +558,6 @@ class _ChatPageState extends State<ChatPage> {
                   //outOfChatMembers: outOfChatMembers,
                   nameController: nameController,
                   chat: widget.chat,
-                  onChatUpdated: updateChatInfoCallback,
                 ),
               );
             }
@@ -651,8 +650,19 @@ class _ChatPageState extends State<ChatPage> {
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'viewProfile') {
-                      // Вызовите метод для просмотра профиля
-                      //viewProfile();
+                      showDialog(
+                        context: context,
+                        builder: (context) => UserProfileDialog(
+                          auth: widget.auth,
+                          //admins: admins,
+                          //users: users,
+                          user: secondMember,
+                          //members: members,
+                          //outOfChatMembers: outOfChatMembers,
+                          nameController: nameController,
+                          chat: widget.chat,
+                        ),
+                      );
                     } else if (value == 'leaveChat') {
                       // Вызовите метод для выхода из чата
                       //leaveChat();

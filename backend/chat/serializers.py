@@ -46,7 +46,6 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat', 'people_count']
-
     
 
 class CreateChatSerializer(serializers.ModelSerializer):
@@ -60,7 +59,6 @@ class CreateChatSerializer(serializers.ModelSerializer):
         model = Chat
         fields = ['user_ids', 'admin_id', 'chat_name', 'avatar', 'group_chat']
     
-
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender_id.username', read_only=True)
@@ -78,16 +76,22 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = ['department_id', 'head_id', 'department_name']
 
+
 class DepartmentEmployeeSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer()
+    department_name = serializers.CharField(source='department_id.department_name', read_only=True)
     class Meta:
         model = DepartmentEployee
-        fields = ['department', 'role']
+        fields = ['department_id', 'user_id', 'role', 'department_name']
 
        
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
-    department_employee = DepartmentEmployeeSerializer(source='user_profile__department', read_only=True)
+    department_employee = serializers.SerializerMethodField()
+    
+    def get_department_employee(self, obj):
+        department_employees = DepartmentEployee.objects.filter(user_id=obj.user_id)
+        return DepartmentEmployeeSerializer(department_employees, many=True).data
+    
     class Meta:
         model = UserProfile
         fields = ['url', 'id', 'user_id', 'user', 'avatar', 'department_employee', 'created_at', 'updated_at']

@@ -29,15 +29,12 @@ class UserProfileDialog extends StatefulWidget {
   final UserProfile user;
   final TextEditingController nameController;
   final Chats chat;
-  final Function(int chatId, String name, String avatar, int membersCount,
-      int adminId, String isGroupChat) onChatUpdated;
 
   UserProfileDialog({
     required this.auth,
     required this.user,
     required this.nameController,
     required this.chat,
-    required this.onChatUpdated,
   });
 
   @override
@@ -60,6 +57,9 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
   List<UserProfile> regularMembers = [];
   bool isLoading = true;
   late UserProfile userToRemove;
+  late String department;
+  late String role;
+  late int department_id;
 
   _UserProfileDialogState({
     //required this.admins,
@@ -144,7 +144,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
   Future getUser(UserProfile user) async {
     var dio = Dio();
     Response returnedResult =
-        await dio.get('http://localhost:8000/userprofiles/${user.userId}',
+        await dio.get('http://localhost:8000/userprofiles/',
             options: Options(headers: {
               'Authorization': "Bearer ${widget.auth.token}",
             }));
@@ -173,15 +173,55 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     });
   }
 
+  Future getEmployeesDepartment(UserProfile user) async {
+    var dio = Dio();
+    Response returnedResult =
+        await dio.get('http://localhost:8000/userprofiles/',
+            options: Options(headers: {
+              'Authorization': "Bearer ${widget.auth.token}",
+            }));
+    print("fetching users");
+    print(returnedResult.data);
+    print("USER ID" + user.userId.toString());
+
+    String resp_department = '';
+    String resp_role = '';
+    int resp_department_id = 0;
+
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      print(widget.auth.userId);
+      List<dynamic> departmentEmployees =
+          returnedResult.data[i]['department_employee'];
+      for (int j = 0; j < departmentEmployees.length; j++) {
+        if (departmentEmployees[j]['user_id'].toString() ==
+            user.userId.toString()) {
+          print("IF WORKED");
+          print("fetch resp_department");
+          resp_department =
+              departmentEmployees[j]['department_name'].toString();
+          print("fetch resp_role");
+          resp_role = departmentEmployees[j]['role'].toString();
+          print("fetch resp_department_id");
+          resp_department_id = departmentEmployees[j]['department_id'];
+          break; // Найден нужный департамент, выходим из цикла
+        }
+      }
+    }
+    print("RESP DEPARTMENT " + resp_department);
+    print("RESP ROLE " + resp_role);
+    print("RESP DEPARTMENT ID " + resp_department_id.toString());
+
+    setState(() {
+      department = resp_department;
+      role = resp_role;
+      department_id = resp_department_id;
+    });
+  }
+
   Future<void> fetchData() async {
     try {
-      await getChatMembersDetails();
-      adminMembers =
-          members.where((member) => admins.contains(member.userId)).toList();
-
-      regularMembers =
-          members.where((member) => !admins.contains(member.userId)).toList();
-
+      print(user.userId);
+      await getEmployeesDepartment(user);
       setState(() {
         isLoading =
             false; // После загрузки данных устанавливаем isLoading в false
@@ -241,82 +281,91 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                 ),
               ],
             ))),
-        content: SizedBox(
-          width: 360,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    child: InkWell(
-                      splashColor: Colors.black26,
-                      onTap: () {},
-                      child: Ink.image(
-                        image: NetworkImage(widget.user.avatar),
-                        height: 120,
-                        width: 120,
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: SizedBox(
+            width: 360,
+            height: 420,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
+                      child: Material(
+                        elevation: 8,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: InkWell(
+                          splashColor: Colors.black26,
+                          onTap: () {},
+                          child: Ink.image(
+                            image: NetworkImage(user.avatar),
+                            height: 120,
+                            width: 120,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text("${user.name} ${user.lastname}",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-                ),
-                Text(
-                  'Отдел: ',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                // Глава отдела
-                Text(
-                  'Глава отдела:',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                // Должность
-                Text(
-                  'Должность:',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                )
-              ],
-            ),
-          ),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton(
-              onPressed: () {
-                getChatMembersDetails();
-                Navigator.of(context).pop();
-              },
-              style: ButtonStyle(
-                  backgroundColor: const MaterialStatePropertyAll<Color>(
-                      Color.fromARGB(255, 37, 87, 153)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: const Text(
-                  "Сохранить",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w300),
+                    Container(
+                      padding: EdgeInsets.fromLTRB(0, 8, 0, 40),
+                      child: Text("${user.name} ${user.lastname}",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w500)),
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 10),
+                        // Левая часть: заголовки
+                        Container(
+                          width: 120, // ширина левой части
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Отдел:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                'Должность:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            width: 20), // отступ между левой и правой частями
+                        // Правая часть: значения
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                department,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                role,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

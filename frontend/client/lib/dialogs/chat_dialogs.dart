@@ -1,5 +1,6 @@
 // идея этого класса в том чтобы организовать передачу информации между диалоговыми окнами
 
+import 'package:client/dialogs/user_profile_dialog.dart';
 import 'package:client/models/chats.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -150,7 +151,8 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
         for (int i = 0;
             i < (returnedResult.data as List<dynamic>).length;
             i++) {
-          if (returnedResult.data[i]['user_id'] == memberId) {
+          if (returnedResult.data[i]['user_id'] == memberId &&
+              !result.any((user) => user.userId == memberId)) {
             print(returnedResult.data[i]);
             UserProfile user = UserProfile(
               returnedResult.data[i]['user_id'],
@@ -169,7 +171,10 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
         // обработка ошибок, если не удается получить данные пользователя
       }
     }
-
+    print("USERS IN RESULT");
+    for (var user in result) {
+      print(user.userId);
+    }
     setState(() {
       members = result;
       admins = adminIds;
@@ -546,6 +551,21 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
                             child: ListTile(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => UserProfileDialog(
+                                    auth: widget.auth,
+                                    //admins: admins,
+                                    //users: users,
+                                    user: adminMembers[index],
+                                    //members: members,
+                                    //outOfChatMembers: outOfChatMembers,
+                                    nameController: nameController,
+                                    chat: widget.chat,
+                                  ),
+                                );
+                              },
                               title: Container(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Text(
@@ -557,11 +577,31 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                   ),
                                 ),
                               ),
-                              trailing: const Tooltip(
+                              // trailing: const Tooltip(
+                              //   message: "Отозвать права администратора",
+                              //   child: Icon(
+                              //     Icons.group_remove_outlined,
+                              //     color: Colors.black,
+                              //   ),
+                              // ),
+                              trailing: Tooltip(
                                 message: "Отозвать права администратора",
-                                child: Icon(
-                                  Icons.group_remove_outlined,
-                                  color: Colors.black,
+                                child: IconButton(
+                                  splashRadius: 1,
+                                  icon: const Icon(
+                                    Icons.group_remove_outlined,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    showConfirmationDialog(
+                                      adminMembers[index],
+                                      confirmAdminRemoving,
+                                      (chat, userToRemove) async {
+                                        await removeChatAdmin(
+                                            chat, userToRemove);
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
                               leading: CircleAvatar(
@@ -570,15 +610,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                     NetworkImage(adminMembers[index].avatar),
                               ),
                               minVerticalPadding: 15.0,
-                              onTap: () {
-                                showConfirmationDialog(
-                                  adminMembers[index],
-                                  confirmAdminRemoving,
-                                  (chat, userToRemove) async {
-                                    await removeChatAdmin(chat, userToRemove);
-                                  },
-                                );
-                              },
                             ),
                           );
                         }
@@ -604,7 +635,21 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                     NetworkImage(adminMembers[index].avatar),
                               ),
                               minVerticalPadding: 15.0,
-                              onTap: () {},
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => UserProfileDialog(
+                                    auth: widget.auth,
+                                    //admins: admins,
+                                    //users: users,
+                                    user: adminMembers[index],
+                                    //members: members,
+                                    //outOfChatMembers: outOfChatMembers,
+                                    nameController: nameController,
+                                    chat: widget.chat,
+                                  ),
+                                );
+                              },
                             ),
                           );
                         }
@@ -698,6 +743,17 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
                             child: ListTile(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => UserProfileDialog(
+                                    auth: widget.auth,
+                                    user: sortedMembers[index],
+                                    nameController: nameController,
+                                    chat: widget.chat,
+                                  ),
+                                );
+                              },
                               title: Container(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Text(
@@ -709,11 +765,24 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                   ),
                                 ),
                               ),
-                              trailing: const Tooltip(
-                                message: 'Удалить участника',
-                                child: Icon(
-                                  Icons.group_remove_outlined,
-                                  color: Colors.black,
+                              trailing: Tooltip(
+                                message: "Удалить участника",
+                                child: IconButton(
+                                  splashRadius: 1,
+                                  icon: const Icon(
+                                    Icons.group_remove_outlined,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    showConfirmationDialog(
+                                      regularMembers[index],
+                                      confirmMemberRemoving,
+                                      (chat, userToRemove) async {
+                                        await removeChatMember(
+                                            chat, userToRemove);
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
                               leading: CircleAvatar(
@@ -722,15 +791,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                     NetworkImage(regularMembers[index].avatar),
                               ),
                               minVerticalPadding: 15.0,
-                              onTap: () {
-                                showConfirmationDialog(
-                                  regularMembers[index],
-                                  confirmMemberRemoving,
-                                  (chat, userToRemove) async {
-                                    await removeChatMember(chat, userToRemove);
-                                  },
-                                );
-                              },
                             ),
                           );
                         }
@@ -756,7 +816,21 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                     NetworkImage(regularMembers[index].avatar),
                               ),
                               minVerticalPadding: 15.0,
-                              onTap: () {},
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => UserProfileDialog(
+                                    auth: widget.auth,
+                                    //admins: admins,
+                                    //users: users,
+                                    user: regularMembers[index],
+                                    //members: members,
+                                    //outOfChatMembers: outOfChatMembers,
+                                    nameController: nameController,
+                                    chat: widget.chat,
+                                  ),
+                                );
+                              },
                             ),
                           );
                         }
@@ -1145,24 +1219,31 @@ class _AddAdminsState extends State<AddAdmins> {
       return;
     }
 
-    print('AddMembers called');
+    print('AddAdmins called');
   }
 
   @override
   Widget build(BuildContext context) {
     print("members == users ??");
     print(widget.admins == widget.users);
-    print("ADD MEMBER CALLED");
-    print("USERS IN ADD MEMBERS");
+    print("ADD ADMIN CALLED");
+    print("USERS IN ADD ADMINS");
     //print(widget.users);
     List<UserProfile> adminMembers = widget.members
         .where((member) => widget.admins.contains(member))
         .toList();
-
+    print(
+        "WIDGET MEMBERS: ${widget.members.map((user) => user.userId).toList()}");
+    print(
+        "OUT OF CHAT ADMINS MEMBERS: ${adminMembers.map((user) => user.userId).toList()}");
     outOfChatAdmins =
         widget.members.where((user) => !adminMembers.contains(user)).toList();
-
-    dublicateOutOfChatAdmins = outOfChatAdmins;
+    print(
+        "OUT OF CHAT ADMINS IDS: ${outOfChatAdmins.map((user) => user.userId).toList()}");
+    dublicateOutOfChatAdmins = List<UserProfile>.generate(
+      outOfChatAdmins.length,
+      (index) => outOfChatAdmins[index],
+    );
     print("outOfChatMembers == users ??");
     print(outOfChatAdmins == widget.users);
     print("USER IDS: ${widget.users.map((user) => user.userId).toList()}");
@@ -1190,7 +1271,7 @@ class _AddAdminsState extends State<AddAdmins> {
                       selectedUserIds.clear();
                     });
                   }),
-                  const Text("Добавить участников"),
+                  const Text("Добавить администраторов"),
                 ],
               ))),
           content: SizedBox(
