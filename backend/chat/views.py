@@ -128,6 +128,9 @@ class ChatViewSet(viewsets.ModelViewSet):
             except ChatMembers.DoesNotExist:
                 return Response({'error': 'Пользователь не является участником этого чата'}, status=status.HTTP_404_NOT_FOUND)
             
+            chat.refresh_from_db()  # Обновляем данные чата из базы данных
+            chat.people_count = chat.chatmembers_set.exclude(left_at__isnull=True).count()  # Пересчитываем количество участников
+            chat.save()
             serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
         else:

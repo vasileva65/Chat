@@ -101,7 +101,7 @@ class ChatAdmin(admin.ModelAdmin):
     list_display = ("chat_id", 'chat_name', 'user_id', 'group_chat', 'people_count', 'created_at', 'updated_at')
     
     def people_count(self, obj):
-        return obj.chatmembers_set.count()
+        return obj.chatmembers_set.filter(left_at__isnull=True).count()
     
 @admin.register(ActionLog)
 class ActionLogAdmin(admin.ModelAdmin):

@@ -24,7 +24,9 @@ class ChatMembersSerializer(serializers.ModelSerializer):
     group_chat = serializers.CharField(source='chat_id.group_chat', read_only=True)
     
     def get_people_count(self, obj):
-        return obj.chat_id.chatmembers_set.count()
+        # Фильтруем записи ChatMembers, где поле left_at пустое
+        # И считаем количество таких записей
+        return obj.chat_id.chatmembers_set.filter(left_at__isnull=True).count()
     
     class Meta:
         model = ChatMembers
@@ -41,7 +43,9 @@ class ChatSerializer(serializers.ModelSerializer):
     people_count = serializers.SerializerMethodField(read_only=True)
 
     def get_people_count(self, obj):
-        return obj.chatmembers_set.count()
+        # Фильтруем записи ChatMembers, где поле left_at пустое
+        # И считаем количество таких записей
+        return ChatMembers.objects.filter(chat_id=obj, left_at__isnull=True).count()
     
     class Meta:
         model = Chat

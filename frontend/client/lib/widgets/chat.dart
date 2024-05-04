@@ -691,12 +691,12 @@ class _ChatPageState extends State<ChatPage> {
                       child: Row(
                         children: const [
                           Icon(
-                            Icons.exit_to_app,
+                            Icons.delete,
                             color: Colors.red,
                           ),
                           SizedBox(width: 4),
                           Text(
-                            'Выйти из чата',
+                            'Удалить чат',
                             style: TextStyle(color: Colors.red),
                           ),
                         ],
