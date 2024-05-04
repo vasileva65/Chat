@@ -754,232 +754,395 @@ class _ChatListState extends State<ChatList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        appBar: AppBar(
-          title: ListTile(
-            title: Text(
-              '${widget.userData.name} ${widget.userData.lastname}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Color.fromARGB(255, 39, 77, 126),
-              ),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      appBar: AppBar(
+        title: ListTile(
+          title: Text(
+            '${widget.userData.name} ${widget.userData.lastname}',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color.fromARGB(255, 39, 77, 126),
             ),
-            subtitle: const Text(
-              'Online',
-              style: TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-              ),
-            ),
-            leading: CircleAvatar(
-              backgroundColor: const Color.fromARGB(1, 255, 255, 255),
-              backgroundImage: NetworkImage(widget.userData.avatar),
-            ),
-            selectedTileColor: Colors.white,
-            selected: false,
-            onTap: userSettings,
-            hoverColor: Colors.transparent,
-            splashColor: Colors.transparent,
           ),
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-          elevation: 0,
-          titleSpacing: 0,
-          shape: const Border(
-              bottom:
-                  BorderSide(width: 0.2, color: Color.fromARGB(255, 0, 0, 0))),
+          subtitle: const Text(
+            'Online',
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: 14,
+            ),
+          ),
+          leading: CircleAvatar(
+            backgroundColor: const Color.fromARGB(1, 255, 255, 255),
+            backgroundImage: NetworkImage(widget.userData.avatar),
+          ),
+          selectedTileColor: Colors.white,
+          selected: false,
+          onTap: userSettings,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
         ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              child: const Padding(
-                padding: EdgeInsets.only(left: 8.0, top: 10.0),
-                child: Text(
-                  'Все чаты',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 18),
-                ),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
+        titleSpacing: 0,
+        shape: const Border(
+            bottom:
+                BorderSide(width: 0.2, color: Color.fromARGB(255, 0, 0, 0))),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10.0),
+            child: const Padding(
+              padding: EdgeInsets.only(left: 8.0, top: 10.0),
+              child: Text(
+                'Все чаты',
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 18),
               ),
             ),
-            SizedBox(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                child: TextField(
-                  //cursorColor: Color.fromARGB(255, 255, 255, 255),
-                  style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                  onChanged: (value) {
-                    filterSearchChatsResults(value);
-                  },
-                  controller: searchChatController,
-                  decoration: const InputDecoration(
-                      suffixIconConstraints:
-                          BoxConstraints(minWidth: 32, minHeight: 32),
-                      hintText: "Найти чат",
-                      hintStyle:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
-                      suffixIcon: Icon(Icons.search),
-                      isDense: true,
-                      contentPadding: EdgeInsets.only(
-                          right: 10, top: 10, bottom: 10, left: 15),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              width: 1,
-                              color: Color.fromARGB(255, 37, 87, 153))),
-                      border: OutlineInputBorder(borderSide: BorderSide())),
-                ),
+          ),
+          SizedBox(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              child: TextField(
+                //cursorColor: Color.fromARGB(255, 255, 255, 255),
+                style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                onChanged: (value) {
+                  filterSearchChatsResults(value);
+                },
+                controller: searchChatController,
+                decoration: const InputDecoration(
+                    suffixIconConstraints:
+                        BoxConstraints(minWidth: 32, minHeight: 32),
+                    hintText: "Найти чат",
+                    hintStyle:
+                        TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
+                    suffixIcon: Icon(Icons.search),
+                    isDense: true,
+                    contentPadding: EdgeInsets.only(
+                        right: 10, top: 10, bottom: 10, left: 15),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            width: 1, color: Color.fromARGB(255, 37, 87, 153))),
+                    border: OutlineInputBorder(borderSide: BorderSide())),
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExpansionTile(
-                  onExpansionChanged: (expanded) {
-                    setState(() {
-                      isExpanded = expanded;
-                    });
-                  },
-                  //initiallyExpanded: isExpanded,
-                  title: const Text(
-                    'Группы',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.add,
-                    ),
-                    onPressed: () {
-                      addGroupChat();
-                    },
-                    splashRadius: 1,
-                  ),
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          itemCount: items
-                              .where((item) => item.isGroupChat == "True")
-                              .length,
-                          itemBuilder: (context, index) {
-                            var groupItems = items
-                                .where((item) => item.isGroupChat == "True")
-                                .toList();
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: ListTile(
-                                title: Text(
-                                  groupItems[index].name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 39, 77, 126),
-                                  ),
-                                ),
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      Color.fromARGB(1, 255, 255, 255),
-                                  backgroundImage:
-                                      NetworkImage(groupItems[index].avatar),
-                                ),
-                                selectedTileColor:
-                                    Color.fromARGB(17, 255, 255, 255),
-                                selected: isSelected,
-                                onTap: () {
-                                  widget.onChatUpdated(
-                                      groupItems[index].chatId,
+          ),
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                      // Блок для отображения групповых чатов
+                      var groupItems = items
+                          .where((item) => item.isGroupChat == "True")
+                          .toList();
+                      return Theme(
+                        data: Theme.of(context)
+                            .copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          initiallyExpanded: false,
+                          title: const Text(
+                            'Группы',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.add,
+                            ),
+                            onPressed: () {
+                              addGroupChat();
+                            },
+                            splashRadius: 1,
+                          ),
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: groupItems.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 5),
+                                  child: ListTile(
+                                    title: Text(
                                       groupItems[index].name,
-                                      groupItems[index].avatar,
-                                      groupItems[index].membersCount,
-                                      groupItems[index].adminId,
-                                      groupItems[index].isGroupChat);
-                                },
-                                hoverColor: Colors.transparent,
-                                splashColor: Colors.transparent,
-                              ),
-                            );
-                          },
-                          controller: scrollGroupChatController),
-                    ),
-                  ],
-                ),
-                ExpansionTile(
-                  onExpansionChanged: (expanded) {
-                    setState(() {
-                      isExpanded = expanded;
-                    });
-                  },
-                  title: const Text(
-                    'Личные чаты',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.add,
-                    ),
-                    onPressed: () {
-                      addPersonalChat();
-                    },
-                    splashRadius: 1,
-                  ),
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          itemCount: items
-                              .where((item) => item.isGroupChat == "False")
-                              .length,
-                          itemBuilder: (context, index) {
-                            var privateItems = items
-                                .where((item) => item.isGroupChat == "False")
-                                .toList();
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: ListTile(
-                                title: Text(
-                                  extractDisplayName(
-                                      privateItems[index].name,
-                                      widget.userData.name,
-                                      widget.userData.lastname),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 39, 77, 126),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color.fromARGB(255, 39, 77, 126),
+                                      ),
+                                    ),
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          Color.fromARGB(1, 255, 255, 255),
+                                      backgroundImage: NetworkImage(
+                                          groupItems[index].avatar),
+                                    ),
+                                    onTap: () {
+                                      widget.onChatUpdated(
+                                          groupItems[index].chatId,
+                                          groupItems[index].name,
+                                          groupItems[index].avatar,
+                                          groupItems[index].membersCount,
+                                          groupItems[index].adminId,
+                                          groupItems[index].isGroupChat);
+                                    },
+                                    hoverColor: Colors.transparent,
+                                    splashColor: Colors.transparent,
                                   ),
-                                ),
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      Color.fromARGB(1, 255, 255, 255),
-                                  backgroundImage:
-                                      NetworkImage(privateItems[index].avatar),
-                                ),
-                                selectedTileColor:
-                                    Color.fromARGB(17, 255, 255, 255),
-                                selected: isSelected,
-                                onTap: () {
-                                  widget.onChatUpdated(
-                                      privateItems[index].chatId,
-                                      privateItems[index].name,
-                                      privateItems[index].avatar,
-                                      privateItems[index].membersCount,
-                                      privateItems[index].adminId,
-                                      privateItems[index].isGroupChat);
-                                },
-                                hoverColor: Colors.transparent,
-                                splashColor: Colors.transparent,
-                              ),
-                            );
-                          },
-                          controller: scrollPrivateChatController),
-                    ),
-                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    childCount: 1, // Отображаем только одну группу
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                      height: 10), // Регулируйте высоту по вашему желанию
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                      // Блок для отображения личных чатов
+                      var privateItems = items
+                          .where((item) => item.isGroupChat == "False")
+                          .toList();
+                      return Theme(
+                        data: Theme.of(context)
+                            .copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          initiallyExpanded: false,
+                          title: const Text(
+                            'Личные чаты',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.add,
+                            ),
+                            onPressed: () {
+                              addPersonalChat();
+                            },
+                            splashRadius: 1,
+                          ),
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: privateItems.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 5),
+                                  child: ListTile(
+                                    title: Text(
+                                      extractDisplayName(
+                                          privateItems[index].name,
+                                          widget.userData.name,
+                                          widget.userData.lastname),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color.fromARGB(255, 39, 77, 126),
+                                      ),
+                                    ),
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          Color.fromARGB(1, 255, 255, 255),
+                                      backgroundImage: NetworkImage(
+                                          privateItems[index].avatar),
+                                    ),
+                                    onTap: () {
+                                      widget.onChatUpdated(
+                                          privateItems[index].chatId,
+                                          privateItems[index].name,
+                                          privateItems[index].avatar,
+                                          privateItems[index].membersCount,
+                                          privateItems[index].adminId,
+                                          privateItems[index].isGroupChat);
+                                    },
+                                    hoverColor: Colors.transparent,
+                                    splashColor: Colors.transparent,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    childCount: 1, // Отображаем только один личный чат
+                  ),
                 ),
               ],
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
+//             SingleChildScrollView(
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   Flexible(
+//                     child: ExpansionTile(
+//                       initiallyExpanded: false,
+//                       // onExpansionChanged: (expanded) {
+//                       //   setState(() {
+//                       //     isExpanded = expanded;
+//                       //   });
+//                       // },
+//                       //initiallyExpanded: isExpanded,
+//                       title: const Text(
+//                         'Группы',
+//                         style: TextStyle(fontSize: 18),
+//                       ),
+//                       trailing: IconButton(
+//                         icon: const Icon(
+//                           Icons.add,
+//                         ),
+//                         onPressed: () {
+//                           addGroupChat();
+//                         },
+//                         splashRadius: 1,
+//                       ),
+//                       children: [
+//                         ListView.builder(
+//                           padding: const EdgeInsets.symmetric(vertical: 10),
+//                           itemCount: items
+//                               .where((item) => item.isGroupChat == "True")
+//                               .length,
+//                           itemBuilder: (context, index) {
+//                             var groupItems = items
+//                                 .where((item) => item.isGroupChat == "True")
+//                                 .toList();
+//                             return Padding(
+//                               padding: const EdgeInsets.symmetric(vertical: 5),
+//                               child: ListTile(
+//                                 title: Text(
+//                                   groupItems[index].name,
+//                                   style: const TextStyle(
+//                                     fontSize: 16,
+//                                     fontWeight: FontWeight.w500,
+//                                     color: Color.fromARGB(255, 39, 77, 126),
+//                                   ),
+//                                 ),
+//                                 leading: CircleAvatar(
+//                                   backgroundColor:
+//                                       Color.fromARGB(1, 255, 255, 255),
+//                                   backgroundImage:
+//                                       NetworkImage(groupItems[index].avatar),
+//                                 ),
+//                                 selectedTileColor:
+//                                     Color.fromARGB(17, 255, 255, 255),
+//                                 selected: isSelected,
+//                                 onTap: () {
+//                                   widget.onChatUpdated(
+//                                       groupItems[index].chatId,
+//                                       groupItems[index].name,
+//                                       groupItems[index].avatar,
+//                                       groupItems[index].membersCount,
+//                                       groupItems[index].adminId,
+//                                       groupItems[index].isGroupChat);
+//                                 },
+//                                 hoverColor: Colors.transparent,
+//                                 splashColor: Colors.transparent,
+//                               ),
+//                             );
+//                           },
+//                           //controller: scrollGroupChatController
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   Flexible(
+//                     child: ExpansionTile(
+//                       initiallyExpanded: false,
+//                       // onExpansionChanged: (expanded) {
+//                       //   setState(() {
+//                       //     isExpanded = expanded;
+//                       //   });
+//                       // },
+//                       title: const Text(
+//                         'Личные чаты',
+//                         style: TextStyle(fontSize: 18),
+//                       ),
+//                       trailing: IconButton(
+//                         icon: const Icon(
+//                           Icons.add,
+//                         ),
+//                         onPressed: () {
+//                           addPersonalChat();
+//                         },
+//                         splashRadius: 1,
+//                       ),
+//                       children: [
+//                         ListView.builder(
+//                           padding: const EdgeInsets.symmetric(vertical: 10),
+//                           itemCount: items
+//                               .where((item) => item.isGroupChat == "False")
+//                               .length,
+//                           itemBuilder: (context, index) {
+//                             var privateItems = items
+//                                 .where((item) => item.isGroupChat == "False")
+//                                 .toList();
+//                             return Padding(
+//                               padding: const EdgeInsets.symmetric(vertical: 5),
+//                               child: ListTile(
+//                                 title: Text(
+//                                   extractDisplayName(
+//                                       privateItems[index].name,
+//                                       widget.userData.name,
+//                                       widget.userData.lastname),
+//                                   style: const TextStyle(
+//                                     fontSize: 16,
+//                                     fontWeight: FontWeight.w500,
+//                                     color: Color.fromARGB(255, 39, 77, 126),
+//                                   ),
+//                                 ),
+//                                 leading: CircleAvatar(
+//                                   backgroundColor:
+//                                       Color.fromARGB(1, 255, 255, 255),
+//                                   backgroundImage:
+//                                       NetworkImage(privateItems[index].avatar),
+//                                 ),
+//                                 selectedTileColor:
+//                                     Color.fromARGB(17, 255, 255, 255),
+//                                 selected: isSelected,
+//                                 onTap: () {
+//                                   widget.onChatUpdated(
+//                                       privateItems[index].chatId,
+//                                       privateItems[index].name,
+//                                       privateItems[index].avatar,
+//                                       privateItems[index].membersCount,
+//                                       privateItems[index].adminId,
+//                                       privateItems[index].isGroupChat);
+//                                 },
+//                                 hoverColor: Colors.transparent,
+//                                 splashColor: Colors.transparent,
+//                               ),
+//                             );
+//                           },
+//                           //controller: scrollPrivateChatController
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+
+//             ),
+//           ],
+//         ));
+//   }
+// }
 }
