@@ -60,10 +60,10 @@ class _ChatListState extends State<ChatList> {
     List<Chats> result = [];
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
-      print(widget.auth.userId);
-      print('user name:');
-      print(widget.userData.userId);
-      print(widget.userData.name);
+      // print(widget.auth.userId);
+      // print('user name:');
+      // print(widget.userData.userId);
+      // print(widget.userData.name);
 
       if (returnedResult.data[i]['user_id'].toString() == widget.auth.userId) {
         Chats chat = Chats(
@@ -99,9 +99,7 @@ class _ChatListState extends State<ChatList> {
           await dio.post('http://localhost:8000/chats/create_chat/',
               data: {
                 'chat_name': chatNameController.text,
-                'user_ids': selectedUsers
-                    .map((user) => user.userId.toString())
-                    .toList(),
+                'user_ids': selectedUserIds.toList(),
                 'avatar': null,
                 'admin_id': widget.userData.userId,
                 'group_chat': true,
@@ -180,7 +178,10 @@ class _ChatListState extends State<ChatList> {
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       print(widget.auth.userId);
 
-      if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId) {
+      int userId = returnedResult.data[i]['user_id'];
+
+      if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId &&
+          !result.any((user) => user.userId == userId)) {
         UserProfile user = UserProfile(
             returnedResult.data[i]['user_id'],
             returnedResult.data[i]['user']['username'],
@@ -190,6 +191,10 @@ class _ChatListState extends State<ChatList> {
             returnedResult.data[i]['avatar']);
         result.add(user);
       }
+    }
+    print("USERS FRON GET USERS");
+    for (var user in result) {
+      print(user.userId);
     }
 
     setState(() {
@@ -207,8 +212,6 @@ class _ChatListState extends State<ChatList> {
 
   @override
   void initState() {
-    items = dublicateItems;
-    users = dublicateUsers;
     super.initState();
     getChats();
     items = dublicateItems;
@@ -535,12 +538,16 @@ class _ChatListState extends State<ChatList> {
                                       //_isChecked[originalIndex] = value;
                                       //_isChecked[users[index].userId] = value;
                                       if (value) {
+                                        print(
+                                            'selectedUserIds IF: $selectedUserIds');
                                         selectedUserIds.add(
                                             users[index].userId.toString());
                                         //selectedUsers.add(users[index]);
                                       } else {
-                                        selectedUserIds
-                                            .remove(users[index].userId);
+                                        print(
+                                            'selectedUserIds ELSE: $selectedUserIds');
+                                        selectedUserIds.remove(
+                                            users[index].userId.toString());
                                         //selectedUsers.remove(users[index]);
                                       }
                                     }
@@ -595,6 +602,7 @@ class _ChatListState extends State<ChatList> {
         ),
       ),
     );
+    print('selectedUserIds: $selectedUserIds');
   }
 
   void addPersonalChat() {
@@ -906,7 +914,7 @@ class _ChatListState extends State<ChatList> {
                 ),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                      height: 10), // Регулируйте высоту по вашему желанию
+                      height: 20), // Регулируйте высоту по вашему желанию
                 ),
                 SliverList(
                   delegate: SliverChildBuilderDelegate(

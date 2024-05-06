@@ -140,35 +140,9 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        print("INSTANCE DELETE " + str(instance))  
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    #@action(detail=True, methods=['patch'])
-    # def remove_member_or_admin(self, request, *args, **kwargs):
-    #     print("removing called")
-    #     chat = self.get_object()
-    #     # user_id = request.data.get('user_id', '')
-    #     admin_id = request.data.get('admin_id')
-    #     admin_id = int(admin_id)
-    #     # if user_id:
-    #     #     try:
-    #     #         chat_member = ChatMembers.objects.get(chat_id=chat, user_id=user_id)
-    #     #         chat_member.left_at = timezone.now()
-    #     #         chat_member.save()
-    #     #     except ChatMembers.DoesNotExist:
-    #     #         return Response({'error': 'Пользователь не является участником этого чата'}, status=status.HTTP_404_NOT_FOUND)
-    #     if admin_id:
-    #         try:
-    #             chat_admin = ChatAdmins.objects.get(chat_id=chat, user_id=admin_id)
-    #             chat_admin.left_at = timezone.now()
-    #             chat_admin.save()
-    #         except ChatAdmins.DoesNotExist:
-    #             return Response({'error': 'Пользователь не является администратором этого чата'}, status=status.HTTP_404_NOT_FOUND)
-    #     else:
-    #          return Response({'error': 'Неверные данные'}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     serializer = ChatSerializer(chat, context={'request': request})
-    #     return Response(serializer.data)
     
     @action(detail=False, methods=['post'], serializer_class=CreateChatSerializer)
     def create_chat(self, request, *args, **kwargs):

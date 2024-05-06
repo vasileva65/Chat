@@ -49,7 +49,7 @@ class ChatSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Chat
-        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat', 'people_count']
+        fields = ['url', 'chat_id', 'chat_name', 'user_id', 'created_at', 'updated_at', 'group_chat', 'people_count', 'avatar']
     
 
 class CreateChatSerializer(serializers.ModelSerializer):

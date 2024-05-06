@@ -36,15 +36,20 @@ class GroupChatSettingsDialog extends StatefulWidget {
   final UserProfile user;
   final TextEditingController nameController;
   final Chats chat;
-  final Function(int chatId, String name, String avatar, int membersCount,
-      int adminId, String isGroupChat) onChatUpdated;
+  final Function(int updatedMembersCount) updateMembersCount;
+  // final Function(int chatId, String name, String avatar, int membersCount,
+  //     int adminId, String isGroupChat) onChatUpdated;
+  // final Function(int chatId, String name, String avatar, int membersCount,
+  //     int adminId, String isGroupChat) updateChatList;
 
   GroupChatSettingsDialog({
     required this.auth,
     required this.user,
     required this.nameController,
     required this.chat,
-    required this.onChatUpdated,
+    required this.updateMembersCount,
+    // required this.onChatUpdated,
+    // required this.updateChatList,
   });
 
   @override
@@ -701,22 +706,25 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                       regularMembers.addAll(
                                                           selectedUsers);
                                                     });
+                                                    widget.updateMembersCount(
+                                                        members.length);
                                                   },
-                                                  onChatUpdated: (int chatId,
-                                                      String name,
-                                                      String avatar,
-                                                      int membersCount,
-                                                      int adminId,
-                                                      String isGroupChat) {
-                                                    // Обновление данных о чате в ChatList
-                                                    widget.onChatUpdated(
-                                                        chatId,
-                                                        name,
-                                                        avatar,
-                                                        membersCount + 1,
-                                                        adminId,
-                                                        isGroupChat);
-                                                  },
+
+                                                  // onChatUpdated: (int chatId,
+                                                  //     String name,
+                                                  //     String avatar,
+                                                  //     int membersCount,
+                                                  //     int adminId,
+                                                  //     String isGroupChat) {
+                                                  //   // Обновление данных о чате в ChatList
+                                                  //   widget.onChatUpdated(
+                                                  //       chatId,
+                                                  //       name,
+                                                  //       avatar,
+                                                  //       membersCount + 1,
+                                                  //       adminId,
+                                                  //       isGroupChat);
+                                                  // },
                                                 ));
                                       }))
                           ],
@@ -878,8 +886,8 @@ class AddMembers extends StatefulWidget {
   Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
-  final Function(int chatId, String name, String avatar, int membersCount,
-      int adminId, String isGroupChat) onChatUpdated;
+  // final Function(int chatId, String name, String avatar, int membersCount,
+  //     int adminId, String isGroupChat) onChatUpdated;
 
   final Function(List<UserProfile> selectedUsers) onSelectionComplete;
 
@@ -889,7 +897,7 @@ class AddMembers extends StatefulWidget {
     required this.users,
     required this.members,
     required this.onSelectionComplete,
-    required this.onChatUpdated,
+    //required this.onChatUpdated,
   });
   @override
   _AddMembersState createState() => _AddMembersState();

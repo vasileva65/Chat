@@ -17,16 +17,16 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
 
-typedef ChatUpdated = void Function(int chatId, String name, String avatar,
-    int membersCount, int adminId, String isGroupChat);
-
 class ChatPage extends StatefulWidget {
   Auth auth;
   UserProfile userData;
   Chats chat;
   ChatUpdated onChatUpdated;
+  final Function(int updatedMembersCount) updateMembersCount;
   ChatPage(this.auth, this.userData, this.chat,
-      {required this.onChatUpdated, super.key});
+      {required this.onChatUpdated,
+      required this.updateMembersCount,
+      super.key});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -46,13 +46,18 @@ class _ChatPageState extends State<ChatPage> {
   List<UserProfile> dublicateMembers = [];
 
   late UserProfile secondMember;
-
+  bool isLoadingChat = true;
   List<UserProfile> users = [];
   List<UserProfile> outOfChatMembers = [];
   List<UserProfile> dublicateOutOfChatMembers = [];
   TextEditingController searchUserController = TextEditingController();
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
+
+  void _handleUpdateMembersCount(int updatedMembersCount) {
+    print('UPDATED MEMBERS COUNT: $updatedMembersCount');
+    // Другая логика, если необходимо
+  }
 
   void updateChatInfoCallback(
     int chatId,
@@ -64,9 +69,23 @@ class _ChatPageState extends State<ChatPage> {
   ) {
     // Update chat information in the ChatPage widget
     setState(() {
-      widget.chat.name = newName;
-      widget.chat.avatar = newAvatar;
+      widget.chat = Chats(
+        chatId,
+        newName,
+        newAvatar,
+        membersCount,
+        adminId,
+        isGroupChat,
+      );
     });
+    widget.onChatUpdated(
+      chatId,
+      newName,
+      newAvatar,
+      membersCount,
+      adminId,
+      isGroupChat,
+    );
   }
 
   static void profanityCheckDialog(BuildContext context) {
@@ -172,6 +191,7 @@ class _ChatPageState extends State<ChatPage> {
     // TODO: implement initState
     print('doing init');
     super.initState();
+    fetchChatData();
 
     _channel.stream.listen((data) {
       print(data);
@@ -182,12 +202,12 @@ class _ChatPageState extends State<ChatPage> {
         timeout: const Duration(milliseconds: 500),
       );
     });
-
+    //fetchData();
     fetchMessages();
     getPhotos();
     getChatMembersDetails();
     nameController.text = widget.chat.name;
-    getUsers();
+    //getUsers();
   }
 
   void _printLatestValue() {
@@ -228,29 +248,93 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.userData.avatar);
   }
 
-  Future<List<int>> getChatAdminsIds() async {
+  Future<void> fetchChatData() async {
     try {
-      Response response = await dio.get('http://localhost:8000/chatadmins',
-          options: Options(headers: {
-            'Authorization': "Bearer ${widget.auth.token}",
-          }));
-      print("fetching users");
-      print(response.data);
+      Response returnedResult =
+          await dio.get('http://localhost:8000/chats/${widget.chat.chatId}',
+              options: Options(headers: {
+                'Authorization': "Bearer ${widget.auth.token}",
+              }));
+      print("fetching chats");
+      print(returnedResult.data);
 
-      List<int> adminIds = [];
+      //if (returnedResult.data['user_id'].toString() == widget.auth.userId) {
+      Chats chatInfo = Chats(
+          returnedResult.data['chat_id'],
+          returnedResult.data['chat_name'],
+          returnedResult.data['avatar'],
+          returnedResult.data['people_count'],
+          returnedResult.data['user_id'],
+          returnedResult.data['group_chat'].toString());
+      print("CHAT INFO COUNT");
+      print(chatInfo.membersCount);
+      print("CHATINFO == WIDGET CHAT");
+      print(chatInfo == widget.chat);
+      print("${widget.chat.name} ${chatInfo.name}");
+      print("${widget.chat.chatId} ${chatInfo.chatId}");
+      print("${widget.chat.avatar} ${chatInfo.avatar}");
+      print("${widget.chat.adminId} ${chatInfo.adminId}");
+      print("${widget.chat.membersCount} ${chatInfo.membersCount}");
+      print("${widget.chat.isGroupChat} ${chatInfo.isGroupChat}");
 
-      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
-        if (widget.chat.chatId == response.data[i]['chat_id']) {
-          adminIds.add(response.data[i]['user_id']);
-        }
-      }
-      print("ADMIN IDS");
-      print(adminIds);
-      return adminIds;
-    } catch (e) {
-      print('Error fetching chat members: $e');
-      return []; // или возвращайте пустой список или другое значение по умолчанию
+      //}
+      setState(() {
+        // widget.onChatUpdated(
+        //   chatInfo.chatId, // Новый ID чата, если он изменяется
+        //   chatInfo.name, // Новое имя чата
+        //   chatInfo.avatar, // Новый аватар чата
+        //   chatInfo.membersCount, // Новое количество участников чата
+        //   chatInfo.adminId, // Новый ID администратора чата, если он изменяется
+        //   chatInfo.isGroupChat, // Признак группового чата
+        // );
+        widget.chat = chatInfo;
+      });
+      print("${widget.chat.name} ${chatInfo.name}");
+      print("${widget.chat.chatId} ${chatInfo.chatId}");
+      print("${widget.chat.avatar} ${chatInfo.avatar}");
+      print("${widget.chat.adminId} ${chatInfo.adminId}");
+      print("${widget.chat.membersCount} ${chatInfo.membersCount}");
+      print("${widget.chat.isGroupChat} ${chatInfo.isGroupChat}");
+    } catch (error) {
+      print('Error fetching chat data: $error');
     }
+  }
+
+  Future<void> fetchData() async {
+    try {
+      // Здесь происходит загрузка данных
+      //await getPhotos();
+      //fetchChatData();
+      //await fetchMessages();
+
+      // После завершения всех операций устанавливаем isLoading в false
+      setState(() {
+        isLoadingChat = false;
+      });
+    } catch (error) {
+      print('Error fetching data: $error');
+      // Обработка ошибок при загрузке данных
+      setState(() {
+        isLoadingChat =
+            false; // Устанавливаем isLoading в false в случае ошибки
+      });
+    }
+  }
+
+  _getCloseButton(context) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: IconButton(
+        splashRadius: 1,
+        icon: const Icon(
+          Icons.clear,
+          color: Colors.black,
+        ),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
   }
 
   Future<List<int>> getChatMembersIds() async {
@@ -279,7 +363,6 @@ class _ChatPageState extends State<ChatPage> {
 
   Future getChatMembersDetails() async {
     List<int> memberIds = await getChatMembersIds();
-    List<int> adminIds = await getChatAdminsIds();
     print("MEMBER IDS");
     print(memberIds.length);
     List<UserProfile> result = [];
@@ -334,155 +417,13 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       members = result;
-      admins = adminIds;
     });
-  }
-
-  Future getUsers() async {
-    Response returnedResult =
-        await dio.get('http://localhost:8000/userprofiles',
-            options: Options(headers: {
-              'Authorization': "Bearer ${widget.auth.token}",
-            }));
-    print("fetching users");
-    print(returnedResult.data);
-
-    List<UserProfile> result = [];
-
-    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
-      print(widget.auth.userId);
-
-      if (returnedResult.data[i]['user_id'].toString() != widget.auth.userId) {
-        UserProfile user = UserProfile(
-            returnedResult.data[i]['user_id'],
-            returnedResult.data[i]['user']['username'],
-            returnedResult.data[i]['user']['first_name'],
-            returnedResult.data[i]['user']['last_name'],
-            returnedResult.data[i]['user']['middle_name'],
-            returnedResult.data[i]['avatar']);
-        result.add(user);
-      }
-    }
-
-    setState(() {
-      users = result;
-    });
-  }
-
-  _getCloseButton(context) {
-    return Align(
-      alignment: Alignment.topRight,
-      child: IconButton(
-        splashRadius: 1,
-        icon: const Icon(
-          Icons.clear,
-          color: Colors.black,
-        ),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
-  void userPage(UserProfile user) {
-    print("called userPage");
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        contentPadding: EdgeInsets.all(5),
-        titlePadding: const EdgeInsets.all(0.0),
-        title: Container(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-            child: Center(
-                child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _getCloseButton(context),
-                const Text(
-                  "Профиль пользователя",
-                ),
-              ],
-            ))),
-        content: SizedBox(
-          width: 360,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    child: InkWell(
-                      splashColor: Colors.black26,
-                      onTap: () {},
-                      child: Ink.image(
-                        image: NetworkImage(widget.userData.avatar),
-                        height: 120,
-                        width: 120,
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                      extractDisplayName(widget.chat.name, widget.userData.name,
-                          widget.userData.lastname),
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-                ),
-                Expanded(
-                  child: Text(
-                    users
-                        .where((user) => user.userId != widget.userData.userId)
-                        .map((user) => user.userId)
-                        .toString(),
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                )
-              ],
-            ),
-          ),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton(
-              onPressed: () {
-                getChatMembersDetails();
-                Navigator.of(ctx).pop();
-              },
-              style: ButtonStyle(
-                  backgroundColor: const MaterialStatePropertyAll<Color>(
-                      Color.fromARGB(255, 37, 87, 153)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: const Text(
-                  "Сохранить",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w300),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    print("WIDGET USERS");
-    print(users);
+    //print("WIDGET USERS");
+    //print(users);
     outOfChatMembers = users.where((user) => !members.contains(user)).toList();
     dublicateOutOfChatMembers = outOfChatMembers;
     print('doing rebuild');
@@ -490,7 +431,7 @@ class _ChatPageState extends State<ChatPage> {
     print(widget.chat.name);
     print("COUNT");
     print(widget.chat.membersCount);
-    print("AVATAR CHAT" + widget.chat.avatar);
+    //print("AVATAR CHAT" + widget.chat.avatar);
     if (members.length == 2) {
       for (int i = 0; i < members.length; i++) {
         if (members[i].userId != widget.userData.userId) {
@@ -502,6 +443,12 @@ class _ChatPageState extends State<ChatPage> {
     members.forEach((user) {
       print('User ID: ${user.userId}');
     });
+    // if (isLoadingChat) {
+    //   // Return a loading indicator or some other widget
+    //   return Center(
+    //       //child: CircularProgressIndicator(), // Индикатор загрузки
+    //       ); // Example of a loading indicator
+    // } else {
     return Scaffold(
       appBar: AppBar(
         shape: const Border(
@@ -526,7 +473,10 @@ class _ChatPageState extends State<ChatPage> {
               ? widget.chat.membersCount.toString() + ' участников'
               : widget.chat.membersCount.toString() + ' участник'),
           onTap: () {
-            if (widget.chat.isGroupChat == "True") {
+            print("TAPPED");
+            print(widget.chat.membersCount);
+            if (widget.chat.isGroupChat == "True" ||
+                widget.chat.isGroupChat == "true") {
               showDialog(
                 context: context,
                 builder: (context) => GroupChatSettingsDialog(
@@ -538,11 +488,21 @@ class _ChatPageState extends State<ChatPage> {
                   //outOfChatMembers: outOfChatMembers,
                   nameController: nameController,
                   chat: widget.chat,
-                  onChatUpdated: updateChatInfoCallback,
+                  updateMembersCount: (updatedMembersCount) {
+                    setState(() {
+                      print("DRAWN CHAT PAGE");
+                      widget.updateMembersCount(updatedMembersCount);
+                    }); // Вызываем обновление из виджета
+                    _handleUpdateMembersCount(
+                        updatedMembersCount); // Отладочный print
+                  },
+                  // onChatUpdated: updateChatInfoCallback,
+                  // updateChatList: widget.onChatUpdated,
                 ),
               );
             }
-            if (widget.chat.isGroupChat == "False") {
+            if (widget.chat.isGroupChat == "False" ||
+                widget.chat.isGroupChat == "false") {
               print("second mem:" +
                   secondMember.name +
                   " " +
@@ -572,9 +532,11 @@ class _ChatPageState extends State<ChatPage> {
                 icon: const Icon(Icons.search),
                 splashRadius: 1,
               ),
-              if (widget.chat.isGroupChat == "True")
+              if (widget.chat.isGroupChat == "True" ||
+                  widget.chat.isGroupChat == "true")
                 PopupMenuButton<String>(
                   onSelected: (value) {
+                    print("IF WORKED TRUE");
                     if (value == 'viewChatInfo') {
                       print("USERS");
                       print(users);
@@ -593,16 +555,24 @@ class _ChatPageState extends State<ChatPage> {
                           //outOfChatMembers: outOfChatMembers,
                           nameController: nameController,
                           chat: widget.chat,
-                          onChatUpdated: (int chatId,
-                              String name,
-                              String avatar,
-                              int membersCount,
-                              int adminId,
-                              String isGroupChat) {
-                            // Обновление данных о чате в ChatList
-                            widget.onChatUpdated(chatId, name, avatar,
-                                membersCount, adminId, isGroupChat);
+                          updateMembersCount: (updatedMembersCount) {
+                            setState(() {
+                              print("DRAWN CHAT PAGE");
+                              widget.updateMembersCount(updatedMembersCount);
+                            }); // Вызываем обновление из виджета
+                            _handleUpdateMembersCount(
+                                updatedMembersCount); // Отладочный print
                           },
+                          // onChatUpdated: (int chatId,
+                          //     String name,
+                          //     String avatar,
+                          //     int membersCount,
+                          //     int adminId,
+                          //     String isGroupChat) {
+                          //   // Обновление данных о чате в ChatList
+
+                          // },
+                          // updateChatList: widget.updateChatList(),
                         ),
                       );
                     } else if (value == 'leaveChat') {
@@ -795,3 +765,4 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 }
+// }

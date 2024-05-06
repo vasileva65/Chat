@@ -139,16 +139,19 @@ class _MainScreenState extends State<MainScreen> {
                   width: 600,
                   child: widget.chat.chatId != 0
                       ? ChatPage(
-                          key: ValueKey(widget.chat.chatId),
+                          key: ValueKey<int>(widget.chat.membersCount),
                           widget.auth,
                           widget.userData,
-                          widget.chat, onChatUpdated: (chatId, name, avatar,
-                              membersCount, adminId, isGroupChat) {
-                          setState(() {
-                            widget.chat = Chats(chatId, name, avatar,
-                                membersCount, adminId, isGroupChat);
-                          });
-                        })
+                          widget.chat,
+                          onChatUpdated: (chatId, name, avatar, membersCount,
+                              adminId, isGroupChat) {
+                            setState(() {
+                              widget.chat = Chats(chatId, name, avatar,
+                                  membersCount, adminId, isGroupChat);
+                            });
+                          },
+                          updateMembersCount: (updatedMembersCount) {},
+                        )
                       : ZeroPage(widget.auth, widget.userData))),
         ],
       )),
