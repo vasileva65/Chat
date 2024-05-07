@@ -129,6 +129,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     
     def validate(self, attrs):
+        print("Validating user data:", attrs)
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Пароли не совпадают."})
         return attrs
@@ -136,7 +137,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     
 
     def create(self, validated_data):
-
+        print("Creating user with data:", validated_data)
         username = generate_username(validated_data['first_name'],validated_data['middle_name'])
 
         while(User.objects.filter(username=username).exists()):
@@ -152,7 +153,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
 
         user.save()
-
+        print("User created:")
         refresh = RefreshToken.for_user(user)
         user_serializer = UserSerializer(user, context=self.context)  
         return {

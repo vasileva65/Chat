@@ -307,6 +307,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
+        print("REGISTER VIEW")
         serializer = RegisterSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             response_data = serializer.save()
