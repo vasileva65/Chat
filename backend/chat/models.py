@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
 
+
 class User(AbstractUser):
     first_name = models.CharField(max_length=150, verbose_name='Имя', validators=[
         MinLengthValidator(limit_value=1, message=("Имя не может быть пустым."))
@@ -122,7 +123,7 @@ class Message(models.Model):
     message_id = models.AutoField(primary_key=True, verbose_name='ID сообщения')
     sender_id = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='message', on_delete=models.CASCADE, verbose_name='ID отправителя')
     chat_id = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name='ID чата')
-    body = models.TextField(validators=[validate_is_profane], verbose_name='Содержание сообщения')
+    body = models.TextField( verbose_name='Содержание сообщения')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name='Время обновления')
     #is_read = models.BooleanField(default=False)

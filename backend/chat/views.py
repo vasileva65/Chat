@@ -1,6 +1,7 @@
 from datetime import timezone
 from datetime import datetime
-
+from profanity.validators import validate_is_profane
+from django.core.exceptions import ValidationError
 import logging
 
 import requests
@@ -233,15 +234,39 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def create(self, request):
-        print(request.data['sender_id'])
-        print(request.data['chat_id'])
-        resp = requests.get('http://localhost:8080/', params={
-            'sender_id' : request.data['sender_id'], 
-            'chat_id' : request.data['chat_id']
-            })
-        print(resp)
-        return super().create(request)
+    def create(self, request, *args, **kwargs):
+        # print(request.data['sender_id'])
+        # print(request.data['chat_id'])
+        # resp = requests.get('http://localhost:8080/', params={
+        #     'sender_id' : request.data['sender_id'], 
+        #     'chat_id' : request.data['chat_id']
+        #     })
+        # print(resp)
+        # return super().create(request)
+        print("Received message creation request:", request.data)
+        body = request.data.get('body', None)
+        
+        # Проверяем, есть ли текст сообщения в запросе
+        if body:
+            # Пытаемся валидировать текст сообщения
+            try:
+                validate_is_profane(body)
+                print("TRY")
+            except ValidationError as e:
+                print("EXCEPT")
+                # Если текст содержит нецензурные слова, создаем запись в журнале действий
+                ActionLog.objects.create(
+                    user=User.objects.get(id=request.user.id),
+                    action_type='Использование нецензурной лексики',
+                    target_object_id=request.data.get('chat_id', None),
+                    #details=str(e)  # Записываем информацию об исключении в детали
+                )
+                print(str(e))
+                # raise ValidationError('Please remove any profanity/swear words.')
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Если валидация прошла успешно или текст сообщения отсутствует, продолжаем создание сообщения
+        return super().create(request, *args, **kwargs)
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):

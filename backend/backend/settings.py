@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,7 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'profanity',
     'channels',
-    
+    # "django_prometheus",
 ]
 
 CHANNEL_LAYERS = {
@@ -55,6 +56,7 @@ CHANNEL_LAYERS = {
 }
 
 MIDDLEWARE = [
+    # "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -62,6 +64,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -96,6 +99,7 @@ DATABASES = {
     # }
     {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # 'ENGINE': "django_prometheus.db.backends.postgresql",
         'NAME': 'Chat', 
         'USER': 'postgres',
         'PASSWORD': '1',
@@ -179,3 +183,14 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'chat.User'
 
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
+#     }
+# }
+
+# env = environ.Env()
+
+# # Загрузка файла .env
+# environ.Env.read_env()
+# PROMETHEUS_EXPORT_MIGRATIONS = env.bool("PROMETHEUS_EXPORT_MIGRATIONS", True)

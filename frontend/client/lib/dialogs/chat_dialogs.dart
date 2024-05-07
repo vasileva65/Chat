@@ -353,7 +353,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
 
   @override
   void initState() {
-    print('doing init');
+    print('Initializing GroupChatSettingsDialogState');
     super.initState();
     fetchData();
   }
@@ -705,9 +705,9 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                           selectedUsers);
                                                       regularMembers.addAll(
                                                           selectedUsers);
+                                                      widget.updateMembersCount(
+                                                          members.length);
                                                     });
-                                                    widget.updateMembersCount(
-                                                        members.length);
                                                   },
 
                                                   // onChatUpdated: (int chatId,

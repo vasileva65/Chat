@@ -131,9 +131,13 @@ class _ChatPageState extends State<ChatPage> {
         if (e.response!.statusCode == 401) {
           Navigator.pop(context);
         }
-        if (e.response!.data['body'].toString() ==
-            "[Please remove any profanity/swear words.]") {
+        if (e.response!.data['error']
+                .toString()
+                .contains("Please remove any profanity/swear words.") &&
+            e.response!.statusCode == 400) {
           print(e.response!.data);
+          print("VALIDTION PROFANITY");
+
           return profanityCheckDialog(context);
         }
       }
