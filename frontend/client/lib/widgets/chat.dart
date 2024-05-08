@@ -41,6 +41,7 @@ class _ChatPageState extends State<ChatPage> {
   ScrollController privateChatSettingsScrollController = ScrollController();
   bool _isExpanded = false;
   final nameController = TextEditingController();
+
   List<UserProfile> members = [];
   List<int> admins = [];
   List<UserProfile> dublicateMembers = [];
@@ -51,8 +52,41 @@ class _ChatPageState extends State<ChatPage> {
   List<UserProfile> outOfChatMembers = [];
   List<UserProfile> dublicateOutOfChatMembers = [];
   TextEditingController searchUserController = TextEditingController();
+  TextEditingController searchMessageController = TextEditingController();
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
+
+  String searchQuery = '';
+  bool isSearchFieldVisible = false;
+  bool isChatVisible = true;
+
+  List<Message> filteredItems = [];
+
+// Метод для фильтрации сообщений по тексту
+  void filterMessages(String query) {
+    setState(() {
+      // Очищаем список отфильтрованных сообщений перед применением нового фильтра
+      // filteredItems.clear();
+
+      // Проходим по всем сообщениям и добавляем те, которые содержат введенный запрос
+      // for (Message item in items) {
+      //   if (item.body.toLowerCase().contains(query.toLowerCase())) {
+      //     filteredItems.add(item);
+      //   }
+      // }
+      if (query.isEmpty) {
+        // Если поле поиска пустое, отображаем все сообщения
+        filteredItems = List.from(items);
+      } else {
+        // Иначе фильтруем сообщения по запросу
+        filteredItems = items
+            .where(
+                (item) => item.body.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+      // items = filteredItems;
+    });
+  }
 
   void _handleUpdateMembersCount(int updatedMembersCount) {
     print('UPDATED MEMBERS COUNT: $updatedMembersCount');
@@ -211,6 +245,7 @@ class _ChatPageState extends State<ChatPage> {
     getPhotos();
     getChatMembersDetails();
     nameController.text = widget.chat.name;
+    // items = filteredItems;
     //getUsers();
   }
 
@@ -242,6 +277,7 @@ class _ChatPageState extends State<ChatPage> {
     if (mounted) {
       setState(() {
         items = result;
+        filteredItems = items;
       });
 
       scrollController.animateTo(0.0,
@@ -459,228 +495,314 @@ class _ChatPageState extends State<ChatPage> {
             bottom:
                 BorderSide(width: 0.2, color: Color.fromARGB(255, 0, 0, 0))),
         //centerTitle: true,
-        title: ListTile(
-          leading: CircleAvatar(
-            backgroundImage: NetworkImage(widget.chat.avatar),
-            backgroundColor: Colors.white,
-          ),
-          title: Text(
-            extractDisplayName(widget.chat.name, widget.userData.name,
-                widget.userData.lastname),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Color.fromARGB(255, 39, 77, 126),
-            ), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
-          ),
-          subtitle: Text(widget.chat.membersCount > 1
-              ? widget.chat.membersCount.toString() + ' участников'
-              : widget.chat.membersCount.toString() + ' участник'),
-          onTap: () {
-            print("TAPPED");
-            print(widget.chat.membersCount);
-            if (widget.chat.isGroupChat == "True" ||
-                widget.chat.isGroupChat == "true") {
-              showDialog(
-                context: context,
-                builder: (context) => GroupChatSettingsDialog(
-                  auth: widget.auth,
-                  //admins: admins,
-                  //users: users,
-                  user: widget.userData,
-                  //members: members,
-                  //outOfChatMembers: outOfChatMembers,
-                  nameController: nameController,
-                  chat: widget.chat,
-                  updateMembersCount: (updatedMembersCount) {
-                    setState(() {
-                      print("DRAWN CHAT PAGE");
-                      widget.updateMembersCount(updatedMembersCount);
-                    }); // Вызываем обновление из виджета
-                    _handleUpdateMembersCount(
-                        updatedMembersCount); // Отладочный print
-                  },
-                  // onChatUpdated: updateChatInfoCallback,
-                  // updateChatList: widget.onChatUpdated,
-                ),
-              );
-            }
-            if (widget.chat.isGroupChat == "False" ||
-                widget.chat.isGroupChat == "false") {
-              print("second mem:" +
-                  secondMember.name +
-                  " " +
-                  secondMember.lastname);
-              showDialog(
-                context: context,
-                builder: (context) => UserProfileDialog(
-                  auth: widget.auth,
-                  //admins: admins,
-                  //users: users,
-                  user: secondMember,
-                  //members: members,
-                  //outOfChatMembers: outOfChatMembers,
-                  nameController: nameController,
-                  chat: widget.chat,
-                ),
-              );
-            }
-          },
-          hoverColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.search),
-                splashRadius: 1,
-              ),
-              if (widget.chat.isGroupChat == "True" ||
-                  widget.chat.isGroupChat == "true")
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    print("IF WORKED TRUE");
-                    if (value == 'viewChatInfo') {
-                      print("USERS");
-                      print(users);
-                      print("OUT OF CHAT MEM");
-                      print(outOfChatMembers);
-                      print("CHAT MEMBERS");
-                      print(members);
-                      showDialog(
-                        context: context,
-                        builder: (context) => GroupChatSettingsDialog(
-                          auth: widget.auth,
-                          //admins: admins,
-                          //users: users,
-                          user: widget.userData,
-                          //members: members,
-                          //outOfChatMembers: outOfChatMembers,
-                          nameController: nameController,
-                          chat: widget.chat,
-                          updateMembersCount: (updatedMembersCount) {
+        title: Row(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Visibility(
+                    visible: isChatVisible,
+                    child: Expanded(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(widget.chat.avatar),
+                          backgroundColor: Colors.white,
+                        ),
+                        title: Text(
+                          extractDisplayName(widget.chat.name,
+                              widget.userData.name, widget.userData.lastname),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Color.fromARGB(255, 39, 77, 126),
+                          ), //style: const TextStyle(color: Color.fromARGB(1, 0, 0, 0)),
+                        ),
+                        subtitle: Text(widget.chat.membersCount > 1
+                            ? widget.chat.membersCount.toString() +
+                                ' участников'
+                            : widget.chat.membersCount.toString() +
+                                ' участник'),
+                        onTap: () {
+                          print("TAPPED");
+                          print(widget.chat.membersCount);
+                          if (widget.chat.isGroupChat == "True" ||
+                              widget.chat.isGroupChat == "true") {
+                            showDialog(
+                              context: context,
+                              builder: (context) => GroupChatSettingsDialog(
+                                auth: widget.auth,
+                                //admins: admins,
+                                //users: users,
+                                user: widget.userData,
+                                //members: members,
+                                //outOfChatMembers: outOfChatMembers,
+                                nameController: nameController,
+                                chat: widget.chat,
+                                updateMembersCount: (updatedMembersCount) {
+                                  setState(() {
+                                    print("DRAWN CHAT PAGE");
+                                    widget.updateMembersCount(
+                                        updatedMembersCount);
+                                  }); // Вызываем обновление из виджета
+                                  _handleUpdateMembersCount(
+                                      updatedMembersCount); // Отладочный print
+                                },
+                                // onChatUpdated: updateChatInfoCallback,
+                                // updateChatList: widget.onChatUpdated,
+                              ),
+                            );
+                          }
+                          if (widget.chat.isGroupChat == "False" ||
+                              widget.chat.isGroupChat == "false") {
+                            print("second mem:" +
+                                secondMember.name +
+                                " " +
+                                secondMember.lastname);
+                            showDialog(
+                              context: context,
+                              builder: (context) => UserProfileDialog(
+                                auth: widget.auth,
+                                //admins: admins,
+                                //users: users,
+                                user: secondMember,
+                                //members: members,
+                                //outOfChatMembers: outOfChatMembers,
+                                nameController: nameController,
+                                chat: widget.chat,
+                              ),
+                            );
+                          }
+                        },
+                        hoverColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: isSearchFieldVisible,
+                    child: Expanded(
+                      child: SizedBox(
+                        child: TextField(
+                          // controller: searchMessageController,
+                          onChanged: (value) {
                             setState(() {
-                              print("DRAWN CHAT PAGE");
-                              widget.updateMembersCount(updatedMembersCount);
-                            }); // Вызываем обновление из виджета
-                            _handleUpdateMembersCount(
-                                updatedMembersCount); // Отладочный print
-                          },
-                          // onChatUpdated: (int chatId,
-                          //     String name,
-                          //     String avatar,
-                          //     int membersCount,
-                          //     int adminId,
-                          //     String isGroupChat) {
-                          //   // Обновление данных о чате в ChatList
+                              searchQuery = value;
+                              filterMessages(value);
+                              // items = filteredItems
+                              //     .where((item) =>
+                              //         item.body.toLowerCase() ==
+                              //         value.toLowerCase())
+                              //     .toList();
 
-                          // },
-                          // updateChatList: widget.updateChatList(),
+                              //       onChanged: (query) {
+                              // setState(() {
+                              //   users = dublicateUsers.where((item) {
+                              //     return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
+                              //             .contains(query) ||
+                              //         item.name.toLowerCase() +
+                              //                 item.lastname.toLowerCase() ==
+                              //             query.toLowerCase() ||
+                              //         item.name
+                              //             .toLowerCase()
+                              //             .contains(query.toLowerCase()) ||
+                              //         item.lastname
+                              //             .toLowerCase()
+                              //             .contains(query.toLowerCase());
+                              //   }).toList();
+                              // });
+                              // },
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Поиск по сообщениям',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                  8.0), // Радиус скругления углов
+                              borderSide: BorderSide(
+                                  color: Colors.grey), // Цвет границы
+                            ),
+                            isDense: true, // Added this
+                            contentPadding: EdgeInsets.all(12),
+                            //prefixIcon: Icon(Icons.search),
+                          ),
                         ),
-                      );
-                    } else if (value == 'leaveChat') {
-                      // Вызовите метод для выхода из чата
-                      //leaveChat();
-                    }
-                  },
-                  icon: const Icon(Icons.settings),
-                  offset: const Offset(0, 40),
-                  tooltip: '',
-                  splashRadius: 1,
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'viewChatInfo',
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.black,
-                          ), // Иконка для "Посмотреть профиль"
-                          SizedBox(width: 4), // Пробел между иконкой и текстом
-                          Text('Информация о чате'),
-                        ],
                       ),
                     ),
-                    PopupMenuItem<String>(
-                      value: 'leaveChat',
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.exit_to_app,
-                            color: Colors.red,
-                          ), // Иконка для "Выйти из чата"
-                          SizedBox(width: 4), // Пробел между иконкой и текстом
-                          Text(
-                            'Выйти из чата',
-                            style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        isSearchFieldVisible = !isSearchFieldVisible;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.search,
+                      color: Colors.grey,
+                    ),
+                    splashRadius: 1,
+                  ),
+                  if (widget.chat.isGroupChat == "True" ||
+                      widget.chat.isGroupChat == "true")
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        print("IF WORKED TRUE");
+                        if (value == 'viewChatInfo') {
+                          print("USERS");
+                          print(users);
+                          print("OUT OF CHAT MEM");
+                          print(outOfChatMembers);
+                          print("CHAT MEMBERS");
+                          print(members);
+                          showDialog(
+                            context: context,
+                            builder: (context) => GroupChatSettingsDialog(
+                              auth: widget.auth,
+                              //admins: admins,
+                              //users: users,
+                              user: widget.userData,
+                              //members: members,
+                              //outOfChatMembers: outOfChatMembers,
+                              nameController: nameController,
+                              chat: widget.chat,
+                              updateMembersCount: (updatedMembersCount) {
+                                setState(() {
+                                  print("DRAWN CHAT PAGE");
+                                  widget
+                                      .updateMembersCount(updatedMembersCount);
+                                }); // Вызываем обновление из виджета
+                                _handleUpdateMembersCount(
+                                    updatedMembersCount); // Отладочный print
+                              },
+                              // onChatUpdated: (int chatId,
+                              //     String name,
+                              //     String avatar,
+                              //     int membersCount,
+                              //     int adminId,
+                              //     String isGroupChat) {
+                              //   // Обновление данных о чате в ChatList
+
+                              // },
+                              // updateChatList: widget.updateChatList(),
+                            ),
+                          );
+                        } else if (value == 'leaveChat') {
+                          // Вызовите метод для выхода из чата
+                          //leaveChat();
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.grey,
+                      ),
+                      offset: const Offset(0, 40),
+                      tooltip: '',
+                      splashRadius: 1,
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'viewChatInfo',
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: Colors.black,
+                              ), // Иконка для "Посмотреть профиль"
+                              SizedBox(
+                                  width: 4), // Пробел между иконкой и текстом
+                              Text('Информация о чате'),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              else
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'viewProfile') {
-                      showDialog(
-                        context: context,
-                        builder: (context) => UserProfileDialog(
-                          auth: widget.auth,
-                          //admins: admins,
-                          //users: users,
-                          user: secondMember,
-                          //members: members,
-                          //outOfChatMembers: outOfChatMembers,
-                          nameController: nameController,
-                          chat: widget.chat,
                         ),
-                      );
-                    } else if (value == 'leaveChat') {
-                      // Вызовите метод для выхода из чата
-                      //leaveChat();
-                    }
-                  },
-                  icon: const Icon(Icons.settings),
-                  offset: const Offset(0, 40),
-                  tooltip: '',
-                  splashRadius: 1,
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'viewProfile',
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.person,
-                            color: Colors.black,
+                        PopupMenuItem<String>(
+                          value: 'leaveChat',
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.exit_to_app,
+                                color: Colors.red,
+                              ), // Иконка для "Выйти из чата"
+                              SizedBox(
+                                  width: 4), // Пробел между иконкой и текстом
+                              Text(
+                                'Выйти из чата',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 4),
-                          Text('Посмотреть профиль'),
-                        ],
-                      ),
+                        ),
+                      ],
+                    )
+                  else
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'viewProfile') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => UserProfileDialog(
+                              auth: widget.auth,
+                              //admins: admins,
+                              //users: users,
+                              user: secondMember,
+                              //members: members,
+                              //outOfChatMembers: outOfChatMembers,
+                              nameController: nameController,
+                              chat: widget.chat,
+                            ),
+                          );
+                        } else if (value == 'leaveChat') {
+                          // Вызовите метод для выхода из чата
+                          //leaveChat();
+                        }
+                      },
+                      icon: const Icon(Icons.settings),
+                      offset: const Offset(0, 40),
+                      tooltip: '',
+                      splashRadius: 1,
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'viewProfile',
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.person,
+                                color: Colors.black,
+                              ),
+                              SizedBox(width: 4),
+                              Text('Посмотреть профиль'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'leaveChat',
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Удалить чат',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    PopupMenuItem<String>(
-                      value: 'leaveChat',
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.delete,
-                            color: Colors.red,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Удалить чат',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
+
         elevation: 0,
         titleSpacing: 0,
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -692,40 +814,48 @@ class _ChatPageState extends State<ChatPage> {
             child: ListView.builder(
               reverse: true,
               padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 3),
-              itemCount: items.length,
+              itemCount: filteredItems.length,
+              // itemCount: items.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Container(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(
-                      "${items[index].name} ${items[index].lastname}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Color.fromARGB(255, 39, 77, 126),
+                {
+                  return ListTile(
+                    title: Container(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        "${filteredItems[index].name} ${filteredItems[index].lastname}",
+                        // "${items[index].name} ${items[index].lastname}",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Color.fromARGB(255, 39, 77, 126),
+                        ),
                       ),
                     ),
-                  ),
-                  subtitle: Text(
-                    items[index].body,
-                    style: const TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
-                  ),
-                  leading: const CircleAvatar(
-                    //backgroundColor: Colors.grey,
-                    backgroundImage: NetworkImage(''),
-                  ),
-                  trailing: Text(
-                    DateFormat('dd.MM.yyyy kk:mm')
-                        .format(items[index].dateTime)
-                        .toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w100,
-                      fontSize: 13,
+                    subtitle: Text(
+                      filteredItems[index].body,
+                      // items[index].body,
+                      style: const TextStyle(
+                          fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
                     ),
-                  ),
-                  minVerticalPadding: 15.0,
-                );
+                    leading: const CircleAvatar(
+                      // backgroundColor: Colors.grey,
+                      backgroundImage: NetworkImage(''),
+                    ),
+                    trailing: Text(
+                      DateFormat('dd.MM.yyyy kk:mm')
+                          .format(filteredItems[index].dateTime)
+                          .toString(),
+                      // DateFormat('dd.MM.yyyy kk:mm')
+                      //     .format(items[index].dateTime)
+                      //     .toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w100,
+                        fontSize: 13,
+                      ),
+                    ),
+                    minVerticalPadding: 15.0,
+                  );
+                }
               },
               controller: scrollController,
             ),
