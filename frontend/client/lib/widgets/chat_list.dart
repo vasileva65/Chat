@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:client/dialogs/buttons.dart';
 import 'package:client/dialogs/chatlist_dialogs.dart';
 import 'package:dio/dio.dart';
@@ -6,7 +8,10 @@ import 'package:client/models/chats.dart';
 import 'package:client/models/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../functions/extract_name.dart';
+import '../models/department.dart';
+import '../models/roles.dart';
 import '../models/userProfile.dart';
+import 'package:file_picker/file_picker.dart';
 
 typedef ChatUpdated = void Function(int chatId, String name, String avatar,
     int membersCount, int adminId, String isGroupChat);
@@ -38,9 +43,9 @@ class _ChatListState extends State<ChatList> {
   TextEditingController searchChatController = TextEditingController();
   TextEditingController searchUserController = TextEditingController();
 
-  final nameController = TextEditingController();
-  final lastnameController = TextEditingController();
-  final middlenameController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController lastnameController = TextEditingController();
+  TextEditingController middlenameController = TextEditingController();
   final chatNameController = TextEditingController();
   //late List<bool> _isChecked;
   //late Map<String, bool> _isChecked; // Используем Map с типом ключа String
@@ -48,6 +53,13 @@ class _ChatListState extends State<ChatList> {
   Chats? selectedChat;
 
   bool isExpanded = false;
+
+  late List<Role> roles;
+  late List<Department> departments;
+
+  late String userDepartment;
+  late String userRole;
+  bool isLoading = true;
 
   Future getChats() async {
     Response returnedResult = await dio.get('http://localhost:8000/chatmembers',
@@ -219,6 +231,7 @@ class _ChatListState extends State<ChatList> {
 
     getUsers();
     users = dublicateUsers;
+    //fetchData(widget.userData);
   }
 
   void selectChat(Chats chat) {
@@ -289,114 +302,472 @@ class _ChatListState extends State<ChatList> {
     );
   }
 
+  Future getUserRoleDepartment(UserProfile user) async {
+    var dio = Dio();
+    Response returnedResult =
+        await dio.get('http://localhost:8000/userprofiles/',
+            options: Options(headers: {
+              'Authorization': "Bearer ${widget.auth.token}",
+            }));
+    print("fetching users");
+    print(returnedResult.data);
+    print("USER ID" + user.userId.toString());
+
+    String resp_department = '';
+    String resp_role = '';
+    int resp_department_id = 0;
+
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      print(widget.auth.userId);
+      List<dynamic> departmentEmployees =
+          returnedResult.data[i]['department_employee'];
+      for (int j = 0; j < departmentEmployees.length; j++) {
+        if (departmentEmployees[j]['user_id'].toString() ==
+            user.userId.toString()) {
+          print("IF WORKED");
+          print("fetch resp_department");
+          resp_department =
+              departmentEmployees[j]['department_name'].toString();
+          print("fetch resp_role");
+          resp_role = departmentEmployees[j]['role'].toString();
+          print("fetch resp_department_id");
+          resp_department_id = departmentEmployees[j]['department_id'];
+          break; // Найден нужный департамент, выходим из цикла
+        }
+      }
+    }
+    print("RESP DEPARTMENT " + resp_department);
+    print("RESP ROLE " + resp_role);
+    print("RESP DEPARTMENT ID " + resp_department_id.toString());
+
+    setState(() {
+      userDepartment = resp_department;
+      userRole = resp_role;
+      // department_id = resp_department_id;
+    });
+  }
+
+  Future getRoles() async {
+    var dio = Dio();
+    Response returnedResult = await dio.get('http://localhost:8000/roles/',
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+        }));
+    print("fetching roles");
+    print(returnedResult.data);
+    List<Role> result = [];
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      print(widget.auth.userId);
+      Role role = Role(returnedResult.data[i]['role_id'],
+          returnedResult.data[i]['role_name']);
+      result.add(role); // Найден нужный департамент, выходим из цикла
+    }
+    print('Список roles:');
+    for (Role role in result) {
+      print(role.name);
+    }
+    setState(() {
+      roles = result;
+    });
+  }
+
+  Future getDepartments() async {
+    var dio = Dio();
+    Response returnedResult =
+        await dio.get('http://localhost:8000/departments/',
+            options: Options(headers: {
+              'Authorization': "Bearer ${widget.auth.token}",
+            }));
+    print("fetching departments");
+    print(returnedResult.data);
+    List<Department> result = [];
+    for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
+      print(widget.auth.userId);
+      Department department = Department(
+          returnedResult.data[i]['department_id'],
+          returnedResult.data[i]['department_name']);
+      result.add(department); // Найден нужный департамент, выходим из цикла
+    }
+
+    print('Список отделов:');
+    for (Department department in result) {
+      print(department.name);
+    }
+    setState(() {
+      departments = result;
+    });
+  }
+
+  Future updateUserSettings(
+      UserProfile userData, String department, String role) async {
+    print('add new group chat called');
+    try {
+      Response response = await dio.patch(
+          'http://localhost:8000/user/profile/${userData.userId}/',
+          data: {
+            'user_id': userData.userId,
+            'user': {
+              'first_name': nameController.text,
+              'last_name': lastnameController.text,
+              'middle_name': middlenameController.text,
+            },
+            'department_employee': {
+              'department_name': department,
+              'role': role,
+            },
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      print('Error: $e');
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+      }
+      return;
+    }
+
+    print('updateUserSettings called');
+  }
+
+  Future<void> fetchData(UserProfile user) async {
+    try {
+      nameController.text = widget.userData.name;
+      lastnameController.text = widget.userData.lastname;
+      middlenameController.text = widget.userData.middlename;
+      await getUserRoleDepartment(user);
+      await getRoles();
+      await getDepartments();
+      //await getUsers();
+
+      setState(() {
+        isLoading =
+            false; // После загрузки данных устанавливаем isLoading в false
+      });
+    } catch (error) {
+      print('Error fetching data: $error');
+      // Обработка ошибок при загрузке данных
+      setState(() {
+        isLoading =
+            false; // Даже в случае ошибки устанавливаем isLoading в false
+      });
+    }
+  }
+
+  Future<void> uploadAvatar(UserProfile user) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      String? filePath = result.files.single.path;
+      if (filePath != null) {
+        // Создайте объект File из выбранного файла
+        File file = File(filePath);
+
+        // Создайте экземпляр Dio
+        Dio dio = Dio();
+
+        // Отправьте файл на сервер с помощью HTTP-запроса с использованием Dio
+        try {
+          FormData formData = FormData.fromMap({
+            'avatar': await MultipartFile.fromFile(file.path,
+                filename: file.path.split('/').last),
+          });
+
+          Response response = await dio.patch(
+              'http://localhost:8000/user/profile/${user.userId}/', // Укажите URL вашего сервера
+              data: formData,
+              options: Options(headers: {
+                'Authorization': "Bearer ${widget.auth.token}",
+              }));
+
+          // Проверьте статус код ответа
+          if (response.statusCode == 200) {
+            // Успешно загружено
+            print('Avatar uploaded successfully');
+          } else {
+            // Не удалось загрузить
+            print('Failed to upload avatar');
+          }
+        } catch (e) {
+          // Обработайте ошибку, если что-то пошло не так
+          print('Error uploading avatar: $e');
+        }
+      }
+    } else {
+      print('User didnt choose avatar');
+    }
+  }
+
   void userSettings() {
+    fetchData(widget.userData);
     print("user settings called");
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        titlePadding: const EdgeInsets.all(0.0),
-        title: Container(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-            child: Center(
+      builder: (ctx) => isLoading
+          ? const SizedBox(
+              height: 30,
+              width: 30,
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 3.0,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          : AlertDialog(
+              titlePadding: const EdgeInsets.all(0.0),
+              title: Container(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                  child: Center(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Buttons.getCloseButton(context),
+                      const Text("Настройки пользователя"),
+                    ],
+                  ))),
+              content: SizedBox(
+                width: 300,
                 child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Buttons.getCloseButton(context),
-                const Text("Настройки пользователя"),
-              ],
-            ))),
-        content: SizedBox(
-          width: 300,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                child: Material(
-                  elevation: 8,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  child: InkWell(
-                    splashColor: Colors.black26,
-                    onTap: () {},
-                    child: Ink.image(
-                      image: NetworkImage(widget.userData.avatar),
-                      height: 120,
-                      width: 120,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                      child: Material(
+                        elevation: 8,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: InkWell(
+                          splashColor: Colors.black26,
+                          onTap: () async {
+                            await uploadAvatar(widget.userData);
+                          },
+                          child: Ink.image(
+                            image: NetworkImage(widget.userData.avatar),
+                            height: 120,
+                            width: 120,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 20),
+                        // Левая часть: заголовки
+                        Container(
+                          width: 110, // ширина левой части
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Имя:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                'Фамилия:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                'Отчество:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                'Отдел:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                'Должность:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            width: 20), // отступ между левой и правой частями
+                        // Правая часть: значения
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.userData.name,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                widget.userData.lastname,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                widget.userData.middlename,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                userDepartment,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 25),
+                              Text(
+                                userRole,
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Если делать настройки, которые можно менять
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(vertical: 8),
+                    //   child: TextFormField(
+                    //     controller: nameController,
+                    //     readOnly: true,
+                    //     decoration: const InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //             borderSide: BorderSide(
+                    //                 width: 1,
+                    //                 color: Color.fromARGB(255, 37, 87, 153))),
+                    //         border: OutlineInputBorder(),
+                    //         labelText: 'Имя',
+                    //         hintText: 'Введите имя'),
+                    //   ),
+                    // ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(vertical: 8),
+                    //   child: TextFormField(
+                    //     controller: lastnameController,
+                    //     decoration: const InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //             borderSide: BorderSide(
+                    //                 width: 1,
+                    //                 color: Color.fromARGB(255, 37, 87, 153))),
+                    //         border: OutlineInputBorder(),
+                    //         labelText: 'Фамилия',
+                    //         hintText: 'Введите фамилию'),
+                    //   ),
+                    // ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(vertical: 8),
+                    //   child: TextFormField(
+                    //     controller: middlenameController,
+                    //     decoration: const InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //             borderSide: BorderSide(
+                    //                 width: 1,
+                    //                 color: Color.fromARGB(255, 37, 87, 153))),
+                    //         border: OutlineInputBorder(),
+                    //         labelText: 'Отчество',
+                    //         hintText: 'Введите отчество'),
+                    //   ),
+                    // ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(vertical: 8),
+                    //   child: SingleChildScrollView(
+                    //     child: DropdownButtonFormField<String>(
+                    //       value: userDepartment,
+                    //       decoration: const InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //             borderSide: BorderSide(
+                    //                 width: 1,
+                    //                 color: Color.fromARGB(255, 37, 87, 153))),
+                    //         border: OutlineInputBorder(),
+                    //         labelText: 'Отдел',
+                    //       ),
+                    //       isExpanded: true,
+                    //       items: departments.map((Department department) {
+                    //         return DropdownMenuItem<String>(
+                    //           value: department.name,
+                    //           child: Text(department.name),
+                    //         );
+                    //       }).toList(),
+                    //       onChanged: (String? newValue) {
+                    //         if (newValue != null) {
+                    //           setState(() {
+                    //             userDepartment = newValue;
+                    //           });
+                    //         }
+                    //       },
+                    //     ),
+                    //   ),
+                    // ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(vertical: 8),
+                    //   child: SingleChildScrollView(
+                    //     child: DropdownButtonFormField<String>(
+                    //       value: userRole,
+                    //       decoration: const InputDecoration(
+                    //         focusedBorder: OutlineInputBorder(
+                    //             borderSide: BorderSide(
+                    //                 width: 1,
+                    //                 color: Color.fromARGB(255, 37, 87, 153))),
+                    //         border: OutlineInputBorder(),
+                    //         labelText: 'Должность',
+                    //       ),
+                    //       isExpanded: true,
+                    //       items: roles.map((Role role) {
+                    //         return DropdownMenuItem<String>(
+                    //           value: role.name,
+                    //           child: Text(role.name),
+                    //         );
+                    //       }).toList(),
+                    //       onChanged: (String? newValue) {
+                    //         if (newValue != null) {
+                    //           setState(() {
+                    //             userRole = newValue;
+                    //           });
+                    //         }
+                    //       },
+                    //     ),
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextButton(
+                    onPressed: () {
+                      updateUserSettings(
+                          widget.userData, userDepartment, userRole);
+                      Navigator.of(ctx).pop();
+                    },
+                    style: ButtonStyle(
+                        backgroundColor: const MaterialStatePropertyAll<Color>(
+                            Color.fromARGB(255, 37, 87, 153)),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ))),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                      child: const Text(
+                        "Сохранить",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w300),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              width: 1,
-                              color: Color.fromARGB(255, 37, 87, 153))),
-                      border: OutlineInputBorder(),
-                      labelText: 'Имя',
-                      hintText: 'Введите имя'),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: TextFormField(
-                  controller: lastnameController,
-                  decoration: const InputDecoration(
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              width: 1,
-                              color: Color.fromARGB(255, 37, 87, 153))),
-                      border: OutlineInputBorder(),
-                      labelText: 'Фамилия',
-                      hintText: 'Введите фамилию'),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: TextFormField(
-                  controller: middlenameController,
-                  decoration: const InputDecoration(
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              width: 1,
-                              color: Color.fromARGB(255, 37, 87, 153))),
-                      border: OutlineInputBorder(),
-                      labelText: 'Отчество',
-                      hintText: 'Введите отчество'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              style: ButtonStyle(
-                  backgroundColor: const MaterialStatePropertyAll<Color>(
-                      Color.fromARGB(255, 37, 87, 153)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ))),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: const Text(
-                  "Сохранить",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w300),
-                ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 

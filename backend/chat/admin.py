@@ -113,10 +113,18 @@ class ActionLogAdmin(admin.ModelAdmin):
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ('department_id', 'head_id', 'department_name')
 
-@admin.register(DepartmentEployee)
-class DepartmentEployeeAdmin(admin.ModelAdmin):
-    list_display = ('department_id', 'user_id', 'joined_at', 'left_at')
+@admin.register(Roles)
+class RolesAdmin(admin.ModelAdmin):
+    list_display = ('role_id', 'role_name')
 
+@admin.register(DepartmentEmployee)
+class DepartmentEmployeeAdmin(admin.ModelAdmin):
+    list_display = ('department_id', 'user_id', 'get_role_name', 'joined_at', 'left_at')
+
+    def get_role_name(self, obj):
+        return obj.role.role_name if obj.role else None
+
+    get_role_name.short_description = 'Должность'
     
 
     

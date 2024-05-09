@@ -7,6 +7,7 @@ from .manager import CustomUserManager
 from django.db.models.signals import post_save
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
+from django.dispatch import receiver
 
 
 class User(AbstractUser):
@@ -151,10 +152,40 @@ class Department(models.Model):
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
 
-class DepartmentEployee(models.Model):
+@receiver(post_save, sender=Department)
+def create_department_employee(sender, instance, created, **kwargs):
+    if created:
+        head_id = instance.head_id
+        department = instance
+        role_name = "Начальник"
+
+        # Получаем или создаем роль "Начальник"
+        role, _ = Roles.objects.get_or_create(role_name=role_name)
+
+        # Создаем запись DepartmentEmployee
+        DepartmentEmployee.objects.create(
+            department_id=department,
+            user_id=head_id,
+            role=role
+        )
+
+class Roles(models.Model):
+    role_id = models.AutoField(primary_key=True, verbose_name='ID должности')
+    # department_id = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='ID подразделения')
+    role_name = models.TextField(verbose_name='Должность', blank=True, unique=True)
+    
+    class Meta:
+        verbose_name = 'Должность'
+        verbose_name_plural = 'Должности'
+
+    def __str__(self):
+        return self.role_name
+
+
+class DepartmentEmployee(models.Model):
     department_id = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='ID подразделения')
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID пользователя')
-    role = models.TextField(verbose_name='Должность', blank=True)
+    role = models.ForeignKey(Roles, on_delete=models.CASCADE, verbose_name='ID должности', blank=True, null=True)
     joined_at = models.DateTimeField(auto_now_add=True, verbose_name='Время присоединения')
     left_at = models.DateTimeField(null=True, blank=True, verbose_name='Время выхода из подразделения')
     
@@ -169,6 +200,7 @@ class DepartmentEployee(models.Model):
         if not self.pk:
             self.left_at = None
         super().save(*args, **kwargs)
+
 
 class ActionLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID пользователя')

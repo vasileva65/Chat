@@ -8,8 +8,11 @@ import requests
 from chat.models import (
     ActionLog,
     Chat,
-    ChatAdmins, 
+    ChatAdmins,
+    Department,
+    DepartmentEmployee, 
     Message,
+    Roles,
     UserProfile, 
     ChatMembers
 )
@@ -19,6 +22,9 @@ from rest_framework import (
 )
 from chat.serializers import (
     CreateChatSerializer,
+    DepartmentEmployeeSerializer,
+    DepartmentSerializer,
+    RoleSerializer,
     UserSerializer, 
     ChatSerializer, 
     MessageSerializer,
@@ -289,12 +295,86 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            print("TRY CALLED")
+            avatar = request.data.get('avatar')  # Получаем файл из запроса
+            user_profile = self.get_object()
+            if avatar:
+                user_profile.avatar = avatar  # Сохраняем файл в поле avatar объекта UserProfile
+                user_profile.save()
+            # Получаем данные из запроса
+            # user_id = request.data.get('user_id')
+            # first_name = request.data.get('user', {}).get('first_name')
+            # last_name = request.data.get('user', {}).get('last_name')
+            # middle_name = request.data.get('user', {}).get('middle_name')
+            # department_name = request.data.get('department_employee', {}).get('department_name')
+            # role_name = request.data.get('department_employee', {}).get('role')
+
+            # print("GOT DATA")
+            # print(f"user_id: {user_id}, first_name: {first_name}, last_name: {last_name}, middle_name: {middle_name}, department_name: {department_name}, role_name: {role_name}")
+            # # Обновляем данные пользователя
+            # user_profile = UserProfile.objects.get(user_id=user_id)
+            # user = user_profile.user
+            # user.first_name = first_name
+            # user.last_name = last_name
+            # user.middle_name = middle_name
+            # user.save()
+            # print("USER SAVED")
+            # role = Roles.objects.get(role_name=role_name)
+            # # Получаем отдел
+            # department = Department.objects.get(department_name=department_name)
+            # print("GOT DEPARTMENT")
+            # print(department.department_id)
+            # user = User.objects.get(id=user_id)
+            # print("GOT USER")
+            # print(user.id)
+            # # Пытаемся получить объект DepartmentEmployee, связанный с пользователем и отделом
+            # # Если объект не найден, он будет создан
+            # try:
+            #     department_employee, created = DepartmentEmployee.objects.update_or_create(user_id=user, department_id=department, role=role)
+            #     print("DEPARTMENT CREATED")
+            #     if created:
+            #         print("DEPARTMENT CREATED")
+            #     else:
+            #         print("DEPARTMENT UPDATED")
+            # except Exception as e:
+            #     print("ERROR:", str(e))
+            #     raise e
+            # Обновляем роль пользователя в отделе
+            # department_employee.role = role_name
+            # print("ROLE SAVED")
+            # department_employee.save()
+            # print("DEP EMPLOYEE SAVED")
+            return Response({'message': 'Настройки пользователя успешно обновлены'}, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'Профиль пользователя не найден'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AllUserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all().order_by('created_at')
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 #viewset filter by authenticated user
+
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Roles.objects.all()
+    serializer_class = RoleSerializer
+
+    
+class DepartmentEmployeeViewSet(viewsets.ModelViewSet):
+    queryset = DepartmentEmployee.objects.all()
+    serializer_class = DepartmentEmployeeSerializer
+
+
 
 class MyObtainTokenPairView(TokenObtainPairView):
     permission_classes = (AllowAny,)

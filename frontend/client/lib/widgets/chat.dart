@@ -258,7 +258,7 @@ class _ChatPageState extends State<ChatPage> {
         options: Options(headers: {
           'Authorization': "Bearer ${widget.auth.token}",
         }));
-    print("fetching");
+    print("fetching" + widget.chat.name);
     print(returnedResult.data);
 
     List<Message> result = [];
@@ -269,7 +269,8 @@ class _ChatPageState extends State<ChatPage> {
             returnedResult.data[i]['sender_first_name'],
             returnedResult.data[i]['sender_last_name'],
             DateTime.parse(returnedResult.data[i]['created_at']),
-            returnedResult.data[i]['body']);
+            returnedResult.data[i]['body'],
+            returnedResult.data[i]['avatar']);
         result.insert(0, message);
       }
     }
@@ -761,7 +762,10 @@ class _ChatPageState extends State<ChatPage> {
                           //leaveChat();
                         }
                       },
-                      icon: const Icon(Icons.settings),
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.grey,
+                      ),
                       offset: const Offset(0, 40),
                       tooltip: '',
                       splashRadius: 1,
@@ -837,9 +841,10 @@ class _ChatPageState extends State<ChatPage> {
                       style: const TextStyle(
                           fontSize: 15, color: Color.fromARGB(255, 0, 0, 0)),
                     ),
-                    leading: const CircleAvatar(
+                    leading: CircleAvatar(
                       // backgroundColor: Colors.grey,
-                      backgroundImage: NetworkImage(''),
+                      backgroundImage:
+                          NetworkImage(filteredItems[index].userAvatar),
                     ),
                     trailing: Text(
                       DateFormat('dd.MM.yyyy kk:mm')

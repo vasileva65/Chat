@@ -23,13 +23,6 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
-        },
-		{
-		"name": "client (debug mode)",
-		"cwd": "frontend\\client",
-		"request": "launch",
-		"type": "dart",
-		"flutterMode": "debug"
-		}
+        }
     ]
 }

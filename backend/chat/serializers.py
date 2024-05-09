@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group
 from backend.generator import generate_username
-from chat.models import Chat, ChatMembers, Department, DepartmentEployee, Message, UserProfile
+from chat.models import Chat, ChatMembers, Department, DepartmentEmployee, Message, Roles, UserProfile
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
@@ -68,8 +68,16 @@ class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender_id.username', read_only=True)
     sender_first_name = serializers.CharField(source='sender_id.first_name', read_only=True)
     sender_last_name = serializers.CharField(source='sender_id.last_name', read_only=True)
-    avatar = serializers.CharField(source='sender_id.avatar', read_only=True)
+    # avatar = serializers.ImageField(source='sender_id.userprofile.avatar', read_only=True)
+    avatar = serializers.SerializerMethodField()
 
+    def get_avatar(self, obj):
+        try:
+            user_profile = UserProfile.objects.get(user=obj.sender_id)
+            return self.context['request'].build_absolute_uri(user_profile.avatar.url)
+        except UserProfile.DoesNotExist:
+            return None
+    
     class Meta:
         model = Message
         fields = ['url', 'message_id', 'sender_id', 'sender_username', 'sender_first_name', 'sender_last_name', 'avatar', 'chat_id', 'body', 'created_at']
@@ -80,11 +88,16 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = ['department_id', 'head_id', 'department_name']
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Roles
+        fields = '__all__'
 
 class DepartmentEmployeeSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department_id.department_name', read_only=True)
+    role = serializers.StringRelatedField()
     class Meta:
-        model = DepartmentEployee
+        model = DepartmentEmployee
         fields = ['department_id', 'user_id', 'role', 'department_name']
 
        
@@ -93,7 +106,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     department_employee = serializers.SerializerMethodField()
     
     def get_department_employee(self, obj):
-        department_employees = DepartmentEployee.objects.filter(user_id=obj.user_id)
+        department_employees = DepartmentEmployee.objects.filter(user_id=obj.user_id)
         return DepartmentEmployeeSerializer(department_employees, many=True).data
     
     class Meta:

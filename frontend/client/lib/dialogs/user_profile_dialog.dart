@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:client/models/chats.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';

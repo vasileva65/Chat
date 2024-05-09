@@ -3,7 +3,10 @@ from rest_framework.routers import DefaultRouter
 from chat.views import (
     AllUserProfileViewSet,
     ChatAdminsViewSet,
+    DepartmentEmployeeViewSet,
+    DepartmentViewSet,
     RegisterView,
+    RoleViewSet,
     UserViewSet,
     MessageViewSet,
     UserProfileViewSet,
@@ -26,11 +29,14 @@ router.register(r'chats', ChatViewSet,basename="chat")
 router.register(r'chatmembers', ChatMembersViewSet,basename="chatmembers")
 router.register(r'chatadmins', ChatAdminsViewSet,basename="chatadmins")
 router.register(r'user/profile', UserProfileViewSet,basename="userprofile")
+router.register(r'user/profile/partial_update', UserProfileViewSet,basename="userprofile_partial_update")
 router.register(r'userprofiles', AllUserProfileViewSet, basename="profiles")
 router.register(r'chats/create_chat', ChatViewSet, basename="create_chat")
 router.register(r'chats/partial_update', ChatViewSet, basename='partial_update')
 router.register(r'chats/remove_member_or_admin', ChatViewSet, basename='remove_member_or_admin')
-
+router.register(r'departments', DepartmentViewSet, basename='departments')
+router.register(r'roles', RoleViewSet, basename='roles')
+router.register(r'department-employees', DepartmentEmployeeViewSet, basename='department_employee')
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
