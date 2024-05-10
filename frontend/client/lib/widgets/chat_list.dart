@@ -64,6 +64,12 @@ class _ChatListState extends State<ChatList> {
   late String userRole;
   bool isLoading = true;
 
+  void updateChatData(Chats updatedChatData) {
+    setState(() {
+      widget.chat = updatedChatData;
+    });
+  }
+
   Future getChats() async {
     Response returnedResult = await dio.get('http://localhost:8000/chatmembers',
         options: Options(headers: {

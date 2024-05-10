@@ -1,13 +1,20 @@
 // идея этого класса в том чтобы организовать передачу информации между диалоговыми окнами
 
+import 'dart:io';
+
 import 'package:client/dialogs/user_profile_dialog.dart';
 import 'package:client/models/chats.dart';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../models/auth.dart';
 import '../models/userProfile.dart';
+
+typedef UpdateChatData = void Function(Chats updateChatData);
+
+typedef UpdateChatMembersCount = void Function(int count);
 
 _getCloseButton(BuildContext context, VoidCallback onClose) {
   return Align(
@@ -35,8 +42,10 @@ class GroupChatSettingsDialog extends StatefulWidget {
   Auth auth;
   final UserProfile user;
   final TextEditingController nameController;
-  final Chats chat;
-  final Function(int updatedMembersCount) updateMembersCount;
+  Chats chat;
+  UpdateChatMembersCount updateChatMembersCount;
+  final UpdateChatData updateChatData;
+  //final Function(int updatedMembersCount) updateMembersCount;
   // final Function(int chatId, String name, String avatar, int membersCount,
   //     int adminId, String isGroupChat) onChatUpdated;
   // final Function(int chatId, String name, String avatar, int membersCount,
@@ -47,7 +56,9 @@ class GroupChatSettingsDialog extends StatefulWidget {
     required this.user,
     required this.nameController,
     required this.chat,
-    required this.updateMembersCount,
+    required this.updateChatMembersCount,
+    required this.updateChatData,
+
     // required this.onChatUpdated,
     // required this.updateChatList,
   });
@@ -82,6 +93,20 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     required this.nameController,
     required this.chat,
   });
+
+  void callUpdateChatData() {
+    setState(() async {
+      await fetchChatData();
+    });
+  }
+
+  void updateMembersCount(int count) {
+    print("updateMembersCount WORKED");
+    setState(() {
+      print("Set state worked");
+      widget.chat.membersCount = count;
+    });
+  }
 
   Future<List<int>> getChatAdminsIds() async {
     var dio = Dio();
@@ -244,6 +269,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
       }
       return;
     }
+
     setState(() {
       adminMembers.remove(userToRemove);
       regularMembers.add(userToRemove);
@@ -276,16 +302,22 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
       }
       return;
     }
+
     setState(() {
       members.remove(userToRemove);
       regularMembers.remove(userToRemove);
+
+      //Call back
+      // widget.updateChatMembersCount(members.length);
     });
+    // await fetchChatData();
   }
 
   Future<void> fetchData() async {
     try {
       await getChatMembersDetails();
       await getUsers();
+      await fetchChatData();
       adminMembers =
           members.where((member) => admins.contains(member.userId)).toList();
 
@@ -293,6 +325,8 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
           members.where((member) => !admins.contains(member.userId)).toList();
 
       setState(() {
+        // widget.updateChatMembersCount(members.length);
+        widget.chat.membersCount = members.length;
         isLoading =
             false; // После загрузки данных устанавливаем isLoading в false
       });
@@ -304,6 +338,97 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
             false; // Даже в случае ошибки устанавливаем isLoading в false
       });
     }
+  }
+
+  File? selectedFile;
+
+// Функция для выбора файла
+  Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      String? filePath = result.files.single.path;
+      if (filePath != null) {
+        // Обновите переменную selectedFile выбранным файлом
+        setState(() {
+          selectedFile = File(filePath);
+        });
+      } else {
+        // Если пользователь не выбрал файл (нажал "Отмена" или закрыл диалоговое окно), сбросьте выбранное изображение
+        setState(() {
+          selectedFile = null;
+        });
+      }
+    }
+  }
+
+  Future<void> fetchChatData() async {
+    try {
+      var dio = Dio();
+      Response returnedResult =
+          await dio.get('http://localhost:8000/chats/${widget.chat.chatId}',
+              options: Options(headers: {
+                'Authorization': "Bearer ${widget.auth.token}",
+              }));
+      print("fetching chats");
+      print(returnedResult.data);
+
+      //if (returnedResult.data['user_id'].toString() == widget.auth.userId) {
+      Chats chatInfo = Chats(
+          returnedResult.data['chat_id'],
+          returnedResult.data['chat_name'],
+          returnedResult.data['avatar'],
+          returnedResult.data['people_count'],
+          returnedResult.data['user_id'],
+          returnedResult.data['group_chat'].toString());
+      print("CHAT INFO COUNT");
+      print(chatInfo.membersCount);
+      print(chatInfo.name);
+      print("CHATINFO == WIDGET CHAT");
+
+      //}
+      setState(() {
+        widget.chat = chatInfo;
+        nameController.text = chatInfo.name;
+        widget.updateChatData(chatInfo);
+      });
+    } catch (error) {
+      print('Error fetching chat data: $error');
+    }
+  }
+
+// Функция для загрузки аватара на сервер
+  Future<void> updateChat() async {
+    if (selectedFile != null) {
+      Dio dio = Dio();
+
+      try {
+        FormData formData = FormData.fromMap({
+          'avatar': await MultipartFile.fromFile(selectedFile!.path,
+              filename: selectedFile!.path.split('/').last),
+          'chat_name': nameController.text,
+        });
+
+        Response response = await dio.patch(
+          'http://localhost:8000/chats/${widget.chat.chatId}/',
+          data: formData,
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          print('Avatar uploaded successfully');
+        } else {
+          print('Failed to upload avatar');
+        }
+      } catch (e) {
+        print('Error uploading avatar: $e');
+      }
+    } else {
+      print('No file selected');
+    }
+    await fetchChatData();
   }
 
   Future<void> showConfirmationDialog(
@@ -424,9 +549,14 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                           clipBehavior: Clip.antiAliasWithSaveLayer,
                           child: InkWell(
                             splashColor: Colors.black26,
-                            onTap: () {},
+                            onTap: () async {
+                              await pickFile();
+                              setState(() {});
+                            },
                             child: Ink.image(
-                              image: NetworkImage(user.avatar),
+                              image: selectedFile != null
+                                  ? FileImage(selectedFile!) as ImageProvider
+                                  : NetworkImage(widget.chat.avatar),
                               height: 120,
                               width: 120,
                             ),
@@ -692,6 +822,8 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                   auth: widget.auth,
                                                   users: users,
                                                   members: members,
+                                                  callUpdateChatData:
+                                                      callUpdateChatData,
                                                   onSelectionComplete:
                                                       //updateRegularMembers,
                                                       (List<UserProfile>
@@ -705,8 +837,10 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                                                           selectedUsers);
                                                       regularMembers.addAll(
                                                           selectedUsers);
-                                                      widget.updateMembersCount(
-                                                          members.length);
+
+                                                      widget
+                                                          .updateChatMembersCount(
+                                                              members.length);
                                                     });
                                                   },
 
@@ -855,7 +989,8 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextButton(
-              onPressed: () {
+              onPressed: () async {
+                await updateChat();
                 Navigator.of(context).pop();
               },
               style: ButtonStyle(
@@ -881,11 +1016,14 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
   }
 }
 
+typedef CallUpdateChatData = void Function();
+
 class AddMembers extends StatefulWidget {
   Chats chat;
   Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
+  final CallUpdateChatData callUpdateChatData;
   // final Function(int chatId, String name, String avatar, int membersCount,
   //     int adminId, String isGroupChat) onChatUpdated;
 
@@ -896,6 +1034,7 @@ class AddMembers extends StatefulWidget {
     required this.auth,
     required this.users,
     required this.members,
+    required this.callUpdateChatData,
     required this.onSelectionComplete,
     //required this.onChatUpdated,
   });
@@ -1113,6 +1252,7 @@ class _AddMembersState extends State<AddMembers> {
                     print(
                         "SELECTED USER IDS: ${selectedUsers.map((user) => user.userId).toList()}");
                     widget.onSelectionComplete(selectedUsers);
+
                     // widget.onChatUpdated(
                     //   widget.chat.chatId,
                     //   widget.chat.name,

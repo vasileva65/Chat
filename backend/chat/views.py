@@ -79,9 +79,29 @@ class ChatViewSet(viewsets.ModelViewSet):
         chat = self.get_object()
         user_id = request.data.get('user_id', None)
         admin_id = request.data.get('admin_id', None)
-        print(admin_id)
+        
         admin_ids = request.data.get('admin_ids', [])
         user_ids = request.data.get('user_ids', [])
+
+        chat_name = request.data.get('chat_name', None)
+        print(chat_name)
+        avatar = request.data.get('avatar', None)
+        print(avatar)
+
+        if chat_name or avatar:
+            if chat_name:
+                chat.chat_name = chat_name
+                chat.save()
+                print("chat name saved")
+
+            if avatar:
+                chat.avatar = avatar
+                chat.save()
+                print("avatar saved")
+                
+            serializer = ChatSerializer(chat, context={'request': request})
+            return Response(serializer.data)
+        
 
         if user_ids:
             users = User.objects.filter(id__in=user_ids)

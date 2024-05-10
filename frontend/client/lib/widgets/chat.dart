@@ -17,14 +17,18 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
 
+typedef UpdateChatData = void Function(Chats updateChatData);
+
 class ChatPage extends StatefulWidget {
   Auth auth;
   UserProfile userData;
   Chats chat;
+  final UpdateChatData updateChatData;
   ChatUpdated onChatUpdated;
   final Function(int updatedMembersCount) updateMembersCount;
   ChatPage(this.auth, this.userData, this.chat,
-      {required this.onChatUpdated,
+      {required this.updateChatData,
+      required this.onChatUpdated,
       required this.updateMembersCount,
       super.key});
 
@@ -61,6 +65,20 @@ class _ChatPageState extends State<ChatPage> {
   bool isChatVisible = true;
 
   List<Message> filteredItems = [];
+
+  void updateNameAvatar(Chats updatedChatData) {
+    setState(() {
+      widget.chat = updatedChatData;
+      widget.updateChatData(updatedChatData);
+    });
+  }
+
+  void updateChatMembersCount(int count) {
+    setState(() {
+      widget.chat.membersCount = count;
+      widget.updateChatData(widget.chat);
+    });
+  }
 
 // Метод для фильтрации сообщений по тексту
   void filterMessages(String query) {
@@ -229,7 +247,7 @@ class _ChatPageState extends State<ChatPage> {
     // TODO: implement initState
     print('doing init');
     super.initState();
-    fetchChatData();
+    //fetchChatData();
 
     _channel.stream.listen((data) {
       print(data);
@@ -310,32 +328,12 @@ class _ChatPageState extends State<ChatPage> {
       print("CHAT INFO COUNT");
       print(chatInfo.membersCount);
       print("CHATINFO == WIDGET CHAT");
-      print(chatInfo == widget.chat);
-      print("${widget.chat.name} ${chatInfo.name}");
-      print("${widget.chat.chatId} ${chatInfo.chatId}");
-      print("${widget.chat.avatar} ${chatInfo.avatar}");
-      print("${widget.chat.adminId} ${chatInfo.adminId}");
-      print("${widget.chat.membersCount} ${chatInfo.membersCount}");
-      print("${widget.chat.isGroupChat} ${chatInfo.isGroupChat}");
 
       //}
       setState(() {
-        // widget.onChatUpdated(
-        //   chatInfo.chatId, // Новый ID чата, если он изменяется
-        //   chatInfo.name, // Новое имя чата
-        //   chatInfo.avatar, // Новый аватар чата
-        //   chatInfo.membersCount, // Новое количество участников чата
-        //   chatInfo.adminId, // Новый ID администратора чата, если он изменяется
-        //   chatInfo.isGroupChat, // Признак группового чата
-        // );
         widget.chat = chatInfo;
+        widget.updateChatData(chatInfo);
       });
-      print("${widget.chat.name} ${chatInfo.name}");
-      print("${widget.chat.chatId} ${chatInfo.chatId}");
-      print("${widget.chat.avatar} ${chatInfo.avatar}");
-      print("${widget.chat.adminId} ${chatInfo.adminId}");
-      print("${widget.chat.membersCount} ${chatInfo.membersCount}");
-      print("${widget.chat.isGroupChat} ${chatInfo.isGroupChat}");
     } catch (error) {
       print('Error fetching chat data: $error');
     }
@@ -345,7 +343,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       // Здесь происходит загрузка данных
       //await getPhotos();
-      //fetchChatData();
+      fetchChatData();
       //await fetchMessages();
 
       // После завершения всех операций устанавливаем isLoading в false
@@ -539,15 +537,17 @@ class _ChatPageState extends State<ChatPage> {
                                 //outOfChatMembers: outOfChatMembers,
                                 nameController: nameController,
                                 chat: widget.chat,
-                                updateMembersCount: (updatedMembersCount) {
-                                  setState(() {
-                                    print("DRAWN CHAT PAGE");
-                                    widget.updateMembersCount(
-                                        updatedMembersCount);
-                                  }); // Вызываем обновление из виджета
-                                  _handleUpdateMembersCount(
-                                      updatedMembersCount); // Отладочный print
-                                },
+                                updateChatData: updateNameAvatar,
+                                updateChatMembersCount: updateChatMembersCount,
+                                // updateChatMembersCount: (updatedMembersCount) {
+                                //   setState(() {
+                                //     print("DRAWN CHAT PAGE");
+                                //     widget.updateMembersCount(
+                                //         updatedMembersCount);
+                                //   }); // Вызываем обновление из виджета
+                                //   _handleUpdateMembersCount(
+                                //       updatedMembersCount); // Отладочный print
+                                // },
                                 // onChatUpdated: updateChatInfoCallback,
                                 // updateChatList: widget.onChatUpdated,
                               ),
@@ -673,15 +673,17 @@ class _ChatPageState extends State<ChatPage> {
                               //outOfChatMembers: outOfChatMembers,
                               nameController: nameController,
                               chat: widget.chat,
-                              updateMembersCount: (updatedMembersCount) {
-                                setState(() {
-                                  print("DRAWN CHAT PAGE");
-                                  widget
-                                      .updateMembersCount(updatedMembersCount);
-                                }); // Вызываем обновление из виджета
-                                _handleUpdateMembersCount(
-                                    updatedMembersCount); // Отладочный print
-                              },
+                              updateChatData: updateNameAvatar,
+                              updateChatMembersCount: updateChatMembersCount,
+                              // updateChatMembersCount: (updatedMembersCount) {
+                              //   setState(() {
+                              //     print("DRAWN CHAT PAGE");
+                              //     widget
+                              //         .updateMembersCount(updatedMembersCount);
+                              //   }); // Вызываем обновление из виджета
+                              //   _handleUpdateMembersCount(
+                              //       updatedMembersCount); // Отладочный print
+                              // },
                               // onChatUpdated: (int chatId,
                               //     String name,
                               //     String avatar,
