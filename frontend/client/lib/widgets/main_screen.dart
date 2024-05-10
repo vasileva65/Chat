@@ -103,6 +103,12 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void updateUserData(UserProfile updatedUserData) {
+    setState(() {
+      widget.userData = updatedUserData;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     print('build called');
@@ -121,9 +127,11 @@ class _MainScreenState extends State<MainScreen> {
                     widget.auth,
                     widget.userData,
                     widget.chat,
+                    updateUserData: updateUserData,
                     onChatUpdated: (chatId, name, avatar, membersCount, adminId,
                         isGroupChat) {
                       setState(() {
+                        print("MAIN PAGE CHAT LIST CALLED");
                         widget.chat = Chats(chatId, name, avatar, membersCount,
                             adminId, isGroupChat);
                       });
