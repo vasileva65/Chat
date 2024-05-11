@@ -11,8 +11,6 @@ import 'package:client/widgets/chat_list.dart';
 import 'package:intl/intl.dart';
 import 'package:client/models/auth.dart';
 import 'package:client/models/userProfile.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
@@ -24,11 +22,10 @@ class ChatPage extends StatefulWidget {
   UserProfile userData;
   Chats chat;
   final UpdateChatData updateChatData;
-  ChatUpdated onChatUpdated;
+
   final Function(int updatedMembersCount) updateMembersCount;
   ChatPage(this.auth, this.userData, this.chat,
       {required this.updateChatData,
-      required this.onChatUpdated,
       required this.updateMembersCount,
       super.key});
 
@@ -57,8 +54,6 @@ class _ChatPageState extends State<ChatPage> {
   List<UserProfile> dublicateOutOfChatMembers = [];
   TextEditingController searchUserController = TextEditingController();
   TextEditingController searchMessageController = TextEditingController();
-  final _channel =
-      WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
 
   String searchQuery = '';
   bool isSearchFieldVisible = false;
@@ -111,32 +106,56 @@ class _ChatPageState extends State<ChatPage> {
     // Другая логика, если необходимо
   }
 
-  void updateChatInfoCallback(
-    int chatId,
-    String newName,
-    String newAvatar,
-    int membersCount,
-    int adminId,
-    String isGroupChat,
-  ) {
-    // Update chat information in the ChatPage widget
-    setState(() {
-      widget.chat = Chats(
-        chatId,
-        newName,
-        newAvatar,
-        membersCount,
-        adminId,
-        isGroupChat,
-      );
-    });
-    widget.onChatUpdated(
-      chatId,
-      newName,
-      newAvatar,
-      membersCount,
-      adminId,
-      isGroupChat,
+  // void updateChatInfoCallback(
+  //   int chatId,
+  //   String newName,
+  //   String newAvatar,
+  //   int membersCount,
+  //   int adminId,
+  //   String isGroupChat,
+  // ) {
+  //   // Update chat information in the ChatPage widget
+  //   setState(() {
+  //     widget.chat = Chats(
+  //       chatId,
+  //       newName,
+  //       newAvatar,
+  //       membersCount,
+  //       adminId,
+  //       isGroupChat,
+  //     );
+  //   });
+  //   widget.onChatUpdated(
+  //     chatId,
+  //     newName,
+  //     newAvatar,
+  //     membersCount,
+  //     adminId,
+  //     isGroupChat,
+  //   );
+  // }
+
+  static void adminLeavingWarning(BuildContext context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Вы являетесь единственным администратором чата'),
+        content: const Text(
+            'Пожалуйста, передайте права \nадминистратора другому пользователю. \n\nВ противном случае оно не будет отправлено.'),
+        actions: <Widget>[
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.all(16.0),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: () => Navigator.pop(context, 'Передать права'),
+            child: const Text('Передать права'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -178,11 +197,13 @@ class _ChatPageState extends State<ChatPage> {
           }));
       print(response);
       print(response.data);
+      await dio.get('http://localhost:8080/?chat_id=${widget.chat.chatId}');
     } on DioError catch (e) {
       if (e.response != null) {
         if (e.response!.statusCode == 401) {
           Navigator.pop(context);
         }
+        print(e.response!.data);
         if (e.response!.data['error']
                 .toString()
                 .contains("Please remove any profanity/swear words.") &&
@@ -249,19 +270,11 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     //fetchChatData();
 
-    _channel.stream.listen((data) {
-      print(data);
-      fetchMessages();
-
-      WindowsTaskbar.setFlashTaskbarAppIcon(
-        mode: TaskbarFlashMode.all | TaskbarFlashMode.timernofg,
-        timeout: const Duration(milliseconds: 500),
-      );
-    });
     //fetchData();
     fetchMessages();
     getPhotos();
     getChatMembersDetails();
+    getChatAdminsIds();
     nameController.text = widget.chat.name;
     // items = filteredItems;
     //getUsers();
@@ -277,7 +290,7 @@ class _ChatPageState extends State<ChatPage> {
           'Authorization': "Bearer ${widget.auth.token}",
         }));
     print("fetching" + widget.chat.name);
-    print(returnedResult.data);
+    // print(returnedResult.data);
 
     List<Message> result = [];
 
@@ -376,6 +389,34 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  Future getChatAdminsIds() async {
+    var dio = Dio();
+    List<int> adminIds = [];
+    try {
+      Response response = await dio.get('http://localhost:8000/chatadmins',
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("fetching users");
+      print(response.data);
+
+      for (int i = 0; i < (response.data as List<dynamic>).length; i++) {
+        if (widget.chat.chatId == response.data[i]['chat_id'] &&
+            response.data[i]['left_at'] == null) {
+          adminIds.add(response.data[i]['user_id']);
+        }
+      }
+      print("ADMIN IDS");
+      print(adminIds);
+    } catch (e) {
+      print('Error fetching chat members: $e');
+      // или возвращайте пустой список или другое значение по умолчанию
+    }
+    setState(() {
+      admins = adminIds;
+    });
+  }
+
   Future<List<int>> getChatMembersIds() async {
     try {
       Response response = await dio.get('http://localhost:8000/chatmembers',
@@ -457,6 +498,78 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       members = result;
     });
+  }
+
+  Future removeChatAdmin(Chats chat, UserProfile userToRemove) async {
+    print('removeChatMemberAdmin called');
+    print(chat.chatId);
+    print(userToRemove.userId);
+    try {
+      var dio = Dio();
+      Response response = await dio.patch(
+          'http://localhost:8000/chats/partial_update/${chat.chatId}/',
+          data: {
+            'admin_id': userToRemove.userId.toString(),
+            //'user_id': '',
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      print('Error: $e');
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+      }
+      return;
+    }
+
+    setState(() {
+      admins.remove(userToRemove.userId);
+    });
+  }
+
+  Future removeChatMember(Chats chat, UserProfile userToRemove) async {
+    print('removeChatMemberAdmin called');
+    print(chat.chatId);
+    print(userToRemove.userId);
+    if (admins.contains(userToRemove.userId))
+      await removeChatAdmin(chat, userToRemove);
+    try {
+      var dio = Dio();
+      Response response = await dio.patch(
+          'http://localhost:8000/chats/partial_update/${chat.chatId}/',
+          data: {
+            'user_id': userToRemove.userId.toString(),
+            //'user_id': '',
+          },
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print(response);
+      print(response.data);
+    } on DioError catch (e) {
+      print('Error: $e');
+      if (e.response != null) {
+        if (e.response!.statusCode == 401) {
+          Navigator.pop(context);
+        }
+      }
+      return;
+    }
+
+    setState(() {
+      members.remove(userToRemove);
+      updateChatMembersCount(members.length);
+      // regularMembers.remove(userToRemove);
+
+      //Call back
+      // widget.updateChatMembersCount(members.length);
+    });
+    // await fetchChatData();
   }
 
   @override
@@ -589,29 +702,6 @@ class _ChatPageState extends State<ChatPage> {
                             setState(() {
                               searchQuery = value;
                               filterMessages(value);
-                              // items = filteredItems
-                              //     .where((item) =>
-                              //         item.body.toLowerCase() ==
-                              //         value.toLowerCase())
-                              //     .toList();
-
-                              //       onChanged: (query) {
-                              // setState(() {
-                              //   users = dublicateUsers.where((item) {
-                              //     return '${item.name.toLowerCase()} ${item.lastname.toLowerCase()}'
-                              //             .contains(query) ||
-                              //         item.name.toLowerCase() +
-                              //                 item.lastname.toLowerCase() ==
-                              //             query.toLowerCase() ||
-                              //         item.name
-                              //             .toLowerCase()
-                              //             .contains(query.toLowerCase()) ||
-                              //         item.lastname
-                              //             .toLowerCase()
-                              //             .contains(query.toLowerCase());
-                              //   }).toList();
-                              // });
-                              // },
                             });
                           },
                           decoration: InputDecoration(
@@ -624,7 +714,6 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                             isDense: true, // Added this
                             contentPadding: EdgeInsets.all(12),
-                            //prefixIcon: Icon(Icons.search),
                           ),
                         ),
                       ),
@@ -697,8 +786,13 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                           );
                         } else if (value == 'leaveChat') {
-                          // Вызовите метод для выхода из чата
-                          //leaveChat();
+                          print("ADMINS LENGTH");
+                          print(admins.length);
+                          if (admins.length == 1 &&
+                              admins.contains(widget.userData.userId))
+                            adminLeavingWarning(context);
+                          else
+                            removeChatMember(widget.chat, widget.userData);
                         }
                       },
                       icon: const Icon(
@@ -760,8 +854,7 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                           );
                         } else if (value == 'leaveChat') {
-                          // Вызовите метод для выхода из чата
-                          //leaveChat();
+                          removeChatMember(widget.chat, widget.userData);
                         }
                       },
                       icon: const Icon(

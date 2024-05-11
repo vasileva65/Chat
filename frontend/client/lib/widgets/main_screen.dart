@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/chat_list.dart';
 import 'package:client/models/auth.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '../dialogs/mainscreen_dialogs.dart';
 import '../models/chats.dart';
@@ -14,6 +16,8 @@ class MainScreen extends StatefulWidget {
   Auth auth;
   UserProfile userData;
 
+  Set<String> updatedChats = {};
+
   MainScreen(this.auth, this.userData,
       {super.key, required this.chat, this.showUsernameDialog = false});
   Chats chat;
@@ -24,6 +28,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final _channel =
+      WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
+  bool chatListReloadNeeded = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +44,22 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     });
+    _channel.stream.listen((data) {
+      print("Received websocket update ${widget.chat.chatId}");
+
+      if (data.toString() != widget.chat.chatId.toString()) {
+        print("calling onOtherChatGotUpdate $data ${widget.chat.chatId}");
+
+        setState(() {
+          widget.updatedChats.add(data);
+        });
+      }
+
+      WindowsTaskbar.setFlashTaskbarAppIcon(
+        mode: TaskbarFlashMode.all | TaskbarFlashMode.timernofg,
+        timeout: const Duration(milliseconds: 500),
+      );
+    });
   }
 
   void updateUserData(UserProfile updatedUserData) {
@@ -47,6 +71,7 @@ class _MainScreenState extends State<MainScreen> {
   void updateChatData(Chats updatedChatData) {
     setState(() {
       widget.chat = updatedChatData;
+      chatListReloadNeeded = true;
     });
   }
 
@@ -57,6 +82,7 @@ class _MainScreenState extends State<MainScreen> {
     print(widget.userData.name);
     print(widget.userData.lastname);
     print(widget.chat.chatId);
+    print(widget.updatedChats);
     return Scaffold(
       body: Container(
           child: Row(
@@ -68,11 +94,21 @@ class _MainScreenState extends State<MainScreen> {
                     widget.auth,
                     widget.userData,
                     widget.chat,
+                    widget.updatedChats,
+                    onChatListUpdated: () {
+                      setState(() {
+                        chatListReloadNeeded = false;
+                      });
+                    },
+                    reloadNeeded: chatListReloadNeeded,
                     updateUserData: updateUserData,
                     onChatUpdated: (chatId, name, avatar, membersCount, adminId,
                         isGroupChat) {
                       setState(() {
                         print("MAIN PAGE CHAT LIST CALLED");
+                        print(widget.updatedChats);
+                        widget.updatedChats.remove(chatId.toString());
+                        print(widget.updatedChats);
                         widget.chat = Chats(chatId, name, avatar, membersCount,
                             adminId, isGroupChat);
                       });
@@ -93,13 +129,6 @@ class _MainScreenState extends State<MainScreen> {
                           widget.userData,
                           widget.chat,
                           updateChatData: updateChatData,
-                          onChatUpdated: (chatId, name, avatar, membersCount,
-                              adminId, isGroupChat) {
-                            setState(() {
-                              widget.chat = Chats(chatId, name, avatar,
-                                  membersCount, adminId, isGroupChat);
-                            });
-                          },
                           updateMembersCount: (updatedMembersCount) {},
                         )
                       : ZeroPage(widget.auth, widget.userData))),

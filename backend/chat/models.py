@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
 from django.dispatch import receiver
+from django.db import transaction
 
 
 class User(AbstractUser):
@@ -40,7 +41,7 @@ class User(AbstractUser):
     
     
 class UserProfile(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to ='user_photos/', default='user_photos/default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name='Время обновления')
@@ -53,13 +54,13 @@ class UserProfile(models.Model):
         return str(self.user)
     
     
-#create profile when user signs up
-def create_profile(sender, instance, created, **kwargs):
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        user_profile = UserProfile(user=instance)
-        user_profile.save()
+        with transaction.atomic():  # Создаем профиль пользователя внутри транзакции
+            UserProfile.objects.create(user=instance)
 
-post_save.connect(create_profile, sender=User)
+post_save.connect(create_user_profile, sender=User)
 
 class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True, verbose_name='ID чата')

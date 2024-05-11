@@ -7,7 +7,7 @@ usersOnline = {
 
 usersInChat = {
     #chat_id хранит список users_id
-    1: [1, 2, 3]
+    
 }
 
 connections = [

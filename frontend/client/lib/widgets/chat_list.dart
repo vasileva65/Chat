@@ -16,15 +16,23 @@ import 'package:file_picker/file_picker.dart';
 typedef ChatUpdated = void Function(int chatId, String name, String avatar,
     int membersCount, int adminId, String isGroupChat);
 typedef UpdateUserData = void Function(UserProfile updatedUserData);
+typedef OnChatListUpdated = void Function();
 
 class ChatList extends StatefulWidget {
   Auth auth;
   UserProfile userData;
   Chats chat;
+  Set<String> updatedChats;
   final UpdateUserData updateUserData;
   ChatUpdated onChatUpdated;
-  ChatList(this.auth, this.userData, this.chat,
-      {required this.updateUserData, required this.onChatUpdated, Key? key})
+  OnChatListUpdated onChatListUpdated;
+  bool reloadNeeded;
+  ChatList(this.auth, this.userData, this.chat, this.updatedChats,
+      {required this.onChatListUpdated,
+      required this.reloadNeeded,
+      required this.updateUserData,
+      required this.onChatUpdated,
+      Key? key})
       : super(key: key);
 
   @override
@@ -64,11 +72,11 @@ class _ChatListState extends State<ChatList> {
   late String userRole;
   bool isLoading = true;
 
-  void updateChatData(Chats updatedChatData) {
-    setState(() {
-      widget.chat = updatedChatData;
-    });
-  }
+  // void updateChatData(Chats updatedChatData) {
+  //   setState(() {
+  //     widget.chat = updatedChatData;
+  //   });
+  // }
 
   Future getChats() async {
     Response returnedResult = await dio.get('http://localhost:8000/chatmembers',
@@ -77,6 +85,8 @@ class _ChatListState extends State<ChatList> {
         }));
     print("fetching chats");
     print(returnedResult.data);
+
+    widget.onChatListUpdated();
 
     List<Chats> result = [];
 
@@ -1206,6 +1216,13 @@ class _ChatListState extends State<ChatList> {
 
   @override
   Widget build(BuildContext context) {
+    print("Chat list build");
+    print(widget.updatedChats);
+
+    if (widget.reloadNeeded) {
+      getChats();
+    }
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
@@ -1329,6 +1346,10 @@ class _ChatListState extends State<ChatList> {
                                         color: Color.fromARGB(255, 39, 77, 126),
                                       ),
                                     ),
+                                    trailing: widget.updatedChats.contains(
+                                            groupItems[index].chatId.toString())
+                                        ? const Icon(Icons.access_alarm)
+                                        : null,
                                     leading: CircleAvatar(
                                       backgroundColor:
                                           Color.fromARGB(1, 255, 255, 255),

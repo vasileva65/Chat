@@ -573,7 +573,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
                           child: InkWell(
                             splashColor: Colors.black26,
                             child: Ink.image(
-                              image: NetworkImage(user.avatar),
+                              image: NetworkImage(widget.chat.avatar),
                               height: 120,
                               width: 120,
                             ),

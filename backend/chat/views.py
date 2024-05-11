@@ -98,7 +98,7 @@ class ChatViewSet(viewsets.ModelViewSet):
                 chat.avatar = avatar
                 chat.save()
                 print("avatar saved")
-                
+
             serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
         
@@ -241,6 +241,10 @@ class ChatMembersViewSet(viewsets.ModelViewSet):
     queryset = ChatMembers.objects.all()
     serializer_class = ChatMembersSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Фильтруем записи ChatMembers, где поле left_at пустое
+        return ChatMembers.objects.filter(left_at__isnull=True)
 
 
 class ChatAdminsViewSet(viewsets.ModelViewSet):
