@@ -7,10 +7,10 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '../dialogs/mainscreen_dialogs.dart';
-import '../models/chats.dart';
+import '../models/chat.dart';
 import 'zero_page.dart';
 
-typedef UpdateChatData = void Function(Chats updateChatData);
+typedef UpdateChatData = void Function(Chat updateChatData);
 
 class MainScreen extends StatefulWidget {
   Auth auth;
@@ -20,7 +20,7 @@ class MainScreen extends StatefulWidget {
 
   MainScreen(this.auth, this.userData,
       {super.key, required this.chat, this.showUsernameDialog = false});
-  Chats chat;
+  Chat chat;
   bool showUsernameDialog;
 
   @override
@@ -68,7 +68,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void updateChatData(Chats updatedChatData) {
+  void updateChatData(Chat updatedChatData) {
     setState(() {
       widget.chat = updatedChatData;
       chatListReloadNeeded = true;
@@ -109,7 +109,7 @@ class _MainScreenState extends State<MainScreen> {
                         print(widget.updatedChats);
                         widget.updatedChats.remove(chatId.toString());
                         print(widget.updatedChats);
-                        widget.chat = Chats(chatId, name, avatar, membersCount,
+                        widget.chat = Chat(chatId, name, avatar, membersCount,
                             adminId, isGroupChat);
                       });
                     },

@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:client/dialogs/user_profile_dialog.dart';
-import 'package:client/models/chats.dart';
+import 'package:client/models/chat.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import '../models/auth.dart';
 import '../models/userProfile.dart';
 
-typedef UpdateChatData = void Function(Chats updateChatData);
+typedef UpdateChatData = void Function(Chat updateChatData);
 
 typedef UpdateChatMembersCount = void Function(int count);
 
@@ -42,7 +42,7 @@ class GroupChatSettingsDialog extends StatefulWidget {
   Auth auth;
   final UserProfile user;
   final TextEditingController nameController;
-  Chats chat;
+  Chat chat;
   UpdateChatMembersCount updateChatMembersCount;
   final UpdateChatData updateChatData;
   //final Function(int updatedMembersCount) updateMembersCount;
@@ -78,7 +78,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
   List<UserProfile> members = [];
   //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
-  final Chats chat;
+  final Chat chat;
   List<UserProfile> adminMembers = [];
   List<UserProfile> regularMembers = [];
   bool isLoading = true;
@@ -243,7 +243,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     });
   }
 
-  Future removeChatAdmin(Chats chat, UserProfile userToRemove) async {
+  Future removeChatAdmin(Chat chat, UserProfile userToRemove) async {
     print('removeChatMemberAdmin called');
     print(chat.chatId);
     print(userToRemove.userId);
@@ -276,7 +276,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
     });
   }
 
-  Future removeChatMember(Chats chat, UserProfile userToRemove) async {
+  Future removeChatMember(Chat chat, UserProfile userToRemove) async {
     print('removeChatMemberAdmin called');
     print(chat.chatId);
     print(userToRemove.userId);
@@ -374,7 +374,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
       print(returnedResult.data);
 
       //if (returnedResult.data['user_id'].toString() == widget.auth.userId) {
-      Chats chatInfo = Chats(
+      Chat chatInfo = Chat(
           returnedResult.data['chat_id'],
           returnedResult.data['chat_name'],
           returnedResult.data['avatar'],
@@ -399,35 +399,43 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
 
 // Функция для загрузки аватара на сервер
   Future<void> updateChat() async {
-    if (selectedFile != null) {
-      Dio dio = Dio();
+    Dio dio = Dio();
 
-      try {
-        FormData formData = FormData.fromMap({
-          'avatar': await MultipartFile.fromFile(selectedFile!.path,
-              filename: selectedFile!.path.split('/').last),
-          'chat_name': nameController.text,
-        });
+    try {
+      FormData formData = FormData();
 
-        Response response = await dio.patch(
-          'http://localhost:8000/chats/${widget.chat.chatId}/',
-          data: formData,
-          options: Options(headers: {
-            'Authorization': "Bearer ${widget.auth.token}",
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          print('Avatar uploaded successfully');
-        } else {
-          print('Failed to upload avatar');
-        }
-      } catch (e) {
-        print('Error uploading avatar: $e');
+      // Проверяем, есть ли выбранная аватара, и добавляем ее к FormData
+      if (selectedFile != null) {
+        formData.files.add(MapEntry(
+            'avatar',
+            await MultipartFile.fromFile(selectedFile!.path,
+                filename: selectedFile!.path.split('/').last)));
       }
-    } else {
-      print('No file selected');
+
+      // Проверяем, есть ли введенное название чата, и добавляем его к FormData
+      if (nameController.text.isNotEmpty) {
+        formData.fields.add(MapEntry('chat_name', nameController.text));
+      }
+
+      // Отправляем запрос на обновление чата
+      Response response = await dio.patch(
+        'http://localhost:8000/chats/${widget.chat.chatId}/',
+        data: formData,
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Chat updated successfully');
+      } else {
+        print('Failed to update chat');
+      }
+    } catch (e) {
+      print('Error updating chat: $e');
     }
+
+    // Получаем обновленные данные о чате
     await fetchChatData();
   }
 
@@ -1019,7 +1027,7 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
 typedef CallUpdateChatData = void Function();
 
 class AddMembers extends StatefulWidget {
-  Chats chat;
+  Chat chat;
   Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
@@ -1073,7 +1081,7 @@ class _AddMembersState extends State<AddMembers> {
     });
   }
 
-  Future addChatMembers(Chats chat) async {
+  Future addChatMembers(Chat chat) async {
     print('add new group chat called');
     try {
       var dio = Dio();
@@ -1287,7 +1295,7 @@ class _AddMembersState extends State<AddMembers> {
 }
 
 class AddAdmins extends StatefulWidget {
-  Chats chat;
+  Chat chat;
   Auth auth;
   List<UserProfile> users;
   List<UserProfile> members;
@@ -1339,7 +1347,7 @@ class _AddAdminsState extends State<AddAdmins> {
     });
   }
 
-  Future addChatAdmins(Chats chat) async {
+  Future addChatAdmins(Chat chat) async {
     print('add new group chat called');
     try {
       var dio = Dio();

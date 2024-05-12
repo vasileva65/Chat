@@ -1,5 +1,5 @@
 // ignore_for_file: avoid_print
-import 'package:client/models/chats.dart';
+import 'package:client/models/chat.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +29,7 @@ class UserProfileDialog extends StatefulWidget {
   Auth auth;
   final UserProfile user;
   final TextEditingController nameController;
-  final Chats chat;
+  final Chat chat;
 
   UserProfileDialog({
     required this.auth,
@@ -53,7 +53,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
   List<UserProfile> members = [];
   //final List<UserProfile> outOfChatMembers;
   final TextEditingController nameController;
-  final Chats chat;
+  final Chat chat;
   List<UserProfile> adminMembers = [];
   List<UserProfile> regularMembers = [];
   bool isLoading = true;

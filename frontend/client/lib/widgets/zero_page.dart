@@ -4,7 +4,7 @@ import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/chat_list.dart';
 import 'package:client/models/auth.dart';
 
-import '../models/chats.dart';
+import '../models/chat.dart';
 
 class ZeroPage extends StatefulWidget {
   Auth auth;

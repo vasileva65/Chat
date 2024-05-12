@@ -1,5 +1,5 @@
 import 'package:client/dialogs/chat_dialogs.dart';
-import 'package:client/models/chats.dart';
+import 'package:client/models/chat.dart';
 import 'package:client/models/message.dart';
 import 'package:client/models/userProfile.dart';
 import 'package:flutter/gestures.dart';
@@ -15,12 +15,12 @@ import 'package:client/models/userProfile.dart';
 import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
 
-typedef UpdateChatData = void Function(Chats updateChatData);
+typedef UpdateChatData = void Function(Chat updateChatData);
 
 class ChatPage extends StatefulWidget {
   Auth auth;
   UserProfile userData;
-  Chats chat;
+  Chat chat;
   final UpdateChatData updateChatData;
 
   final Function(int updatedMembersCount) updateMembersCount;
@@ -61,7 +61,7 @@ class _ChatPageState extends State<ChatPage> {
 
   List<Message> filteredItems = [];
 
-  void updateNameAvatar(Chats updatedChatData) {
+  void updateNameAvatar(Chat updatedChatData) {
     setState(() {
       widget.chat = updatedChatData;
       widget.updateChatData(updatedChatData);
@@ -265,7 +265,6 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     print('doing init');
     super.initState();
     //fetchChatData();
@@ -331,7 +330,7 @@ class _ChatPageState extends State<ChatPage> {
       print(returnedResult.data);
 
       //if (returnedResult.data['user_id'].toString() == widget.auth.userId) {
-      Chats chatInfo = Chats(
+      Chat chatInfo = Chat(
           returnedResult.data['chat_id'],
           returnedResult.data['chat_name'],
           returnedResult.data['avatar'],
@@ -500,7 +499,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Future removeChatAdmin(Chats chat, UserProfile userToRemove) async {
+  Future removeChatAdmin(Chat chat, UserProfile userToRemove) async {
     print('removeChatMemberAdmin called');
     print(chat.chatId);
     print(userToRemove.userId);
@@ -532,7 +531,7 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Future removeChatMember(Chats chat, UserProfile userToRemove) async {
+  Future removeChatMember(Chat chat, UserProfile userToRemove) async {
     print('removeChatMemberAdmin called');
     print(chat.chatId);
     print(userToRemove.userId);

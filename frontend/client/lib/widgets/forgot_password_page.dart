@@ -1,5 +1,5 @@
 import 'package:client/models/auth.dart';
-import 'package:client/models/chats.dart';
+import 'package:client/models/chat.dart';
 import 'package:client/models/userProfile.dart';
 import 'package:client/widgets/zero_page.dart';
 import 'package:dio/dio.dart';
@@ -21,7 +21,7 @@ class _ChangePassPage extends State<ChangePassPage> {
   String errorText = '';
 
   late UserProfile userData;
-  Chats chat = Chats(0, '', '', 0, 0, '');
+  Chat chat = Chat(0, '', '', 0, 0, '');
 
   Future signIn() async {
     Auth auth = await register();

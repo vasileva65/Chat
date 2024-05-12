@@ -12,7 +12,7 @@ import 'package:client/models/auth.dart';
 import 'package:client/models/userProfile.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
-import '../models/chats.dart';
+import '../models/chat.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -26,7 +26,7 @@ class _LoginPage extends State<LoginPage> {
   String errorText = '';
 
   late UserProfile userData;
-  Chats chat = Chats(0, '', '', 0, 0, '');
+  Chat chat = Chat(0, '', '', 0, 0, '');
 
   Future signIn() async {
     Auth auth = await login();

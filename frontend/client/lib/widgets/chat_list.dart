@@ -4,7 +4,7 @@ import 'package:client/dialogs/buttons.dart';
 import 'package:client/dialogs/chatlist_dialogs.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:client/models/chats.dart';
+import 'package:client/models/chat.dart';
 import 'package:client/models/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../functions/extract_name.dart';
@@ -21,7 +21,7 @@ typedef OnChatListUpdated = void Function();
 class ChatList extends StatefulWidget {
   Auth auth;
   UserProfile userData;
-  Chats chat;
+  Chat chat;
   Set<String> updatedChats;
   final UpdateUserData updateUserData;
   ChatUpdated onChatUpdated;
@@ -40,15 +40,15 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-  List<Chats> items = [];
-  List<Chats> dublicateItems = [];
+  List<Chat> items = [];
+  List<Chat> dublicateItems = [];
   List<UserProfile> users = [];
   List<UserProfile> dublicateUsers = [];
   List<UserProfile> selectedUsers = [];
   bool isSelected = false;
   UserProfile? selectedUser;
   final dio = Dio();
-  late Chats chat;
+  late Chat chat;
   ScrollController scrollGroupChatController = ScrollController();
   ScrollController scrollPrivateChatController = ScrollController();
   TextEditingController searchChatController = TextEditingController();
@@ -61,7 +61,7 @@ class _ChatListState extends State<ChatList> {
   //late List<bool> _isChecked;
   //late Map<String, bool> _isChecked; // Используем Map с типом ключа String
   late Set<String> selectedUserIds;
-  Chats? selectedChat;
+  Chat? selectedChat;
 
   bool isExpanded = false;
 
@@ -88,7 +88,7 @@ class _ChatListState extends State<ChatList> {
 
     widget.onChatListUpdated();
 
-    List<Chats> result = [];
+    List<Chat> result = [];
 
     for (int i = 0; i < (returnedResult.data as List<dynamic>).length; i++) {
       // print(widget.auth.userId);
@@ -97,7 +97,7 @@ class _ChatListState extends State<ChatList> {
       // print(widget.userData.name);
 
       if (returnedResult.data[i]['user_id'].toString() == widget.auth.userId) {
-        Chats chat = Chats(
+        Chat chat = Chat(
             returnedResult.data[i]['chat_id'],
             returnedResult.data[i]['chat_name'],
             returnedResult.data[i]['avatar'],
@@ -254,7 +254,7 @@ class _ChatListState extends State<ChatList> {
     fetchData(widget.userData);
   }
 
-  void selectChat(Chats chat) {
+  void selectChat(Chat chat) {
     setState(() {
       selectedChat = chat;
       isExpanded = true;
@@ -1348,7 +1348,10 @@ class _ChatListState extends State<ChatList> {
                                     ),
                                     trailing: widget.updatedChats.contains(
                                             groupItems[index].chatId.toString())
-                                        ? const Icon(Icons.access_alarm)
+                                        ? const Icon(
+                                            Icons.circle,
+                                            color: Colors.red,
+                                          )
                                         : null,
                                     leading: CircleAvatar(
                                       backgroundColor:
