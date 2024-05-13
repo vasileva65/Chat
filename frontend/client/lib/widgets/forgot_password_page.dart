@@ -60,15 +60,16 @@ class _ChangePassPage extends State<ChangePassPage> {
       // GET /user/profile/<id>
       // PATCH /user/profile/<id>
       print(response.data['access']);
-      return Auth(userData.userId.toString(), response.data['access'], true);
+      return Auth(userData.userId.toString(), response.data['access'],
+          response.data['refresh'], true);
     } on DioError catch (e) {
       if (e.response!.data['detail'] == null) {
-        return Auth('', '', false,
+        return Auth('', '', '', false,
             authError: 'Пароль должен содержать минимум 8 символов');
       } else if (e.response != null) {
-        return Auth('', '', false, authError: e.response!.data['detail']);
+        return Auth('', '', '', false, authError: e.response!.data['detail']);
       }
-      return Auth('', '', false, authError: 'Ошибка сети..');
+      return Auth('', '', '', false, authError: 'Ошибка сети..');
     }
   }
 

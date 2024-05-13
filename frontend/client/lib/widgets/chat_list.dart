@@ -13,6 +13,8 @@ import '../models/roles.dart';
 import '../models/userProfile.dart';
 import 'package:file_picker/file_picker.dart';
 
+import 'login_page.dart';
+
 typedef ChatUpdated = void Function(int chatId, String name, String avatar,
     int membersCount, int adminId, String isGroupChat);
 typedef UpdateUserData = void Function(UserProfile updatedUserData);
@@ -557,6 +559,87 @@ class _ChatListState extends State<ChatList> {
       print('No file selected');
     }
     await fetchUserData();
+  }
+
+  Future<void> logout() async {
+    try {
+      Response response = await dio.post('http://localhost:8000/logout/',
+          data: {'refresh_token': widget.auth.refreshToken},
+          options: Options(headers: {
+            'Authorization': "Bearer ${widget.auth.token}",
+          }));
+      print("logout");
+      print(response.data);
+      if (response.statusCode == 205) {
+        // Успешный выход из приложения
+        print("Logged out successfully");
+        // Здесь вы можете выполнить какие-либо дополнительные действия, например, переход на экран входа в приложение
+      } else {
+        // Обработка других статусов ответа, если это необходимо
+        print("Failed to log out");
+      }
+    } catch (e) {
+      // Обработка ошибок, возникших во время отправки запроса
+      print("Error during logout: $e");
+    }
+    setState(() {});
+  }
+
+  void logoutWarning(BuildContext context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Подтвердите выход'),
+        content:
+            const Text('Вы уверены, что хотите выйти\nиз своего аккаунта?'),
+        actions: <Widget>[
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.all(16.0),
+                    backgroundColor: Color.fromARGB(255, 37, 87, 153),
+                  ),
+                  onPressed: () async {
+                    // Вызываем logout() и дожидаемся его завершения
+                    await logout();
+                    // После завершения logout() переходим на страницу логина
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) => LoginPage()));
+                  },
+                  child: const Text(
+                    'Да',
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 213, 225, 241),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.all(16.0),
+                    backgroundColor: Color.fromARGB(255, 240, 240, 240),
+                  ),
+                  onPressed: () => Navigator.pop(context, 'Нет'),
+                  child: const Text(
+                    'Нет',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void userSettings() {
@@ -1226,31 +1309,50 @@ class _ChatListState extends State<ChatList> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
-        title: ListTile(
-          title: Text(
-            '${widget.userData.name} ${widget.userData.lastname}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Color.fromARGB(255, 39, 77, 126),
+        title: Row(
+          children: [
+            Expanded(
+              child: ListTile(
+                title: Text(
+                  '${widget.userData.name} ${widget.userData.lastname}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Color.fromARGB(255, 39, 77, 126),
+                  ),
+                ),
+                subtitle: const Text(
+                  'Online',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+                leading: CircleAvatar(
+                  backgroundColor: const Color.fromARGB(1, 255, 255, 255),
+                  backgroundImage: NetworkImage(widget.userData.avatar),
+                ),
+                selectedTileColor: Colors.white,
+                selected: false,
+                onTap: userSettings,
+                hoverColor: Colors.transparent,
+                splashColor: Colors.transparent,
+              ),
             ),
-          ),
-          subtitle: const Text(
-            'Online',
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: 14,
+            IconButton(
+              splashRadius: 1,
+              icon: const Icon(
+                Icons.logout,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                // Действие при нажатии кнопки выхода из аккаунта
+                // Например, вызов метода для выхода из аккаунта
+                //logout();
+                logoutWarning(context);
+              },
             ),
-          ),
-          leading: CircleAvatar(
-            backgroundColor: const Color.fromARGB(1, 255, 255, 255),
-            backgroundImage: NetworkImage(widget.userData.avatar),
-          ),
-          selectedTileColor: Colors.white,
-          selected: false,
-          onTap: userSettings,
-          hoverColor: Colors.transparent,
-          splashColor: Colors.transparent,
+          ],
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,

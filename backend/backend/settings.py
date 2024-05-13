@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'profanity',
     'channels',
     # "django_prometheus",
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 CHANNEL_LAYERS = {
@@ -179,6 +180,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
     'ROTATE_REFRESH_TOKENS': True,
+    'UPDATE_LAST_LOGIN': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 AUTH_USER_MODEL = 'chat.User'

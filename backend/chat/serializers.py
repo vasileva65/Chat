@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext as _
 #from .models import User
+from django.utils import timezone
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -122,6 +123,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Add custom claims
         token['username'] = user.username
+        user.last_login = timezone.now()
+        print("LAST LOGIN")
+        print(user.last_login)
+        user.save()
         return token
 
 

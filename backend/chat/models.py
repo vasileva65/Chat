@@ -41,7 +41,7 @@ class User(AbstractUser):
     
     
 class UserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='ID профиля')
     avatar = models.ImageField(upload_to ='user_photos/', default='user_photos/default.jpg', height_field=None, width_field=None)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name='Время обновления')
@@ -57,8 +57,10 @@ class UserProfile(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        with transaction.atomic():  # Создаем профиль пользователя внутри транзакции
-            UserProfile.objects.create(user=instance)
+        with transaction.atomic():
+            user_profile = UserProfile(user=instance)
+            user_profile.id = instance.id
+            user_profile.save()
 
 post_save.connect(create_user_profile, sender=User)
 

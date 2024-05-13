@@ -1,7 +1,11 @@
 # В файле signals.py вашего приложения
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from .models import Chat, ChatAdmins, ChatMembers, User, ActionLog
+from .models import Chat, ChatAdmins, ChatMembers, ActionLog
+from django.dispatch import receiver
+
+from django.contrib.auth import get_user_model
+
 
 # @receiver(post_delete, sender=Chat)
 # def log_chat_deletion(sender, instance, **kwargs):
@@ -69,3 +73,5 @@ def log_chat_admin_update(sender, instance, **kwargs):
             action_type='Отозваны права администратора в группе',
             target_object_id=instance.chat_id.chat_id
         )
+
+

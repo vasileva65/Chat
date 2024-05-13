@@ -5,6 +5,7 @@ from chat.views import (
     ChatAdminsViewSet,
     DepartmentEmployeeViewSet,
     DepartmentViewSet,
+    LogoutView,
     RegisterView,
     RoleViewSet,
     UserViewSet,
@@ -19,6 +20,7 @@ from rest_framework_simplejwt.views import (
 )
 from django.contrib import admin
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenBlacklistView
 
 
 # Create a router and register our viewsets with it.
@@ -46,4 +48,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterView.as_view(), name='auth_register'),
     # path("prometheus/", include("django_prometheus.urls")),
+    path('logout/', LogoutView.as_view(), name='auth_logout'),
+    #path('logout/', TokenBlacklistView.as_view(), name='token_blacklist'),
 ]

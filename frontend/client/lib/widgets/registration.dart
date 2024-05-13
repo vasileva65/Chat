@@ -69,15 +69,17 @@ class _RegistrationPage extends State<RegistrationPage> {
       // PATCH /user/profile/<id>
       print(response.data['access']);
 
-      return Auth(userData.userId.toString(), response.data['access'], true);
+      return Auth(userData.userId.toString(), response.data['access'],
+          response.data['refresh'], true);
     } on DioError catch (e) {
       print("RES");
       print(e.response!.data);
       //print(e.response!.data['password'][0]);
       if (e.response!.data['password'] != null) {
-        return Auth('', '', false, authError: e.response!.data['password'][0]);
+        return Auth('', '', '', false,
+            authError: e.response!.data['password'][0]);
       }
-      return Auth('', '', false, authError: 'Ошибка сети..');
+      return Auth('', '', '', false, authError: 'Ошибка сети..');
     }
   }
 

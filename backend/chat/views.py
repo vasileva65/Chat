@@ -2,9 +2,6 @@ from datetime import timezone
 from datetime import datetime
 from profanity.validators import validate_is_profane
 from django.core.exceptions import ValidationError
-import logging
-
-import requests
 from chat.models import (
     ActionLog,
     Chat,
@@ -50,7 +47,8 @@ from django.contrib.auth import get_user_model
 #from .models import User
 User = get_user_model()
 
-from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -418,4 +416,16 @@ class RegisterView(generics.CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
