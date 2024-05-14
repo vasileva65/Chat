@@ -26,7 +26,6 @@ from chat.serializers import (
     ChatSerializer, 
     MessageSerializer,
     UserProfileSerializer,
-    MyTokenObtainPairSerializer,
     RegisterSerializer, 
     ChatMembersSerializer,
     ChatAdminsSerializer
@@ -49,6 +48,8 @@ User = get_user_model()
 
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -397,12 +398,6 @@ class DepartmentEmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = DepartmentEmployeeSerializer
 
 
-
-class MyObtainTokenPairView(TokenObtainPairView):
-    permission_classes = (AllowAny,)
-    serializer_class = MyTokenObtainPairSerializer
-
-
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -429,4 +424,3 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        

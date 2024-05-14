@@ -42,7 +42,7 @@ class ChatAdminsSerializer(serializers.ModelSerializer):
 
 class ChatSerializer(serializers.ModelSerializer):
     people_count = serializers.SerializerMethodField(read_only=True)
-
+    
     def get_people_count(self, obj):
         # Фильтруем записи ChatMembers, где поле left_at пустое
         # И считаем количество таких записей
@@ -113,21 +113,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['url', 'id', 'user_id', 'user', 'avatar', 'department_employee', 'created_at', 'updated_at']
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-
-    @classmethod
-    def get_token(cls, user):
-        token = super(MyTokenObtainPairSerializer, cls).get_token(user)
-
-        # Add custom claims
-        token['username'] = user.username
-        user.last_login = timezone.now()
-        print("LAST LOGIN")
-        print(user.last_login)
-        user.save()
-        return token
 
 
 class RegisterSerializer(serializers.ModelSerializer):

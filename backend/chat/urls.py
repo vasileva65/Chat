@@ -49,6 +49,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     path("prometheus/", include("django_prometheus.urls")),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
-    #path('logout/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path('silk/', include('silk.urls', namespace='silk')),
+    path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]

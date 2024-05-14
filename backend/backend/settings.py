@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.utils.translation import gettext_lazy as _
 # import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     # "django_prometheus",
     'rest_framework_simplejwt.token_blacklist',
     'silk',
+    'django_rest_passwordreset',
 ]
 
 CHANNEL_LAYERS = {
@@ -152,6 +154,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 
 LANGUAGE_CODE = 'ru-RU'
+
+LANGUAGES = [
+    ('ru', _('Russian')),
+    ('en', _('English')),
+    # Другие языки...
+]
 
 TIME_ZONE = "UTC"
 
