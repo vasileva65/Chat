@@ -47,7 +47,8 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterView.as_view(), name='auth_register'),
-    # path("prometheus/", include("django_prometheus.urls")),
+    path("prometheus/", include("django_prometheus.urls")),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
     #path('logout/', TokenBlacklistView.as_view(), name='token_blacklist'),
+    path('silk/', include('silk.urls', namespace='silk')),
 ]
