@@ -602,10 +602,11 @@ class _ChatListState extends State<ChatList> {
                     backgroundColor: Color.fromARGB(255, 37, 87, 153),
                   ),
                   onPressed: () async {
+                    final navigator = Navigator.of(context);
                     // Вызываем logout() и дожидаемся его завершения
                     await logout();
                     // После завершения logout() переходим на страницу логина
-                    Navigator.pushReplacement(context,
+                    navigator.pushReplacement(
                         MaterialPageRoute(builder: (context) => LoginPage()));
                   },
                   child: const Text(
