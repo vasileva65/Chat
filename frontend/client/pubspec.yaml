@@ -106,4 +106,4 @@ flutter:
       - asset: fonts/Rubik-SemiBold.ttf
   
   assets:
-    - assets/images/
+    - assets/images/default.jpg

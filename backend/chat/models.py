@@ -66,7 +66,7 @@ post_save.connect(create_user_profile, sender=User)
 
 class Chat(models.Model):
     chat_id = models.AutoField(primary_key=True, verbose_name='ID чата')
-    chat_name = models.CharField(max_length=50, unique=True, null=True, blank=True, verbose_name='Название')
+    chat_name = models.CharField(max_length=50, unique=False, null=True, blank=True, verbose_name='Название')
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='ID пользователя')
     avatar = models.ImageField(upload_to ='chat_photos/', default='chat_photos/default.jpg', null=True,
         blank=True, height_field=None, width_field=None, verbose_name='Аватар')

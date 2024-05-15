@@ -75,6 +75,13 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void onDeleteChat() {
+    setState(() {
+      widget.chat.chatId = 0;
+      chatListReloadNeeded = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     print('build called');
@@ -128,6 +135,7 @@ class _MainScreenState extends State<MainScreen> {
                           widget.auth,
                           widget.userData,
                           widget.chat,
+                          onDeleteChat: onDeleteChat,
                           updateChatData: updateChatData,
                           updateMembersCount: (updatedMembersCount) {},
                         )

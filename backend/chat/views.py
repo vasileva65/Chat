@@ -1,6 +1,8 @@
 from datetime import timezone
+from django.db.models import Q
 from datetime import datetime
 from profanity.validators import validate_is_profane
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from chat.models import (
     ActionLog,
@@ -142,21 +144,33 @@ class ChatViewSet(viewsets.ModelViewSet):
             serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
         if user_id:
-            print("user id close")
             try:
-                print("try called")
+                other_chat_user_id = ChatMembers.objects.exclude(user_id=user_id).filter(chat_id=chat).values_list('user_id', flat=True).first()
+                print(other_chat_user_id)
+                user = User.objects.get(id=other_chat_user_id)
+                chat_name = f"{user.first_name} {user.last_name}"
+                chat.chat_name = chat_name
+                chat.save()
                 chat_user = ChatMembers.objects.get(chat_id=chat, user_id=user_id, left_at__isnull=True)
-                print(chat_user)
                 chat_user.left_at = datetime.now()
-                print(chat_user.left_at)
                 chat_user.save()
-                print("saved")
+                user = User.objects.get(id=user_id)
+                
+                
+                
+            #     other_user = get_user_model().objects.get(id=user_ids[0])  # Assuming it's a one-on-one chat
+            # chat_name = f"{admin_user.first_name} {admin_user.last_name} - {other_user.first_name} {other_user.last_name}"
             except ChatMembers.DoesNotExist:
                 return Response({'error': 'Пользователь не является участником этого чата'}, status=status.HTTP_404_NOT_FOUND)
             
-            chat.refresh_from_db()  # Обновляем данные чата из базы данных
-            chat.people_count = chat.chatmembers_set.exclude(left_at__isnull=True).count()  # Пересчитываем количество участников
-            chat.save()
+            remaining_members = ChatMembers.objects.filter(chat_id=chat, left_at__isnull=True).count()
+            if remaining_members == 0:
+                chat.delete()
+                return Response({'message': 'Chat deleted because no members are left'}, status=status.HTTP_204_NO_CONTENT)
+            
+            # chat.refresh_from_db()  # Обновляем данные чата из базы данных
+            # chat.people_count = chat.chatmembers_set.exclude(left_at__isnull=True).count()  # Пересчитываем количество участников
+            # chat.save()
             serializer = ChatSerializer(chat, context={'request': request})
             return Response(serializer.data)
         else:
@@ -180,6 +194,8 @@ class ChatViewSet(viewsets.ModelViewSet):
         except serializers.ValidationError as e:
             print(e)
             return Response({'error': 'Validation error'}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):
         user_ids = serializer.validated_data['user_ids']
@@ -188,7 +204,10 @@ class ChatViewSet(viewsets.ModelViewSet):
         avatar = serializer.validated_data['avatar'] or 'chat_photos/default.jpg'
         group_chat = serializer.validated_data['group_chat']
 
-        admin_user = get_user_model().objects.get(id=admin_id)
+        try:
+            admin_user = get_user_model().objects.get(id=admin_id)
+        except get_user_model().DoesNotExist:
+            raise ObjectDoesNotExist('User with provided admin_id does not exist')
         
         print("ADMIN:") 
         print(admin_user) 
@@ -201,6 +220,17 @@ class ChatViewSet(viewsets.ModelViewSet):
             other_user = get_user_model().objects.get(id=user_ids[0])  # Assuming it's a one-on-one chat
             chat_name = f"{admin_user.first_name} {admin_user.last_name} - {other_user.first_name} {other_user.last_name}"
         
+        users_count = len(user_ids)
+        existing_chat_count = ChatMembers.objects.filter(
+            Q(chat_id__chat_name=chat_name) &
+            Q(user_id__in=user_ids)
+        ).values('user_id').annotate(user_count=Count('user_id'))
+
+        # Если количество найденных записей для каждого пользователя равно 1, а общее количество найденных записей
+        # соответствует количеству пользователей, то это означает, что чат уже существует.
+        if len(existing_chat_count) == users_count:
+            raise ValidationError("A chat with the same participants and name already exists.")
+    
         chat = Chat(chat_name=chat_name, group_chat=group_chat, avatar=avatar, user_id=admin_user)
         chat.save()
         print("CHAT SAVED")
@@ -327,49 +357,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             if avatar:
                 user_profile.avatar = avatar  # Сохраняем файл в поле avatar объекта UserProfile
                 user_profile.save()
-            # Получаем данные из запроса
-            # user_id = request.data.get('user_id')
-            # first_name = request.data.get('user', {}).get('first_name')
-            # last_name = request.data.get('user', {}).get('last_name')
-            # middle_name = request.data.get('user', {}).get('middle_name')
-            # department_name = request.data.get('department_employee', {}).get('department_name')
-            # role_name = request.data.get('department_employee', {}).get('role')
-
-            # print("GOT DATA")
-            # print(f"user_id: {user_id}, first_name: {first_name}, last_name: {last_name}, middle_name: {middle_name}, department_name: {department_name}, role_name: {role_name}")
-            # # Обновляем данные пользователя
-            # user_profile = UserProfile.objects.get(user_id=user_id)
-            # user = user_profile.user
-            # user.first_name = first_name
-            # user.last_name = last_name
-            # user.middle_name = middle_name
-            # user.save()
-            # print("USER SAVED")
-            # role = Roles.objects.get(role_name=role_name)
-            # # Получаем отдел
-            # department = Department.objects.get(department_name=department_name)
-            # print("GOT DEPARTMENT")
-            # print(department.department_id)
-            # user = User.objects.get(id=user_id)
-            # print("GOT USER")
-            # print(user.id)
-            # # Пытаемся получить объект DepartmentEmployee, связанный с пользователем и отделом
-            # # Если объект не найден, он будет создан
-            # try:
-            #     department_employee, created = DepartmentEmployee.objects.update_or_create(user_id=user, department_id=department, role=role)
-            #     print("DEPARTMENT CREATED")
-            #     if created:
-            #         print("DEPARTMENT CREATED")
-            #     else:
-            #         print("DEPARTMENT UPDATED")
-            # except Exception as e:
-            #     print("ERROR:", str(e))
-            #     raise e
-            # Обновляем роль пользователя в отделе
-            # department_employee.role = role_name
-            # print("ROLE SAVED")
-            # department_employee.save()
-            # print("DEP EMPLOYEE SAVED")
             return Response({'message': 'Настройки пользователя успешно обновлены'}, status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             return Response({'error': 'Профиль пользователя не найден'}, status=status.HTTP_404_NOT_FOUND)

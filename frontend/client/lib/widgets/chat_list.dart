@@ -124,29 +124,136 @@ class _ChatListState extends State<ChatList> {
       }
     }
   }
+  // Future<void> updateChat() async {
+  //   Dio dio = Dio();
 
-  Future addNewGroupChat() async {
+  //   try {
+  //     FormData formData = FormData();
+
+  //     // Проверяем, есть ли выбранная аватара, и добавляем ее к FormData
+  //     if (selectedFile != null) {
+  //       formData.files.add(MapEntry(
+  //           'avatar',
+  //           await MultipartFile.fromFile(selectedFile!.path,
+  //               filename: selectedFile!.path.split('/').last)));
+  //     }
+
+  //     // Проверяем, есть ли введенное название чата, и добавляем его к FormData
+  //     if (nameController.text.isNotEmpty) {
+  //       formData.fields.add(MapEntry('chat_name', nameController.text));
+  //     }
+
+  //     // Отправляем запрос на обновление чата
+  //     Response response = await dio.patch(
+  //       'http://localhost:8000/chats/${widget.chat.chatId}/',
+  //       data: formData,
+  //       options: Options(headers: {
+  //         'Authorization': "Bearer ${widget.auth.token}",
+  //       }),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       print('Chat updated successfully');
+  //     } else {
+  //       print('Failed to update chat');
+  //     }
+  //   } catch (e) {
+  //     print('Error updating chat: $e');
+  //   }
+
+  //   // Получаем обновленные данные о чате
+  //   await fetchChatData();
+  // }
+  void showChatExistsWarning(BuildContext context) {
+    OverlayEntry? overlayEntry;
+
+    overlayEntry = OverlayEntry(
+        builder: (BuildContext context) => Stack(children: <Widget>[
+              // Показываем диалоговое окно поверх предупреждения
+              Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      AlertDialog(
+                        title: Text(
+                            'Такой чат уже существует.\nИзмените имя или список участников'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              overlayEntry?.remove(); // Закрыть предупреждение
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ]));
+
+    Overlay.of(context).insert(overlayEntry);
+  }
+
+  Future addNewGroupChat(BuildContext context) async {
     print('add new group chat called');
     try {
-      Response response =
-          await dio.post('http://localhost:8000/chats/create_chat/',
-              data: {
-                'chat_name': chatNameController.text,
-                'user_ids': selectedUserIds.toList(),
-                'avatar': null,
-                'admin_id': widget.userData.userId,
-                'group_chat': true,
-              },
-              options: Options(headers: {
-                'Authorization': "Bearer ${widget.auth.token}",
-              }));
+      FormData formData = FormData();
+
+      // Добавляем поля к FormData
+      formData.fields.add(MapEntry('chat_name', chatNameController.text));
+      for (var userId in selectedUserIds) {
+        formData.fields.add(MapEntry('user_ids', userId));
+      }
+      formData.fields
+          .add(MapEntry('admin_id', widget.userData.userId.toString()));
+      formData.fields.add(MapEntry('group_chat', 'true'));
+
+      // Проверяем, есть ли выбранная аватара, и добавляем ее к FormData
+      if (selectedFile != null) {
+        formData.files.add(MapEntry(
+            'avatar',
+            await MultipartFile.fromFile(selectedFile!.path,
+                filename: selectedFile!.path.split('/').last)));
+      } else {
+        // Добавляем пустое поле avatar для совместимости
+        formData.files
+            .add(MapEntry('avatar', MultipartFile.fromBytes([], filename: '')));
+      }
+
+      // Отправляем запрос на сервер с использованием FormData
+      Response response = await dio.post(
+        'http://localhost:8000/chats/create_chat/',
+        data: formData,
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+          'Content-Type': 'multipart/form-data',
+        }),
+      );
       print(response);
       print(response.data);
+      Navigator.of(context).pop();
+      // Clear the text field controllers
+      chatNameController.clear();
+      searchUserController.clear();
+      selectedUserIds.clear();
+      selectedFile = null;
     } on DioError catch (e) {
       print('Error: $e');
       if (e.response != null) {
         if (e.response!.statusCode == 401) {
           Navigator.pop(context);
+        }
+        if (e.response!.statusCode == 500) {
+          String errorMessage = e.response!.data.toString();
+          if (errorMessage.contains(
+              "A chat with the same participants and name already exists.")) {
+            print(errorMessage);
+            print("A chat with the same participants and name already exists.");
+            showChatExistsWarning(context);
+          }
         }
       }
       return;
@@ -164,18 +271,37 @@ class _ChatListState extends State<ChatList> {
   Future addNewPersonalChat() async {
     print('add new group chat called');
     try {
-      Response response =
-          await dio.post('http://localhost:8000/chats/create_chat/',
-              data: {
-                'chat_name': null,
-                'user_ids': [selectedUser?.userId],
-                'avatar': null,
-                'admin_id': widget.userData.userId,
-                'group_chat': false,
-              },
-              options: Options(headers: {
-                'Authorization': "Bearer ${widget.auth.token}",
-              }));
+      FormData formData = FormData();
+
+      // Добавляем поля к FormData
+      formData.fields
+          .add(MapEntry('chat_name', '')); // Пустое имя чата для личного чата
+      formData.fields
+          .add(MapEntry('user_ids', [selectedUser?.userId].join(',')));
+      formData.fields
+          .add(MapEntry('admin_id', widget.userData.userId.toString()));
+      formData.fields.add(MapEntry('group_chat', 'false'));
+
+      if (selectedFile != null) {
+        formData.files.add(MapEntry(
+            'avatar',
+            await MultipartFile.fromFile(selectedFile!.path,
+                filename: selectedFile!.path.split('/').last)));
+      } else {
+        // Добавляем пустое поле avatar для совместимости
+        formData.files
+            .add(MapEntry('avatar', MultipartFile.fromBytes([], filename: '')));
+      }
+
+      // Отправляем запрос на сервер с использованием FormData
+      Response response = await dio.post(
+        'http://localhost:8000/chats/create_chat/',
+        data: formData,
+        options: Options(headers: {
+          'Authorization': "Bearer ${widget.auth.token}",
+          'Content-Type': 'multipart/form-data',
+        }),
+      );
       print(response);
       print(response.data);
     } on DioError catch (e) {
@@ -559,6 +685,9 @@ class _ChatListState extends State<ChatList> {
       print('No file selected');
     }
     await fetchUserData();
+    setState(() {
+      selectedFile = null;
+    });
   }
 
   Future<void> logout() async {
@@ -939,6 +1068,38 @@ class _ChatListState extends State<ChatList> {
               ));
   }
 
+  void showUserWarning(BuildContext context) {
+    OverlayEntry? overlayEntry;
+
+    overlayEntry = OverlayEntry(
+        builder: (BuildContext context) => Stack(children: <Widget>[
+              // Показываем диалоговое окно поверх предупреждения
+              Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      AlertDialog(
+                        title: Text('Вы не выбрали пользователей'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              overlayEntry?.remove(); // Закрыть предупреждение
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ]));
+
+    Overlay.of(context).insert(overlayEntry);
+  }
+
   void addGroupChat() {
     showDialog(
       context: context,
@@ -956,21 +1117,23 @@ class _ChatListState extends State<ChatList> {
           titlePadding: const EdgeInsets.all(0.0),
           title: Container(
               padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-              child: Center(
-                  child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _getCloseButton(context, () {
-                    setState(() {
-                      chatNameController.clear();
-                      searchUserController.clear();
-                      selectedUserIds.clear();
-                      filterUsers('');
-                    });
-                  }),
-                  const Text("Создать чат"),
-                ],
-              ))),
+              child: Center(child: Builder(builder: (context) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _getCloseButton(context, () {
+                      setState(() {
+                        chatNameController.clear();
+                        searchUserController.clear();
+                        selectedUserIds.clear();
+                        filterUsers('');
+                        selectedFile = null;
+                      });
+                    }),
+                    const Text("Создать чат"),
+                  ],
+                );
+              }))),
           content: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
             return SizedBox(
@@ -984,14 +1147,18 @@ class _ChatListState extends State<ChatList> {
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       child: InkWell(
-                        splashColor: Colors.black26,
-                        onTap: () {},
-                        child: Ink.image(
-                          image: const AssetImage('assets/images/default.jpg'),
-                          height: 120,
-                          width: 120,
-                        ),
-                      ),
+                          splashColor: Colors.black26,
+                          onTap: () async {
+                            await pickFile();
+                            setState(() {});
+                          },
+                          child: Ink.image(
+                            image: selectedFile != null
+                                ? FileImage(selectedFile!) as ImageProvider
+                                : const AssetImage('assets/images/default.jpg'),
+                            height: 120,
+                            width: 120,
+                          )),
                     ),
                   ),
                   Container(
@@ -1104,12 +1271,21 @@ class _ChatListState extends State<ChatList> {
               padding: const EdgeInsets.all(8.0),
               child: TextButton(
                 onPressed: () {
-                  addNewGroupChat();
-                  Navigator.of(ctx).pop();
-                  // Clear the text field controllers
-                  chatNameController.clear();
-                  searchUserController.clear();
-                  selectedUserIds.clear();
+                  if (selectedUserIds.isNotEmpty) {
+                    print("if called");
+                    addNewGroupChat(context);
+                    // Navigator.of(ctx).pop();
+                    // // Clear the text field controllers
+                    // chatNameController.clear();
+                    // searchUserController.clear();
+                    // selectedUserIds.clear();
+                    // selectedFile = null;
+                  } else {
+                    print("else called");
+                    showUserWarning(context);
+                    // selectedUsersCountWarning(context);
+                  }
+
                   // _isChecked = Map<String, bool>.from(
                   //     _isChecked); // Создаем копию текущего состояния
 
@@ -1160,6 +1336,7 @@ class _ChatListState extends State<ChatList> {
                   setState(() {
                     searchUserController.clear();
                     selectedUser = null;
+                    selectedFile = null;
                     filterUsers('');
                   });
                 }),
@@ -1179,14 +1356,18 @@ class _ChatListState extends State<ChatList> {
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAliasWithSaveLayer,
                     child: InkWell(
-                      splashColor: Colors.black26,
-                      onTap: () {},
-                      child: Ink.image(
-                        image: const AssetImage('assets/images/default.jpg'),
-                        height: 120,
-                        width: 120,
-                      ),
-                    ),
+                        splashColor: Colors.black26,
+                        onTap: () async {
+                          await pickFile();
+                          setState(() {});
+                        },
+                        child: Ink.image(
+                          image: selectedFile != null
+                              ? FileImage(selectedFile!) as ImageProvider
+                              : const AssetImage('assets/images/default.jpg'),
+                          height: 120,
+                          width: 120,
+                        )),
                   ),
                 ),
                 Container(
@@ -1275,6 +1456,7 @@ class _ChatListState extends State<ChatList> {
                 Navigator.of(ctx).pop();
                 searchUserController.clear();
                 selectedUser = null;
+                selectedFile = null;
               },
               style: ButtonStyle(
                   backgroundColor: const MaterialStatePropertyAll<Color>(

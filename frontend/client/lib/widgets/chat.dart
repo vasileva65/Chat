@@ -2,6 +2,7 @@ import 'package:client/dialogs/chat_dialogs.dart';
 import 'package:client/models/chat.dart';
 import 'package:client/models/message.dart';
 import 'package:client/models/userProfile.dart';
+import 'package:client/widgets/zero_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import '../dialogs/user_profile_dialog.dart';
 import '../functions/extract_name.dart';
 
 typedef UpdateChatData = void Function(Chat updateChatData);
+typedef DeleteChat = void Function();
 
 class ChatPage extends StatefulWidget {
   Auth auth;
@@ -24,10 +26,17 @@ class ChatPage extends StatefulWidget {
   final UpdateChatData updateChatData;
 
   final Function(int updatedMembersCount) updateMembersCount;
-  ChatPage(this.auth, this.userData, this.chat,
-      {required this.updateChatData,
-      required this.updateMembersCount,
-      super.key});
+  final DeleteChat onDeleteChat;
+
+  ChatPage(
+    this.auth,
+    this.userData,
+    this.chat, {
+    required this.onDeleteChat,
+    required this.updateChatData,
+    required this.updateMembersCount,
+    super.key,
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -562,7 +571,7 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       members.remove(userToRemove);
-      updateChatMembersCount(members.length);
+      // updateChatMembersCount(members.length);
       // regularMembers.remove(userToRemove);
 
       //Call back
@@ -854,6 +863,9 @@ class _ChatPageState extends State<ChatPage> {
                           );
                         } else if (value == 'leaveChat') {
                           removeChatMember(widget.chat, widget.userData);
+                          // Chat chat = widget.chat;
+                          // chat.chatId = 0;
+                          //widget.updateChatData(chat);
                         }
                       },
                       icon: const Icon(
