@@ -44,6 +44,7 @@ dependencies:
   web_socket_channel: ^2.3.0
   image_picker: ^0.8.4
   file_picker: ^4.0.0
+  uni_links: ^0.5.1
   
 dev_dependencies:
   flutter_test:

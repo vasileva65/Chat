@@ -573,7 +573,7 @@ class _ChatPageState extends State<ChatPage> {
       members.remove(userToRemove);
       // updateChatMembersCount(members.length);
       // regularMembers.remove(userToRemove);
-
+      widget.onDeleteChat;
       //Call back
       // widget.updateChatMembersCount(members.length);
     });
@@ -865,7 +865,8 @@ class _ChatPageState extends State<ChatPage> {
                           removeChatMember(widget.chat, widget.userData);
                           // Chat chat = widget.chat;
                           // chat.chatId = 0;
-                          //widget.updateChatData(chat);
+                          // widget.updateChatData(chat);
+                          // widget.onDeleteChat;
                         }
                       },
                       icon: const Icon(

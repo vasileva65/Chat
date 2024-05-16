@@ -129,8 +129,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             'middle_name': {'required': True},
         }
 
-    
-    
     def validate(self, attrs):
         print("Validating user data:", attrs)
         if attrs['password'] != attrs['password2']:
@@ -165,3 +163,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             'access': str(refresh.access_token),
         }
     
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с этим email не найден.")
+        return value
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
+    token = serializers.CharField(write_only=True, required=True)
+    uidb64 = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Пароли не совпадают."})
+        return attrs

@@ -6,8 +6,10 @@ from chat.views import (
     DepartmentEmployeeViewSet,
     DepartmentViewSet,
     LogoutView,
+    PasswordResetView,
     RegisterView,
     RoleViewSet,
+    SetNewPasswordView,
     UserViewSet,
     MessageViewSet,
     UserProfileViewSet,
@@ -51,4 +53,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='auth_logout'),
     path('silk/', include('silk.urls', namespace='silk')),
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
+    path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
+    path('reset-password-confirm/<uidb64>/<token>/', SetNewPasswordView.as_view(), name='reset_password_confirm'),
+
 ]

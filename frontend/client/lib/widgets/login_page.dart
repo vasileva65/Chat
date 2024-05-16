@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'package:client/models/userProfile.dart';
-import 'package:client/widgets/forgot_password_page.dart';
+import 'package:client/widgets/password_reset.dart';
 import 'package:client/widgets/main_screen.dart';
 import 'package:client/widgets/registration.dart';
 import 'package:http/http.dart' as http;
@@ -264,7 +264,8 @@ class _LoginPage extends State<LoginPage> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ChangePassPage()),
+                                  builder: (context) =>
+                                      PasswordResetRequestPage()),
                               (Route<dynamic> route) => true,
                             );
                           },

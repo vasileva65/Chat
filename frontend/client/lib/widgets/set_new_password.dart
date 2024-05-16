@@ -1,104 +1,52 @@
-import 'package:client/models/auth.dart';
-import 'package:client/models/chat.dart';
-import 'package:client/models/userProfile.dart';
-import 'package:client/widgets/zero_page.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-import 'main_screen.dart';
+import 'login_page.dart';
 
-class ChangePassPage extends StatefulWidget {
+class SetNewPasswordPage extends StatefulWidget {
+  final String uidb64;
+  final String token;
+
+  SetNewPasswordPage({required this.uidb64, required this.token});
+
   @override
-  _ChangePassPage createState() => _ChangePassPage();
+  _SetNewPasswordPageState createState() => _SetNewPasswordPageState();
 }
 
-class _ChangePassPage extends State<ChangePassPage> {
+class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
   final dio = Dio();
-  final usernameController = TextEditingController();
   final passController = TextEditingController();
   final passController2 = TextEditingController();
   String errorText = '';
 
-  late UserProfile userData;
-  Chat chat = Chat(0, '', '', 0, 0, '');
-
-  Future signIn() async {
-    Auth auth = await register();
-    setState(() {});
-    if (auth.authenticated) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => ZeroPage(auth, userData)),
-        (Route<dynamic> route) => true,
-      );
-    } else {
-      setState(() {
-        errorText = auth.authError;
-      });
-    }
-  }
-
-  Future register() async {
-    // Returns true if auth succeeded.
+  Future setNewPassword() async {
     try {
-      Response response = await dio.post(
-        'http://localhost:8000/changepassword/',
+      Response response = await dio.patch(
+        'http://localhost:8000/reset-password-confirm/${widget.uidb64}/${widget.token}/',
         data: {
-          'username': usernameController.text,
           'password': passController.text,
           'password2': passController2.text,
         },
       );
-
-      await getUserProfileData(response);
-
-      print("user data userId");
-      print(userData.userId);
-
-      // GET /user/profile -> {user_id: username: email: first_name: last_name: avatat:}
-      // GET /user/profile/<id>
-      // PATCH /user/profile/<id>
-      print(response.data['access']);
-      return Auth(userData.userId.toString(), response.data['access'],
-          response.data['refresh'], true);
-    } on DioError catch (e) {
-      if (e.response!.data['detail'] == null) {
-        return Auth('', '', '', false,
-            authError: 'Пароль должен содержать минимум 8 символов');
-      } else if (e.response != null) {
-        return Auth('', '', '', false, authError: e.response!.data['detail']);
+      if (response.statusCode == 200) {
+        // Password reset successful, navigate to login page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      } else {
+        // Handle error
+        setState(() {
+          errorText = 'Failed to reset password.';
+        });
       }
-      return Auth('', '', '', false, authError: 'Ошибка сети..');
+    } catch (e) {
+      // Handle error
+      setState(() {
+        errorText = 'Failed to reset password.';
+      });
     }
-  }
-
-  Future getUserProfileData(Response res) async {
-    Response returnedResult =
-        await dio.get('http://localhost:8000/changepassword'
-            //options: Options(headers: {
-            //       'Authorization': "Bearer ${res.data['access']}",
-            //     })
-            );
-
-    print(returnedResult.data);
-    UserProfile user = UserProfile(0, '', '', '', '', '');
-    if ((returnedResult.data as List<dynamic>).length > 0) {
-      user = UserProfile(
-        returnedResult.data[0]['user_id'],
-        returnedResult.data[0]['username'].toString(),
-        returnedResult.data[0]['first_name'].toString(),
-        returnedResult.data[0]['last_name'].toString(),
-        returnedResult.data[0]['middle_name'].toString(),
-        returnedResult.data[0]['avatar'].toString(),
-      );
-    }
-    print("here is the result");
-    print(returnedResult.data);
-
-    setState(() {
-      userData = user;
-    });
   }
 
   bool passwordVisible = false;
@@ -135,7 +83,7 @@ class _ChangePassPage extends State<ChangePassPage> {
                   Container(
                     padding: const EdgeInsets.only(bottom: 25),
                     child: const Text(
-                      'Изменить пароль',
+                      'Придумайте пароль',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 33,
@@ -144,27 +92,10 @@ class _ChangePassPage extends State<ChangePassPage> {
                       ),
                     ),
                   ),
-
-                  //
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: TextFormField(
-                      onEditingComplete: signIn,
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Имя пользователя',
-                          hintText: 'Введите имя пользователя'),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextFormField(
-                      onEditingComplete: signIn,
+                      onEditingComplete: setNewPassword,
                       controller: passController2,
                       obscureText: passwordVisible,
                       decoration: InputDecoration(
@@ -174,7 +105,7 @@ class _ChangePassPage extends State<ChangePassPage> {
                                 color: Color.fromARGB(255, 37, 87, 153))),
                         border: const OutlineInputBorder(),
                         labelText: 'Пароль',
-                        hintText: 'Придумайте пароль',
+                        hintText: 'Введите пароль',
                         errorText: errorText.isEmpty ? null : errorText,
                         suffixIcon: IconButton(
                           splashRadius: 20,
@@ -195,7 +126,7 @@ class _ChangePassPage extends State<ChangePassPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: TextFormField(
-                      onEditingComplete: signIn,
+                      onEditingComplete: setNewPassword,
                       controller: passController,
                       obscureText: passwordVisible2,
                       decoration: InputDecoration(
@@ -223,21 +154,22 @@ class _ChangePassPage extends State<ChangePassPage> {
                       ),
                     ),
                   ),
-                  /*TextButton(
+                  TextButton(
                     onPressed: () {
                       //TODO FORGOT PASSWORD SCREEN
                     },
                     child: const Text(
                       'Забыли пароль?',
                       style: TextStyle(
-                          color: Color.fromARGB(255, 0, 102, 204), fontSize: 15),
+                          color: Color.fromARGB(255, 0, 102, 204),
+                          fontSize: 15),
                     ),
-                  ),*/
+                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     height: 65,
                     child: ElevatedButton(
-                      onPressed: signIn,
+                      onPressed: setNewPassword,
                       style: ButtonStyle(
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
