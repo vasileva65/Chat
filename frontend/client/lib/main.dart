@@ -1,8 +1,6 @@
-import 'dart:async';
-
+import 'package:client/widgets/password_reset.dart';
 import 'package:client/widgets/login_page.dart';
 import 'package:client/widgets/password_reset.dart';
-
 import 'package:client/widgets/set_new_password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +9,6 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:client/widgets/chat.dart';
 import 'package:client/widgets/main_screen.dart';
-import 'package:uni_links/uni_links.dart';
 import 'package:window_size/window_size.dart';
 
 void main() {
@@ -22,63 +19,13 @@ void main() {
     setWindowMinSize(const Size(750, 500));
   }
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
-class _MyAppState extends State<MyApp> {
-  StreamSubscription? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    initUniLinks();
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> initUniLinks() async {
-    try {
-      _sub = getUriLinksStream().listen((Uri? uri) {
-        if (uri != null) {
-          _handleDeepLink(uri);
-        }
-      }, onError: (err) {
-        // Handle error
-      });
-
-      Uri? initialUri = await getInitialUri();
-      if (initialUri != null) {
-        _handleDeepLink(initialUri);
-      }
-    } catch (e) {
-      // Handle exception
-    }
-  }
-
-  void _handleDeepLink(Uri uri) {
-    // Handle your deep link here
-    if (uri.pathSegments.contains('reset-password-confirm')) {
-      String uidb64 = uri.pathSegments[1];
-      String token = uri.pathSegments[2];
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              SetNewPasswordPage(uidb64: uidb64, token: token),
-        ),
-      );
-    }
-  }
-
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -90,13 +37,6 @@ class _MyAppState extends State<MyApp> {
             ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 37, 87, 153)),
       ),
       home: LoginPage(),
-      routes: {
-        '/request-password-reset': (context) => PasswordResetRequestPage(),
-        '/set-new-password': (context) => SetNewPasswordPage(
-            uidb64: '',
-            token:
-                ''), // Для простоты, но uidb64 и token должны быть переданы из URL
-      },
     );
   }
 }
