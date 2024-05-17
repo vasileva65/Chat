@@ -4,6 +4,7 @@ import 'package:client/models/userProfile.dart';
 import 'package:client/widgets/password_reset.dart';
 import 'package:client/widgets/main_screen.dart';
 import 'package:client/widgets/registration.dart';
+import 'package:client/widgets/reset_password/email_input_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -122,11 +123,6 @@ class _LoginPage extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       //backgroundColor: Color.fromARGB(255, 114, 154, 207),
-      appBar: AppBar(
-        title: const Text(''),
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        elevation: 0,
-      ),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -264,8 +260,7 @@ class _LoginPage extends State<LoginPage> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      PasswordResetRequestPage()),
+                                  builder: (context) => EmailInputPage()),
                               (Route<dynamic> route) => true,
                             );
                           },
