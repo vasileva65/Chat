@@ -19,11 +19,11 @@ class User(AbstractUser):
     MinLengthValidator(limit_value=1, message=("Фамилия не может быть пустой."))
 ])
     middle_name = models.CharField(max_length=150, blank=True, verbose_name='Отчество')
-
+    email = models.EmailField(unique=True, verbose_name='Электронная почта')
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'middle_name']
 
     class Meta:
         verbose_name = 'Пользователь'

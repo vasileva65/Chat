@@ -433,8 +433,8 @@ class PasswordResetView(generics.GenericAPIView):
 
         try:
             send_mail(
-                "Password Reset OTP",
-                f"Your OTP for password reset is {otp}",
+                "Код подтверждения для сброса пароля",
+                f"Ваш код подтверждения для сброса пароля {otp}",
                 "no-reply@example.com",
                 [email],
                 fail_silently=False,

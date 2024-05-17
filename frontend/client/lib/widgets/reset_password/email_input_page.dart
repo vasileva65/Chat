@@ -22,7 +22,7 @@ class _EmailInputPageState extends State<EmailInputPage> {
         },
       );
       setState(() {
-        message = 'Password reset OTP has been sent to your email.';
+        message = 'Код подтверждения для сброса пароля был отправлен на почту.';
         errorText = '';
       });
       Navigator.push(
@@ -33,7 +33,8 @@ class _EmailInputPageState extends State<EmailInputPage> {
       );
     } on DioError catch (e) {
       setState(() {
-        errorText = 'Failed to send password reset email.';
+        errorText =
+            'Произошла ошибка. Убедитесь, что вы ввели почту, к которой привязан аккаунт.';
         message = '';
       });
     }

@@ -22,6 +22,7 @@ class _RegistrationPage extends State<RegistrationPage> {
   final nameController = TextEditingController();
   final lastnameController = TextEditingController();
   final middlenameController = TextEditingController();
+  final emailController = TextEditingController();
   String errorText = '';
 
   late UserProfile userData;
@@ -140,203 +141,221 @@ class _RegistrationPage extends State<RegistrationPage> {
               width: 400,
               child: Form(
                 key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 25),
-                      child: const Text(
-                        'Создайте аккаунт',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 33,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-
-                    //
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextFormField(
-                        onEditingComplete: signIn,
-                        controller: nameController,
-                        validator: RussianNameValidator.validate,
-                        decoration: const InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: OutlineInputBorder(),
-                          labelText: 'Имя',
-                          hintText: 'Введите имя',
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextFormField(
-                        onEditingComplete: signIn,
-                        controller: lastnameController,
-                        validator: RussianNameValidator.validate,
-                        decoration: const InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    width: 1,
-                                    color: Color.fromARGB(255, 37, 87, 153))),
-                            border: OutlineInputBorder(),
-                            labelText: 'Фамилия',
-                            hintText: 'Введите фамилию'),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextFormField(
-                        onEditingComplete: signIn,
-                        controller: middlenameController,
-                        validator: RussianNameValidator.validate,
-                        decoration: const InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    width: 1,
-                                    color: Color.fromARGB(255, 37, 87, 153))),
-                            border: OutlineInputBorder(),
-                            labelText: 'Отчество',
-                            hintText: 'Введите отчество'),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextFormField(
-                        onEditingComplete: signIn,
-                        controller: passController2,
-                        obscureText: passwordVisible,
-                        decoration: InputDecoration(
-                          focusedBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: const OutlineInputBorder(),
-                          labelText: 'Пароль',
-                          hintText: 'Придумайте пароль',
-                          errorText: errorText.isEmpty ? null : errorText,
-                          errorMaxLines: 2,
-                          suffixIcon: IconButton(
-                            splashRadius: 20,
-                            icon: Icon(passwordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () {
-                              setState(
-                                () {
-                                  passwordVisible = !passwordVisible;
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextFormField(
-                        onEditingComplete: signIn,
-                        controller: passController,
-                        obscureText: passwordVisible2,
-                        decoration: InputDecoration(
-                          focusedBorder: const OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1,
-                                  color: Color.fromARGB(255, 37, 87, 153))),
-                          border: const OutlineInputBorder(),
-                          labelText: 'Повтор пароля',
-                          hintText: 'Повторите пароль',
-                          errorText: errorText.isEmpty ? null : errorText,
-                          errorMaxLines: 2,
-                          suffixIcon: IconButton(
-                            splashRadius: 20,
-                            icon: Icon(passwordVisible2
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () {
-                              setState(
-                                () {
-                                  passwordVisible2 = !passwordVisible2;
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    /*TextButton(
-                      onPressed: () {
-                        //TODO FORGOT PASSWORD SCREEN
-                      },
-                      child: const Text(
-                        'Забыли пароль?',
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 0, 102, 204), fontSize: 15),
-                      ),
-                    ),*/
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      height: 65,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            signIn();
-                          }
-                        },
-                        style: ButtonStyle(
-                            shape: MaterialStateProperty.all<
-                                RoundedRectangleBorder>(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
-                        ))),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.only(bottom: 25),
                         child: const Text(
-                          'Регистрация',
+                          'Создайте аккаунт',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 33,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.black,
                           ),
                         ),
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 11),
-                          height: 40,
-                          child: const Text('Уже есть аккаунт?',
-                              style: TextStyle(fontSize: 16)),
-                        ),
-                        //const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 7),
-                          height: 38,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              textStyle: const TextStyle(fontSize: 16),
-                            ),
-                            onPressed: () {
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginPage()),
-                                (Route<dynamic> route) => false,
-                              );
-                            },
-                            child: const Text('Войти'),
+
+                      //
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: nameController,
+                          validator: RussianNameValidator.validate,
+                          decoration: const InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border: OutlineInputBorder(),
+                            labelText: 'Имя',
+                            hintText: 'Введите имя',
                           ),
-                        )
-                      ],
-                    ),
-                  ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: lastnameController,
+                          validator: RussianNameValidator.validate,
+                          decoration: const InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 1,
+                                      color: Color.fromARGB(255, 37, 87, 153))),
+                              border: OutlineInputBorder(),
+                              labelText: 'Фамилия',
+                              hintText: 'Введите фамилию'),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: middlenameController,
+                          validator: RussianNameValidator.validate,
+                          decoration: const InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 1,
+                                      color: Color.fromARGB(255, 37, 87, 153))),
+                              border: OutlineInputBorder(),
+                              labelText: 'Отчество',
+                              hintText: 'Введите отчество'),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: emailController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Пожалуйста, введите почту';
+                            }
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                .hasMatch(value)) {
+                              return 'Введите корректную почту';
+                            }
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border: OutlineInputBorder(),
+                            labelText: 'Почта',
+                            hintText: 'Введите почту',
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: passController2,
+                          obscureText: passwordVisible,
+                          decoration: InputDecoration(
+                            focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border: const OutlineInputBorder(),
+                            labelText: 'Пароль',
+                            hintText: 'Придумайте пароль',
+                            errorText: errorText.isEmpty ? null : errorText,
+                            errorMaxLines: 2,
+                            suffixIcon: IconButton(
+                              splashRadius: 20,
+                              icon: Icon(passwordVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () {
+                                setState(
+                                  () {
+                                    passwordVisible = !passwordVisible;
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: TextFormField(
+                          onEditingComplete: signIn,
+                          controller: passController,
+                          obscureText: passwordVisible2,
+                          decoration: InputDecoration(
+                            focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 1,
+                                    color: Color.fromARGB(255, 37, 87, 153))),
+                            border: const OutlineInputBorder(),
+                            labelText: 'Повтор пароля',
+                            hintText: 'Повторите пароль',
+                            errorText: errorText.isEmpty ? null : errorText,
+                            errorMaxLines: 2,
+                            suffixIcon: IconButton(
+                              splashRadius: 20,
+                              icon: Icon(passwordVisible2
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () {
+                                setState(
+                                  () {
+                                    passwordVisible2 = !passwordVisible2;
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        height: 65,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              signIn();
+                            }
+                          },
+                          style: ButtonStyle(
+                              shape: MaterialStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ))),
+                          child: const Text(
+                            'Регистрация',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            height: 40,
+                            child: const Text('Уже есть аккаунт?',
+                                style: TextStyle(fontSize: 16)),
+                          ),
+                          //const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 7),
+                            height: 38,
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                textStyle: const TextStyle(fontSize: 16),
+                              ),
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => LoginPage()),
+                                  (Route<dynamic> route) => false,
+                                );
+                              },
+                              child: const Text('Войти'),
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

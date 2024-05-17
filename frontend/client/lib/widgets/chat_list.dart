@@ -124,46 +124,7 @@ class _ChatListState extends State<ChatList> {
       }
     }
   }
-  // Future<void> updateChat() async {
-  //   Dio dio = Dio();
 
-  //   try {
-  //     FormData formData = FormData();
-
-  //     // Проверяем, есть ли выбранная аватара, и добавляем ее к FormData
-  //     if (selectedFile != null) {
-  //       formData.files.add(MapEntry(
-  //           'avatar',
-  //           await MultipartFile.fromFile(selectedFile!.path,
-  //               filename: selectedFile!.path.split('/').last)));
-  //     }
-
-  //     // Проверяем, есть ли введенное название чата, и добавляем его к FormData
-  //     if (nameController.text.isNotEmpty) {
-  //       formData.fields.add(MapEntry('chat_name', nameController.text));
-  //     }
-
-  //     // Отправляем запрос на обновление чата
-  //     Response response = await dio.patch(
-  //       'http://localhost:8000/chats/${widget.chat.chatId}/',
-  //       data: formData,
-  //       options: Options(headers: {
-  //         'Authorization': "Bearer ${widget.auth.token}",
-  //       }),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       print('Chat updated successfully');
-  //     } else {
-  //       print('Failed to update chat');
-  //     }
-  //   } catch (e) {
-  //     print('Error updating chat: $e');
-  //   }
-
-  //   // Получаем обновленные данные о чате
-  //   await fetchChatData();
-  // }
   void showChatExistsWarning(BuildContext context) {
     OverlayEntry? overlayEntry;
 
@@ -379,7 +340,7 @@ class _ChatListState extends State<ChatList> {
     getUsers();
     users = dublicateUsers;
     fetchUserData();
-    fetchData(widget.userData);
+    // fetchData(widget.userData);
   }
 
   void selectChat(Chat chat) {
@@ -634,7 +595,7 @@ class _ChatListState extends State<ChatList> {
         options: Options(headers: {
           'Authorization': "Bearer ${widget.auth.token}",
         }));
-    print("PHOTOS");
+    print("USER DATA");
     print(returnedResult.data);
     late UserProfile user;
 
@@ -777,295 +738,342 @@ class _ChatListState extends State<ChatList> {
     print("user settings called");
     showDialog(
         context: context,
-        builder: (ctx) => isLoading
-            ? const SizedBox(
-                height: 30,
-                width: 30,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3.0,
-                    color: Colors.white,
-                  ),
-                ),
-              )
-            : WillPopScope(
-                onWillPop: () async {
-                  // Обнуляем selectedFile при закрытии диалогового окна
-                  setState(() {
-                    selectedFile = null;
-                  });
-                  return true; // Разрешаем закрытие диалога
-                },
-                child: StatefulBuilder(
-                    builder: (BuildContext context, StateSetter setState) {
-                  return AlertDialog(
-                    titlePadding: const EdgeInsets.all(0.0),
-                    title: Container(
-                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                        child: Center(
-                            child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Buttons.getCloseButton(context),
-                            const Text("Настройки пользователя"),
-                          ],
-                        ))),
-                    content: SizedBox(
-                      width: 300,
-                      child: StatefulBuilder(builder:
-                          (BuildContext context, StateSetter setState) {
-                        return Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-                              child: Material(
-                                elevation: 8,
-                                shape: const CircleBorder(),
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                child: InkWell(
-                                  // splashColor: Colors.black26,
-                                  onTap: () async {
-                                    await pickFile();
-                                    setState(() {});
-                                  },
-                                  child: Ink.image(
-                                    image: selectedFile != null
-                                        ? FileImage(selectedFile!)
-                                            as ImageProvider
-                                        : NetworkImage(widget.userData.avatar),
-                                    height: 120,
-                                    width: 120,
+        builder: (ctx) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter dialogSetState) {
+            // Начинаем загрузку данных
+            if (isLoading) {
+              fetchData(widget.userData).then((_) {
+                // Обновляем состояние диалогового окна после загрузки данных
+                dialogSetState(() {});
+              });
+            }
+
+            // Возвращаем содержимое диалогового окна в зависимости от состояния isLoading
+            return isLoading
+                ? const SizedBox(
+                    height: 30,
+                    width: 30,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3.0,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : WillPopScope(
+                    onWillPop: () async {
+                      // Обнуляем selectedFile при закрытии диалогового окна
+                      setState(() {
+                        selectedFile = null;
+                      });
+                      return true; // Разрешаем закрытие диалога
+                    },
+                    child: StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                      return AlertDialog(
+                        titlePadding: const EdgeInsets.all(0.0),
+                        title: Container(
+                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                            child: Center(
+                                child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Buttons.getCloseButton(context),
+                                const Text("Настройки пользователя"),
+                              ],
+                            ))),
+                        content: SizedBox(
+                          width: 300,
+                          child: StatefulBuilder(builder:
+                              (BuildContext context, StateSetter setState) {
+                            return Column(
+                              children: [
+                                Container(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                                  child: Material(
+                                    elevation: 8,
+                                    shape: const CircleBorder(),
+                                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                                    child: InkWell(
+                                      // splashColor: Colors.black26,
+                                      onTap: () async {
+                                        await pickFile();
+                                        setState(() {});
+                                      },
+                                      child: Ink.image(
+                                        image: selectedFile != null
+                                            ? FileImage(selectedFile!)
+                                                as ImageProvider
+                                            : NetworkImage(
+                                                widget.userData.avatar),
+                                        height: 120,
+                                        width: 120,
+                                      ),
+                                    ),
                                   ),
+                                ),
+
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(width: 20),
+                                    // Левая часть: заголовки
+                                    Container(
+                                      width: 120, // ширина левой части
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Имя\nпользователя:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 25),
+                                          const Text(
+                                            'Имя:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 25),
+                                          const Text(
+                                            'Фамилия:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 25),
+                                          const Text(
+                                            'Отчество:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          if (userDepartment != '') ...[
+                                            const SizedBox(height: 25),
+                                            const Text(
+                                              'Отдел:',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                          if (userRole != '') ...[
+                                            const SizedBox(height: 25),
+                                            const Text(
+                                              'Должность:',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                        width:
+                                            20), // отступ между левой и правой частями
+                                    // Правая часть: значения
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            0, 20, 0, 0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              widget.userData.username,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            const SizedBox(height: 25),
+                                            Text(
+                                              widget.userData.name,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            const SizedBox(height: 25),
+                                            Text(
+                                              widget.userData.lastname,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            const SizedBox(height: 25),
+                                            Text(
+                                              widget.userData.middlename,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            if (userDepartment != '') ...[
+                                              const SizedBox(height: 25),
+                                              Text(
+                                                userDepartment,
+                                                style: const TextStyle(
+                                                    fontSize: 16),
+                                              ),
+                                            ],
+                                            if (userRole != '') ...[
+                                              const SizedBox(height: 25),
+                                              Text(
+                                                userRole,
+                                                style: const TextStyle(
+                                                    fontSize: 16),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Если делать настройки, которые можно менять
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(vertical: 8),
+                                //   child: TextFormField(
+                                //     controller: nameController,
+                                //     readOnly: true,
+                                //     decoration: const InputDecoration(
+                                //         focusedBorder: OutlineInputBorder(
+                                //             borderSide: BorderSide(
+                                //                 width: 1,
+                                //                 color: Color.fromARGB(255, 37, 87, 153))),
+                                //         border: OutlineInputBorder(),
+                                //         labelText: 'Имя',
+                                //         hintText: 'Введите имя'),
+                                //   ),
+                                // ),
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(vertical: 8),
+                                //   child: TextFormField(
+                                //     controller: lastnameController,
+                                //     decoration: const InputDecoration(
+                                //         focusedBorder: OutlineInputBorder(
+                                //             borderSide: BorderSide(
+                                //                 width: 1,
+                                //                 color: Color.fromARGB(255, 37, 87, 153))),
+                                //         border: OutlineInputBorder(),
+                                //         labelText: 'Фамилия',
+                                //         hintText: 'Введите фамилию'),
+                                //   ),
+                                // ),
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(vertical: 8),
+                                //   child: TextFormField(
+                                //     controller: middlenameController,
+                                //     decoration: const InputDecoration(
+                                //         focusedBorder: OutlineInputBorder(
+                                //             borderSide: BorderSide(
+                                //                 width: 1,
+                                //                 color: Color.fromARGB(255, 37, 87, 153))),
+                                //         border: OutlineInputBorder(),
+                                //         labelText: 'Отчество',
+                                //         hintText: 'Введите отчество'),
+                                //   ),
+                                // ),
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(vertical: 8),
+                                //   child: SingleChildScrollView(
+                                //     child: DropdownButtonFormField<String>(
+                                //       value: userDepartment,
+                                //       decoration: const InputDecoration(
+                                //         focusedBorder: OutlineInputBorder(
+                                //             borderSide: BorderSide(
+                                //                 width: 1,
+                                //                 color: Color.fromARGB(255, 37, 87, 153))),
+                                //         border: OutlineInputBorder(),
+                                //         labelText: 'Отдел',
+                                //       ),
+                                //       isExpanded: true,
+                                //       items: departments.map((Department department) {
+                                //         return DropdownMenuItem<String>(
+                                //           value: department.name,
+                                //           child: Text(department.name),
+                                //         );
+                                //       }).toList(),
+                                //       onChanged: (String? newValue) {
+                                //         if (newValue != null) {
+                                //           setState(() {
+                                //             userDepartment = newValue;
+                                //           });
+                                //         }
+                                //       },
+                                //     ),
+                                //   ),
+                                // ),
+                                // Container(
+                                //   padding: const EdgeInsets.symmetric(vertical: 8),
+                                //   child: SingleChildScrollView(
+                                //     child: DropdownButtonFormField<String>(
+                                //       value: userRole,
+                                //       decoration: const InputDecoration(
+                                //         focusedBorder: OutlineInputBorder(
+                                //             borderSide: BorderSide(
+                                //                 width: 1,
+                                //                 color: Color.fromARGB(255, 37, 87, 153))),
+                                //         border: OutlineInputBorder(),
+                                //         labelText: 'Должность',
+                                //       ),
+                                //       isExpanded: true,
+                                //       items: roles.map((Role role) {
+                                //         return DropdownMenuItem<String>(
+                                //           value: role.name,
+                                //           child: Text(role.name),
+                                //         );
+                                //       }).toList(),
+                                //       onChanged: (String? newValue) {
+                                //         if (newValue != null) {
+                                //           setState(() {
+                                //             userRole = newValue;
+                                //           });
+                                //         }
+                                //       },
+                                //     ),
+                                //   ),
+                                // ),
+                              ],
+                            );
+                          }),
+                        ),
+                        actions: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextButton(
+                              onPressed: () async {
+                                await uploadAvatar(widget.userData);
+                                Navigator.of(ctx).pop();
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor:
+                                      const MaterialStatePropertyAll<Color>(
+                                          Color.fromARGB(255, 37, 87, 153)),
+                                  shape: MaterialStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ))),
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                child: const Text(
+                                  "Сохранить",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w300),
                                 ),
                               ),
                             ),
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(width: 20),
-                                // Левая часть: заголовки
-                                Container(
-                                  width: 110, // ширина левой части
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        'Имя:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        'Фамилия:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        'Отчество:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        'Отдел:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        'Должность:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(
-                                    width:
-                                        20), // отступ между левой и правой частями
-                                // Правая часть: значения
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.userData.name,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        widget.userData.lastname,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        widget.userData.middlename,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        userDepartment,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                      SizedBox(height: 25),
-                                      Text(
-                                        userRole,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // Если делать настройки, которые можно менять
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(vertical: 8),
-                            //   child: TextFormField(
-                            //     controller: nameController,
-                            //     readOnly: true,
-                            //     decoration: const InputDecoration(
-                            //         focusedBorder: OutlineInputBorder(
-                            //             borderSide: BorderSide(
-                            //                 width: 1,
-                            //                 color: Color.fromARGB(255, 37, 87, 153))),
-                            //         border: OutlineInputBorder(),
-                            //         labelText: 'Имя',
-                            //         hintText: 'Введите имя'),
-                            //   ),
-                            // ),
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(vertical: 8),
-                            //   child: TextFormField(
-                            //     controller: lastnameController,
-                            //     decoration: const InputDecoration(
-                            //         focusedBorder: OutlineInputBorder(
-                            //             borderSide: BorderSide(
-                            //                 width: 1,
-                            //                 color: Color.fromARGB(255, 37, 87, 153))),
-                            //         border: OutlineInputBorder(),
-                            //         labelText: 'Фамилия',
-                            //         hintText: 'Введите фамилию'),
-                            //   ),
-                            // ),
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(vertical: 8),
-                            //   child: TextFormField(
-                            //     controller: middlenameController,
-                            //     decoration: const InputDecoration(
-                            //         focusedBorder: OutlineInputBorder(
-                            //             borderSide: BorderSide(
-                            //                 width: 1,
-                            //                 color: Color.fromARGB(255, 37, 87, 153))),
-                            //         border: OutlineInputBorder(),
-                            //         labelText: 'Отчество',
-                            //         hintText: 'Введите отчество'),
-                            //   ),
-                            // ),
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(vertical: 8),
-                            //   child: SingleChildScrollView(
-                            //     child: DropdownButtonFormField<String>(
-                            //       value: userDepartment,
-                            //       decoration: const InputDecoration(
-                            //         focusedBorder: OutlineInputBorder(
-                            //             borderSide: BorderSide(
-                            //                 width: 1,
-                            //                 color: Color.fromARGB(255, 37, 87, 153))),
-                            //         border: OutlineInputBorder(),
-                            //         labelText: 'Отдел',
-                            //       ),
-                            //       isExpanded: true,
-                            //       items: departments.map((Department department) {
-                            //         return DropdownMenuItem<String>(
-                            //           value: department.name,
-                            //           child: Text(department.name),
-                            //         );
-                            //       }).toList(),
-                            //       onChanged: (String? newValue) {
-                            //         if (newValue != null) {
-                            //           setState(() {
-                            //             userDepartment = newValue;
-                            //           });
-                            //         }
-                            //       },
-                            //     ),
-                            //   ),
-                            // ),
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(vertical: 8),
-                            //   child: SingleChildScrollView(
-                            //     child: DropdownButtonFormField<String>(
-                            //       value: userRole,
-                            //       decoration: const InputDecoration(
-                            //         focusedBorder: OutlineInputBorder(
-                            //             borderSide: BorderSide(
-                            //                 width: 1,
-                            //                 color: Color.fromARGB(255, 37, 87, 153))),
-                            //         border: OutlineInputBorder(),
-                            //         labelText: 'Должность',
-                            //       ),
-                            //       isExpanded: true,
-                            //       items: roles.map((Role role) {
-                            //         return DropdownMenuItem<String>(
-                            //           value: role.name,
-                            //           child: Text(role.name),
-                            //         );
-                            //       }).toList(),
-                            //       onChanged: (String? newValue) {
-                            //         if (newValue != null) {
-                            //           setState(() {
-                            //             userRole = newValue;
-                            //           });
-                            //         }
-                            //       },
-                            //     ),
-                            //   ),
-                            // ),
-                          ],
-                        );
-                      }),
-                    ),
-                    actions: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextButton(
-                          onPressed: () async {
-                            await uploadAvatar(widget.userData);
-                            Navigator.of(ctx).pop();
-                          },
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  const MaterialStatePropertyAll<Color>(
-                                      Color.fromARGB(255, 37, 87, 153)),
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5.0),
-                              ))),
-                          child: Container(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                            child: const Text(
-                              "Сохранить",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w300),
-                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    }),
                   );
-                }),
-              ));
+          });
+        });
   }
 
   void showUserWarning(BuildContext context) {

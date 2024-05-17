@@ -197,16 +197,6 @@ class _LoginPage extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  /*TextButton(
-                    onPressed: () {
-                      //TODO FORGOT PASSWORD SCREEN
-                    },
-                    child: const Text(
-                      'Забыли пароль?',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 0, 102, 204), fontSize: 15),
-                    ),
-                  ),*/
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     height: 65,
