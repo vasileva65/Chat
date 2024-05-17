@@ -6,6 +6,7 @@ from chat.views import (
     DepartmentEmployeeViewSet,
     DepartmentViewSet,
     LogoutView,
+    OTPVerificationView,
     PasswordResetView,
     RegisterView,
     RoleViewSet,
@@ -52,8 +53,8 @@ urlpatterns = [
     path("prometheus/", include("django_prometheus.urls")),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
     path('silk/', include('silk.urls', namespace='silk')),
-    path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
-    path('reset-password-confirm/<uidb64>/<token>/', SetNewPasswordView.as_view(), name='reset_password_confirm'),
+    path('otp-verification/', OTPVerificationView.as_view(), name='otp_verification'),
+    path('set-new-password/', SetNewPasswordView.as_view(), name='set_new_password'),
 
 ]

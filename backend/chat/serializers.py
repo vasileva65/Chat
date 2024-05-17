@@ -172,11 +172,15 @@ class PasswordResetSerializer(serializers.Serializer):
             raise serializers.ValidationError("Пользователь с этим email не найден.")
         return value
 
+class OTPVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
 class SetNewPasswordSerializer(serializers.Serializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+    password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
-    token = serializers.CharField(write_only=True, required=True)
-    uidb64 = serializers.CharField(write_only=True, required=True)
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:

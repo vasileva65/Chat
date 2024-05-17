@@ -11,6 +11,7 @@ from chat.models import (
     Department,
     DepartmentEmployee, 
     Message,
+    PasswordResetOTP,
     Roles,
     UserProfile, 
     ChatMembers
@@ -23,6 +24,7 @@ from chat.serializers import (
     CreateChatSerializer,
     DepartmentEmployeeSerializer,
     DepartmentSerializer,
+    OTPVerificationSerializer,
     PasswordResetSerializer,
     RoleSerializer,
     SetNewPasswordSerializer,
@@ -54,6 +56,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.crypto import get_random_string
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -424,43 +427,60 @@ class PasswordResetView(generics.GenericAPIView):
         email = serializer.validated_data['email']
 
         user = User.objects.get(email=email)
-        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
+        otp = get_random_string(length=6, allowed_chars='0123456789')
 
-        reset_url = f"{request.scheme}://{request.get_host()}/reset-password-confirm/{uidb64}/{token}/"
+        PasswordResetOTP.objects.update_or_create(user=user, defaults={'otp': otp})
 
         try:
             send_mail(
-                "Password Reset Request",
-                f"Click the link to reset your password: {reset_url}",
+                "Password Reset OTP",
+                f"Your OTP for password reset is {otp}",
                 "no-reply@example.com",
                 [email],
                 fail_silently=False,
             )
-            return Response({"detail": "Password reset link has been sent to your email."}, status=status.HTTP_200_OK)
+            return Response({"detail": "OTP has been sent to your email."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+class OTPVerificationView(generics.GenericAPIView):
+    serializer_class = OTPVerificationSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
+
+        try:
+            user = User.objects.get(email=email)
+            otp_instance = PasswordResetOTP.objects.get(user=user, otp=otp)
+            return Response({"detail": "OTP is valid."}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "User does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+        except PasswordResetOTP.DoesNotExist:
+            return Response({"detail": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
 
 class SetNewPasswordView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
 
-    def patch(self, request, uidb64, token):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
+        password = serializer.validated_data['password']
 
-        if user and default_token_generator.check_token(user, token):
-            user.set_password(serializer.validated_data['password'])
+        try:
+            user = User.objects.get(email=email)
+            otp_instance = PasswordResetOTP.objects.get(user=user, otp=otp)
+            user.set_password(password)
             user.save()
+            otp_instance.delete()
             return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "Invalid token or user ID."}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"detail": "User does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+        except PasswordResetOTP.DoesNotExist:
+            return Response({"detail": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
