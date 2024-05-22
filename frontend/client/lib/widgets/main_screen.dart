@@ -47,14 +47,31 @@ class _MainScreenState extends State<MainScreen> {
     });
     _channel.stream.listen((data) {
       print("Received websocket update ${widget.chat.chatId}");
+      var message = data.toString();
+      // if (data.toString() != widget.chat.chatId.toString()) {
+      //   print("calling onOtherChatGotUpdate $data ${widget.chat.chatId}");
 
-      if (data.toString() != widget.chat.chatId.toString()) {
-        print("calling onOtherChatGotUpdate $data ${widget.chat.chatId}");
-
+      //   setState(() {
+      //     widget.updatedChats.add(data);
+      //   });
+      // }
+      if (message.startsWith('User ') && message.contains(' added to chat ')) {
+        var parts = message.split(' ');
+        var chatId = int.parse(parts[4]);
+        setState(() {
+          if (chatId != widget.chat.chatId) {
+            widget.updatedChats.add(chatId.toString());
+          }
+          chatListReloadNeeded = true;
+        });
+      } else if (data.toString() != widget.chat.chatId.toString()) {
         setState(() {
           widget.updatedChats.add(data);
+          chatListReloadNeeded = true;
+          // onNewMessageReceived(data.toString());
         });
       }
+
       onNewMessageReceived(data.toString());
       WindowsTaskbar.setFlashTaskbarAppIcon(
         mode: TaskbarFlashMode.all | TaskbarFlashMode.timernofg,
