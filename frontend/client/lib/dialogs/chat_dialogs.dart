@@ -13,7 +13,7 @@ import '../models/auth.dart';
 import '../models/userProfile.dart';
 
 typedef UpdateChatData = void Function(Chat updateChatData);
-
+typedef UpdateAdminList = void Function(Chat updateChatData);
 typedef UpdateChatMembersCount = void Function(int count);
 
 _getCloseButton(BuildContext context, VoidCallback onClose) {
@@ -97,14 +97,6 @@ class _GroupChatSettingsDialogState extends State<GroupChatSettingsDialog> {
   void callUpdateChatData() {
     setState(() async {
       await fetchChatData();
-    });
-  }
-
-  void updateMembersCount(int count) {
-    print("updateMembersCount WORKED");
-    setState(() {
-      print("Set state worked");
-      widget.chat.membersCount = count;
     });
   }
 

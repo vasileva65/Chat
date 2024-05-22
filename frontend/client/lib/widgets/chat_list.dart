@@ -1512,13 +1512,13 @@ class _ChatListState extends State<ChatList> {
                     color: Color.fromARGB(255, 39, 77, 126),
                   ),
                 ),
-                subtitle: const Text(
-                  'Online',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
+                // subtitle: const Text(
+                //   '',
+                //   style: TextStyle(
+                //     fontWeight: FontWeight.w400,
+                //     fontSize: 14,
+                //   ),
+                // ),
                 leading: CircleAvatar(
                   backgroundColor: const Color.fromARGB(1, 255, 255, 255),
                   backgroundImage: NetworkImage(widget.userData.avatar),

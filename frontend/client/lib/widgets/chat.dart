@@ -27,7 +27,7 @@ class ChatPage extends StatefulWidget {
 
   final Function(int updatedMembersCount) updateMembersCount;
   final DeleteChat onDeleteChat;
-
+  bool reloadNeeded;
   ChatPage(
     this.auth,
     this.userData,
@@ -35,6 +35,7 @@ class ChatPage extends StatefulWidget {
     required this.onDeleteChat,
     required this.updateChatData,
     required this.updateMembersCount,
+    required this.reloadNeeded,
     super.key,
   });
 
@@ -571,9 +572,12 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       members.remove(userToRemove);
-      // updateChatMembersCount(members.length);
+      updateChatMembersCount(members.length);
+      if (!members.contains(widget.userData)) {
+        widget.onDeleteChat();
+      }
       // regularMembers.remove(userToRemove);
-      widget.onDeleteChat;
+      //widget.onDeleteChat;
       //Call back
       // widget.updateChatMembersCount(members.length);
     });
@@ -582,6 +586,9 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.reloadNeeded) {
+      fetchMessages();
+    }
     //print("WIDGET USERS");
     //print(users);
     outOfChatMembers = users.where((user) => !members.contains(user)).toList();
@@ -660,6 +667,7 @@ class _ChatPageState extends State<ChatPage> {
                                 chat: widget.chat,
                                 updateChatData: updateNameAvatar,
                                 updateChatMembersCount: updateChatMembersCount,
+
                                 // updateChatMembersCount: (updatedMembersCount) {
                                 //   setState(() {
                                 //     print("DRAWN CHAT PAGE");
@@ -772,6 +780,7 @@ class _ChatPageState extends State<ChatPage> {
                               chat: widget.chat,
                               updateChatData: updateNameAvatar,
                               updateChatMembersCount: updateChatMembersCount,
+
                               // updateChatMembersCount: (updatedMembersCount) {
                               //   setState(() {
                               //     print("DRAWN CHAT PAGE");

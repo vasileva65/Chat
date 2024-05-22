@@ -31,6 +31,7 @@ class _MainScreenState extends State<MainScreen> {
   final _channel =
       WebSocketChannel.connect(Uri.parse('ws://localhost:8080/ws'));
   bool chatListReloadNeeded = false;
+  bool chatReloadNeeded = false;
 
   @override
   void initState() {
@@ -54,11 +55,22 @@ class _MainScreenState extends State<MainScreen> {
           widget.updatedChats.add(data);
         });
       }
-
+      onNewMessageReceived(data.toString());
       WindowsTaskbar.setFlashTaskbarAppIcon(
         mode: TaskbarFlashMode.all | TaskbarFlashMode.timernofg,
         timeout: const Duration(milliseconds: 500),
       );
+    });
+  }
+
+  void onNewMessageReceived(String chatId) {
+    setState(() {
+      if (chatId == widget.chat.chatId.toString()) {
+        // Trigger chat message reload
+        chatReloadNeeded = true; // Call the fetchMessages method
+      } else {
+        widget.updatedChats.add(chatId);
+      }
     });
   }
 
@@ -77,8 +89,7 @@ class _MainScreenState extends State<MainScreen> {
 
   void onDeleteChat() {
     setState(() {
-      widget.chat.chatId = 0;
-      chatListReloadNeeded = true;
+      widget.chat = Chat(0, '', '', 0, 0, ''); // Создаем пустой чат
     });
   }
 
@@ -138,6 +149,7 @@ class _MainScreenState extends State<MainScreen> {
                           onDeleteChat: onDeleteChat,
                           updateChatData: updateChatData,
                           updateMembersCount: (updatedMembersCount) {},
+                          reloadNeeded: chatReloadNeeded,
                         )
                       : ZeroPage(widget.auth, widget.userData))),
         ],
