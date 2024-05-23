@@ -43,6 +43,19 @@ class _EmailInputPageState extends State<EmailInputPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text(''), // Заголовок для AppBar
+        leading: IconButton(
+          splashRadius: 1,
+          color: Colors.grey,
+          icon: Icon(Icons.arrow_back), // Иконка кнопки "Назад"
+          onPressed: () {
+            Navigator.pop(context); // Действие при нажатии на кнопку "Назад"
+          },
+        ),
+      ),
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,

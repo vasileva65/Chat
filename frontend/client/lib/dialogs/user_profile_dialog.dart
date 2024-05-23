@@ -294,7 +294,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 40),
                       child: Material(
                         elevation: 8,
                         shape: const CircleBorder(),
@@ -310,37 +310,56 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                         ),
                       ),
                     ),
-                    Container(
-                      padding: EdgeInsets.fromLTRB(0, 8, 0, 40),
-                      child: Text("${user.name} ${user.lastname}",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w500)),
-                    ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(width: 10),
+                        SizedBox(width: 20),
                         // Левая часть: заголовки
                         Container(
                           width: 120, // ширина левой части
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Отдел:',
+                              const Text(
+                                'Имя:',
                                 style: TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              SizedBox(height: 25),
-                              Text(
-                                'Должность:',
+                              const SizedBox(height: 25),
+                              const Text(
+                                'Фамилия:',
                                 style: TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
+                              const SizedBox(height: 25),
+                              const Text(
+                                'Отчество:',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 25),
+                              if (department != '') ...[
+                                const SizedBox(height: 25),
+                                const Text(
+                                  'Отдел:',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                              if (role != '') ...[
+                                const SizedBox(height: 25),
+                                const Text(
+                                  'Должность:',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                             width: 20), // отступ между левой и правой частями
                         // Правая часть: значения
                         Expanded(
@@ -348,14 +367,33 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                department,
-                                style: TextStyle(fontSize: 16),
+                                user.name,
+                                style: const TextStyle(fontSize: 16),
                               ),
-                              SizedBox(height: 25),
+                              const SizedBox(height: 25),
                               Text(
-                                role,
-                                style: TextStyle(fontSize: 16),
+                                user.lastname,
+                                style: const TextStyle(fontSize: 16),
                               ),
+                              const SizedBox(height: 25),
+                              Text(
+                                user.middlename,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              if (department != '') ...[
+                                const SizedBox(height: 25),
+                                Text(
+                                  department,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                              if (role != '') ...[
+                                const SizedBox(height: 25),
+                                Text(
+                                  role,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
                             ],
                           ),
                         ),

@@ -1,15 +1,11 @@
-from django.contrib.auth.models import Group
 from backend.generator import generate_username
 from chat.models import Chat, ChatMembers, Department, DepartmentEmployee, Message, Roles, UserProfile
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext as _
 #from .models import User
-from django.utils import timezone
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -135,8 +131,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Пароли не совпадают."})
         return attrs
-
-    
 
     def create(self, validated_data):
         print("Creating user with data:", validated_data)

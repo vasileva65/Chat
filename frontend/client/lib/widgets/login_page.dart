@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'package:client/models/userProfile.dart';
-import 'package:client/widgets/password_reset.dart';
 import 'package:client/widgets/main_screen.dart';
 import 'package:client/widgets/registration.dart';
 import 'package:client/widgets/reset_password/email_input_page.dart';

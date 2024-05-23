@@ -1007,7 +1007,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 //filled: true,
-                hintText: 'Введите сообщение... Для чата ${widget.chat.chatId}',
+                hintText: 'Введите сообщение...',
               ),
               keyboardType: TextInputType.multiline,
               maxLines: 5,

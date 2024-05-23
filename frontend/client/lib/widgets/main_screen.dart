@@ -159,7 +159,7 @@ class _MainScreenState extends State<MainScreen> {
                   width: 600,
                   child: widget.chat.chatId != 0
                       ? ChatPage(
-                          key: ValueKey<int>(widget.chat.membersCount),
+                          key: ValueKey<int>(widget.chat.chatId),
                           widget.auth,
                           widget.userData,
                           widget.chat,

@@ -1641,9 +1641,14 @@ class _ChatListState extends State<ChatList> {
                                     ),
                                     trailing: widget.updatedChats.contains(
                                             groupItems[index].chatId.toString())
-                                        ? const Icon(
-                                            Icons.circle,
-                                            color: Colors.red,
+                                        ? const Padding(
+                                            padding: EdgeInsets.only(right: 15),
+                                            child: Icon(
+                                              Icons.circle,
+                                              color: Color.fromARGB(
+                                                  255, 40, 116, 216),
+                                              size: 10,
+                                            ),
                                           )
                                         : null,
                                     leading: CircleAvatar(
@@ -1725,6 +1730,20 @@ class _ChatListState extends State<ChatList> {
                                         color: Color.fromARGB(255, 39, 77, 126),
                                       ),
                                     ),
+                                    trailing: widget.updatedChats.contains(
+                                            privateItems[index]
+                                                .chatId
+                                                .toString())
+                                        ? const Padding(
+                                            padding: EdgeInsets.only(right: 15),
+                                            child: Icon(
+                                              Icons.circle,
+                                              color: Color.fromARGB(
+                                                  255, 40, 116, 216),
+                                              size: 10,
+                                            ),
+                                          )
+                                        : null,
                                     leading: CircleAvatar(
                                       backgroundColor:
                                           Color.fromARGB(1, 255, 255, 255),
